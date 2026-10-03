@@ -2,7 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
+  Image,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,21 +16,25 @@ import {
   Baby,
   ChevronRight,
   Flame,
+  Heart,
   Info,
   RefreshCw,
   Ruler,
+  Sparkles,
   Utensils,
   Weight,
 } from 'lucide-react-native';
 import babyService, { BabyProfileDto, DailyMenuDto, MealItem } from '../../services/babyService';
-import { COLORS, RADII, SHADOWS } from '../../theme/colors';
+import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+
+const { width: SCREEN_W } = Dimensions.get('window');
 
 const MEAL_SLOTS = [
-  { key: 'breakfast', label: 'Bữa sáng', time: '07:30' },
-  { key: 'lunch', label: 'Bữa trưa', time: '11:30' },
-  { key: 'snack', label: 'Bữa xế', time: '15:30' },
-  { key: 'dinner', label: 'Bữa tối', time: '18:30' },
-  { key: 'supplementary_snack', label: 'Cữ phụ', time: '20:00' },
+  { key: 'breakfast', label: 'Bữa sáng', time: '07:30', icon: '🥣' },
+  { key: 'lunch', label: 'Bữa trưa', time: '11:30', icon: '🍲' },
+  { key: 'snack', label: 'Bữa xế', time: '15:30', icon: '🥑' },
+  { key: 'dinner', label: 'Bữa tối', time: '18:30', icon: '🥣' },
+  { key: 'supplementary_snack', label: 'Cữ phụ', time: '20:00', icon: '🍼' },
 ];
 
 export default function BabyNutritionScreen() {
@@ -55,7 +62,7 @@ export default function BabyNutritionScreen() {
       setMenuError(
         err?.response?.data?.message ||
           err?.response?.data?.title ||
-          'Backend chưa tạo được thực đơn. App đang hiển thị gợi ý mẫu.'
+          'Backend chưa tạo được thực đơn. App đang hiển thị gợi ý mẫu theo chuẩn dinh dưỡng.'
       );
       return false;
     } finally {
@@ -90,10 +97,10 @@ export default function BabyNutritionScreen() {
     const ok = await loadMenu(selectedBaby.id, true);
     setIsRefreshing(false);
     Alert.alert(
-      'Thực đơn AI',
+      'Thực đơn dinh dưỡng',
       ok
-        ? 'Đã làm mới thực đơn cho bé.'
-        : 'Backend chưa trả về thực đơn hợp lệ. App đang hiển thị gợi ý mẫu.'
+        ? 'Đã làm mới thực đơn theo chuẩn dinh dưỡng cho bé.'
+        : 'Backend chưa trả về thực đơn mới. App đang hiển thị gợi ý khoa học mẫu.'
     );
   };
 
@@ -103,181 +110,226 @@ export default function BabyNutritionScreen() {
   const goals = dailyMenu?.goals || {};
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.topBar}>
-        <View>
-          <Text style={styles.eyebrow}>Bé yêu</Text>
-          <Text style={styles.title}>Dinh dưỡng & tăng trưởng</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={refreshMenu}
-          disabled={!selectedBaby || isRefreshing}
-        >
-          {isRefreshing ? (
-            <ActivityIndicator size="small" color={COLORS.primary} />
-          ) : (
-            <RefreshCw size={20} color={COLORS.primary} />
-          )}
-        </TouchableOpacity>
-      </View>
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" backgroundColor={MOM_THEME.cream} />
 
-      {babies.length ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.babyScroller}>
-          {babies.map((baby) => {
-            const active = selectedBaby?.id === baby.id;
-            return (
-              <TouchableOpacity
-                key={baby.id}
-                style={[styles.babyChip, active && styles.babyChipActive]}
-                onPress={() => {
-                  setSelectedBaby(baby);
-                  loadMenu(baby.id);
-                }}
-              >
-                <Baby size={16} color={active ? COLORS.white : COLORS.primary} />
-                <Text style={[styles.babyChipText, active && styles.babyChipTextActive]}>
-                  {baby.babyName || baby.name || 'Bé yêu'} · {baby.ageMonths || 0} tháng
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      ) : (
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyTitle}>Chưa có hồ sơ bé</Text>
-          <Text style={styles.emptyText}>Mẹ tạo hồ sơ bé trên web hoặc mục Hồ Sơ Mẹ để nhận thực đơn phù hợp.</Text>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Top Bar ── */}
+        <View style={styles.topBar}>
+          <View>
+            <View style={styles.eyebrowWrap}>
+              <Text style={styles.eyebrow}>DINH DƯỠNG & PHÁT TRIỂN</Text>
+            </View>
+            <Text style={styles.title}>Bé yêu của mẹ</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={refreshMenu}
+            disabled={!selectedBaby || isRefreshing}
+            activeOpacity={0.8}
+          >
+            {isRefreshing ? (
+              <ActivityIndicator size="small" color={MOM_THEME.roseDark} />
+            ) : (
+              <RefreshCw size={19} color={MOM_THEME.roseDark} />
+            )}
+          </TouchableOpacity>
         </View>
-      )}
 
-      {selectedBaby ? (
+        {/* ── Baby Selector Chips ── */}
+        {babies.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.babyScroller}>
+            {babies.map((baby) => {
+              const active = selectedBaby?.id === baby.id;
+              return (
+                <TouchableOpacity
+                  key={baby.id}
+                  style={[styles.babyChip, active && styles.babyChipActive]}
+                  onPress={() => {
+                    setSelectedBaby(baby);
+                    loadMenu(baby.id);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.babyChipEmoji}>👶</Text>
+                  <Text style={[styles.babyChipText, active && styles.babyChipTextActive]}>
+                    {baby.babyName || baby.name || 'Bé yêu'} · {baby.ageMonths || 0} tháng
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyTitle}>Chưa có hồ sơ bé yêu</Text>
+            <Text style={styles.emptyText}>Mẹ có thể thêm thông tin bé ở mục Menu / Hồ sơ để nhận thực đơn cá nhân hóa nhé.</Text>
+          </View>
+        )}
+
+        {/* ── Baby Hero Card with Real Visual ── */}
         <View style={[styles.heroCard, SHADOWS.card]}>
-          <View style={styles.heroHeader}>
-            <View>
-              <Text style={styles.heroLabel}>Hồ sơ hiện tại</Text>
-              <Text style={styles.heroTitle}>{selectedBaby.babyName || selectedBaby.name || 'Bé yêu'}</Text>
-            </View>
-            <View style={styles.statusBadge}>
-              <Award size={14} color={COLORS.emerald} />
-              <Text style={styles.statusText}>Theo dõi WHO</Text>
-            </View>
-          </View>
+          <Image
+            source={require('../../../assets/images/baby.jpg')}
+            style={styles.heroImage}
+            resizeMode="cover"
+          />
+          <View style={styles.heroOverlay} />
 
-          <View style={styles.metricRow}>
-            <Metric icon={<Weight size={18} color={COLORS.primary} />} label="Cân nặng" value={`${selectedBaby.currentWeightKg || 0} kg`} />
-            <Metric icon={<Ruler size={18} color={COLORS.secondary} />} label="Chiều cao" value={`${selectedBaby.currentHeightCm || 0} cm`} />
-          </View>
-        </View>
-      ) : null}
-
-      <View style={[styles.tipCard, SHADOWS.sm]}>
-        <View style={styles.tipHeader}>
-          <Utensils size={18} color={COLORS.amber} />
-          <Text style={styles.tipTitle}>{tip.title}</Text>
-        </View>
-        <Text style={styles.tipBody}>{tip.body}</Text>
-      </View>
-
-      <View style={[styles.macroCard, SHADOWS.card]}>
-        <View style={styles.macroTop}>
-          <View style={styles.calorieBox}>
-            <Flame size={20} color={COLORS.rose} />
-            <View>
-              <Text style={styles.calorieValue}>{Math.round(totals.calories || 620)} kcal</Text>
-              <Text style={styles.calorieLabel}>Mục tiêu: {Math.round(goals.calories || 700)} kcal</Text>
-            </View>
-          </View>
-          <Text style={styles.macroBadge}>Cân đối</Text>
-        </View>
-
-        <View style={styles.nutrientRow}>
-          <Nutrient label="Đạm" value={`${totals.protein_g || 18}g`} color={COLORS.blue} />
-          <Nutrient label="Béo" value={`${totals.fat_g || 22}g`} color={COLORS.amber} />
-          <Nutrient label="Tinh bột" value={`${totals.carbs_g || 85}g`} color={COLORS.emerald} />
-        </View>
-      </View>
-
-      <Text style={styles.sectionTitle}>Lịch bữa ăn hôm nay</Text>
-
-      {menuError ? (
-        <View style={styles.errorBox}>
-          <Info size={15} color={COLORS.amber} />
-          <Text style={styles.errorText}>{menuError}</Text>
-        </View>
-      ) : null}
-
-      {isLoading ? (
-        <View style={styles.loadingBox}>
-          <ActivityIndicator color={COLORS.primary} />
-          <Text style={styles.loadingText}>Đang lập thực đơn AI...</Text>
-        </View>
-      ) : (
-        MEAL_SLOTS.map((slot) => {
-          const meal: MealItem | undefined = dailyMenu?.meals?.[
-            slot.key as keyof NonNullable<DailyMenuDto['meals']>
-          ];
-          return (
-            <View key={slot.key} style={[styles.mealCard, SHADOWS.sm]}>
-              <View style={styles.mealIcon}>
-                <Utensils size={20} color={COLORS.primary} />
+          <View style={styles.heroContent}>
+            <View style={styles.heroTopRow}>
+              <View style={styles.statusBadge}>
+                <Award size={13} color={MOM_THEME.white} />
+                <Text style={styles.statusText}>Tiêu chuẩn WHO</Text>
               </View>
-              <View style={styles.mealCopy}>
-                <View style={styles.mealHeader}>
-                  <Text style={styles.mealSlot}>{slot.label}</Text>
-                  <Text style={styles.mealTime}>{slot.time}</Text>
+              <View style={styles.agePill}>
+                <Text style={styles.agePillText}>{ageMonths} tháng tuổi</Text>
+              </View>
+            </View>
+
+            <View>
+              <Text style={styles.heroBabyName}>
+                {selectedBaby?.babyName || selectedBaby?.name || 'Bé yêu của mẹ'}
+              </Text>
+              <Text style={styles.heroBabySub}>Phát triển khỏe mạnh, ăn ngon chóng lớn ✨</Text>
+            </View>
+
+            <View style={styles.statsCardRow}>
+              <View style={styles.statMiniCard}>
+                <Weight size={15} color={MOM_THEME.roseDark} />
+                <View>
+                  <Text style={styles.statMiniVal}>{selectedBaby?.currentWeightKg || 8.5} kg</Text>
+                  <Text style={styles.statMiniLbl}>Cân nặng</Text>
                 </View>
-                <Text style={styles.mealName}>
-                  {meal?.name_vi || meal?.name_en || 'Cháo dinh dưỡng rau củ / sữa theo cữ'}
-                </Text>
-                <Text style={styles.mealMeta}>{Math.round(meal?.total_calories || 120)} kcal</Text>
               </View>
-              <ChevronRight size={18} color={COLORS.textLight} />
+              <View style={styles.statMiniCard}>
+                <Ruler size={15} color={MOM_THEME.sageDark} />
+                <View>
+                  <Text style={styles.statMiniVal}>{selectedBaby?.currentHeightCm || 71} cm</Text>
+                  <Text style={styles.statMiniLbl}>Chiều cao</Text>
+                </View>
+              </View>
             </View>
-          );
-        })
-      )}
-    </ScrollView>
+          </View>
+        </View>
+
+        {/* ── Age Tip Card ── */}
+        <View style={[styles.tipCard, SHADOWS.sm]}>
+          <View style={styles.tipIconWrap}>
+            <Sparkles size={18} color={MOM_THEME.amberDark} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.tipTitle}>{tip.title}</Text>
+            <Text style={styles.tipBody}>{tip.body}</Text>
+          </View>
+        </View>
+
+        {/* ── Macro Nutrition Card ── */}
+        <View style={[styles.macroCard, SHADOWS.card]}>
+          <View style={styles.macroTop}>
+            <View style={styles.calorieBox}>
+              <View style={styles.calorieIconWrap}>
+                <Flame size={18} color="#D95368" />
+              </View>
+              <View>
+                <Text style={styles.calorieValue}>{Math.round(totals.calories || 620)} kcal</Text>
+                <Text style={styles.calorieLabel}>Mục tiêu hôm nay: {Math.round(goals.calories || 700)} kcal</Text>
+              </View>
+            </View>
+            <View style={styles.balanceBadge}>
+              <Text style={styles.balanceBadgeText}>Cân đối</Text>
+            </View>
+          </View>
+
+          <View style={styles.nutrientRow}>
+            <Nutrient label="Đạm (Protein)" value={`${totals.protein_g || 18}g`} color="#4A88C7" bg="#EEF5FA" />
+            <Nutrient label="Chất béo" value={`${totals.fat_g || 22}g`} color={MOM_THEME.amberDark} bg="#FFF5EB" />
+            <Nutrient label="Tinh bột" value={`${totals.carbs_g || 85}g`} color={MOM_THEME.sageDark} bg="#E8F2EC" />
+          </View>
+        </View>
+
+        {/* ── Section: Thực đơn theo cữ ── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Thực đơn các cữ hôm nay</Text>
+          <Text style={styles.sectionSub}>Gợi ý chuẩn định lượng theo độ tuổi</Text>
+        </View>
+
+        {menuError ? (
+          <View style={styles.errorBox}>
+            <Info size={15} color={MOM_THEME.amberDark} />
+            <Text style={styles.errorText}>{menuError}</Text>
+          </View>
+        ) : null}
+
+        {isLoading ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator color={MOM_THEME.roseDark} />
+            <Text style={styles.loadingText}>Đang chuẩn bị thực đơn dinh dưỡng...</Text>
+          </View>
+        ) : (
+          MEAL_SLOTS.map((slot) => {
+            const meal: MealItem | undefined = dailyMenu?.meals?.[
+              slot.key as keyof NonNullable<DailyMenuDto['meals']>
+            ];
+            return (
+              <View key={slot.key} style={[styles.mealCard, SHADOWS.sm]}>
+                <View style={styles.mealEmojiWrap}>
+                  <Text style={{ fontSize: 20 }}>{slot.icon}</Text>
+                </View>
+                <View style={styles.mealCopy}>
+                  <View style={styles.mealHeader}>
+                    <Text style={styles.mealSlot}>{slot.label}</Text>
+                    <Text style={styles.mealTime}>{slot.time}</Text>
+                  </View>
+                  <Text style={styles.mealName}>
+                    {meal?.name_vi || meal?.name_en || 'Cháo bí đỏ thịt nạc xay mịn / sữa mẹ ấm'}
+                  </Text>
+                  <View style={styles.mealMetaRow}>
+                    <Text style={styles.mealMetaKcal}>{Math.round(meal?.total_calories || 120)} kcal</Text>
+                    <Text style={styles.mealMetaDot}>·</Text>
+                    <Text style={styles.mealMetaSub}>Dễ tiêu hóa, thơm ngon</Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 function getNutritionTip(ageMonths: number) {
   if (ageMonths < 6) {
     return {
-      title: 'Sữa mẹ là ưu tiên',
-      body: 'Bé dưới 6 tháng nên bú mẹ hoặc sữa công thức phù hợp. Chưa cần ăn dặm nếu bác sĩ không chỉ định.',
+      title: 'Sữa mẹ là nguồn dinh dưỡng vàng',
+      body: 'Bé dưới 6 tháng nên bú mẹ hoàn toàn hoặc sữa công thức phù hợp. Chưa cần ăn dặm nếu bác sĩ không chỉ định.',
     };
   }
   if (ageMonths <= 8) {
     return {
-      title: 'Bắt đầu ăn dặm',
-      body: 'Ưu tiên bột mịn, cháo loãng, rau củ ngọt và đạm mềm. Mỗi món mới nên theo dõi 2-3 ngày.',
+      title: 'Giai đoạn bắt đầu ăn dặm',
+      body: 'Ưu tiên bột mịn, cháo rây tỉ lệ 1:10, rau củ ngọt thanh và đạm dễ tiêu. Mỗi món mới mẹ cho thử 2-3 ngày nhé.',
     };
   }
   if (ageMonths <= 11) {
     return {
-      title: 'Tăng dần độ thô',
-      body: 'Có thể dùng cháo hạt vỡ, rau củ mềm, đậu hũ, cá và thức ăn bốc tay an toàn.',
+      title: 'Tăng dần độ thô cho bé',
+      body: 'Mẹ có thể nấu cháo hạt vỡ, rau củ hấp mềm thái nhỏ, đậu hũ, cá hồi và tập cho bé bốc thức ăn an toàn.',
     };
   }
   return {
-    title: 'Cơm nát và bữa gia đình',
-    body: 'Đa dạng 4 nhóm chất, giảm muối đường và theo dõi dị ứng khi thêm thực phẩm mới.',
+    title: 'Đa dạng 4 nhóm chất',
+    body: 'Bé có thể ăn cơm nát hoặc cùng bữa với gia đình. Mẹ nêm nhạt, ít muối đường và giữ không khí ăn vui vẻ.',
   };
 }
 
-function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Nutrient({ label, value, color, bg }: { label: string; value: string; color: string; bg: string }) {
   return (
-    <View style={styles.metric}>
-      {icon}
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function Nutrient({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <View style={styles.nutrient}>
+    <View style={[styles.nutrient, { backgroundColor: bg }]}>
       <Text style={[styles.nutrientValue, { color }]}>{value}</Text>
       <Text style={styles.nutrientLabel}>{label}</Text>
     </View>
@@ -285,13 +337,16 @@ function Nutrient({ label, value, color }: { label: string; value: string; color
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: MOM_THEME.cream,
+  },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   content: {
-    padding: 20,
-    paddingTop: 56,
+    paddingHorizontal: 20,
+    paddingTop: 54,
     paddingBottom: 40,
   },
   topBar: {
@@ -300,161 +355,213 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
+  eyebrowWrap: {
+    marginBottom: 2,
+  },
   eyebrow: {
-    color: COLORS.primary,
+    color: MOM_THEME.roseDark,
     fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '700',
+    letterSpacing: 0.8,
   },
   title: {
-    color: COLORS.textDark,
-    fontSize: 24,
-    lineHeight: 30,
+    color: MOM_THEME.charcoal,
+    fontSize: 26,
+    lineHeight: 32,
     fontWeight: '800',
   },
   refreshButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.white,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: MOM_THEME.white,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: MOM_THEME.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   babyScroller: {
-    marginBottom: 14,
+    marginBottom: 16,
   },
   babyChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 6,
     minHeight: 40,
     borderRadius: RADII.pill,
-    backgroundColor: COLORS.white,
+    backgroundColor: MOM_THEME.white,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingHorizontal: 13,
+    borderColor: MOM_THEME.border,
+    paddingHorizontal: 14,
     marginRight: 8,
   },
   babyChipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: MOM_THEME.roseDark,
+    borderColor: MOM_THEME.roseDark,
+  },
+  babyChipEmoji: {
+    fontSize: 14,
   },
   babyChipText: {
-    color: COLORS.textDark,
+    color: MOM_THEME.charcoal,
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   babyChipTextActive: {
-    color: COLORS.white,
+    color: MOM_THEME.white,
   },
   emptyBox: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.card,
+    backgroundColor: MOM_THEME.white,
+    borderRadius: 20,
     padding: 16,
-    marginBottom: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
   },
   emptyTitle: {
-    color: COLORS.textDark,
+    color: MOM_THEME.charcoal,
     fontSize: 15,
     fontWeight: '800',
   },
   emptyText: {
-    color: COLORS.textMuted,
+    color: MOM_THEME.muted,
     fontSize: 12,
     lineHeight: 18,
     marginTop: 4,
   },
   heroCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.hero,
+    height: 210,
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 20,
+    position: 'relative',
+  },
+  heroImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  heroOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(44, 33, 24, 0.44)',
+  },
+  heroContent: {
+    flex: 1,
     padding: 18,
-    marginBottom: 14,
-  },
-  heroHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
   },
-  heroLabel: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  heroTitle: {
-    color: COLORS.textDark,
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '800',
-    marginTop: 3,
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: COLORS.emeraldLight,
+    gap: 5,
+    backgroundColor: 'rgba(95, 122, 107, 0.88)',
     borderRadius: RADII.pill,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   statusText: {
-    color: COLORS.emerald,
+    color: MOM_THEME.white,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
   },
-  metricRow: {
+  agePill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderRadius: RADII.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  agePillText: {
+    color: MOM_THEME.charcoal,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  heroBabyName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: MOM_THEME.white,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  heroBabySub: {
+    fontSize: 12,
+    color: '#FBF8F5',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  statsCardRow: {
     flexDirection: 'row',
     gap: 10,
   },
-  metric: {
+  statMiniCard: {
     flex: 1,
-    borderRadius: RADII.card,
-    backgroundColor: COLORS.background,
-    padding: 12,
-  },
-  metricValue: {
-    color: COLORS.textDark,
-    fontSize: 16,
-    fontWeight: '800',
-    marginTop: 8,
-  },
-  metricLabel: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
-    marginTop: 2,
-  },
-  tipCard: {
-    backgroundColor: COLORS.amberLight,
-    borderRadius: RADII.card,
-    padding: 14,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#FFE6AA',
-  },
-  tipHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
-    marginBottom: 5,
+    gap: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  statMiniVal: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: MOM_THEME.charcoal,
+  },
+  statMiniLbl: {
+    fontSize: 10,
+    color: MOM_THEME.muted,
+  },
+  tipCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: '#FFF8F0',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#F7E7D0',
+  },
+  tipIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFE8D0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tipTitle: {
-    color: '#9A5C00',
+    color: MOM_THEME.amberDark,
     fontSize: 14,
     fontWeight: '800',
+    marginBottom: 3,
   },
   tipBody: {
-    color: '#855100',
+    color: MOM_THEME.charcoalMid,
     fontSize: 12,
     lineHeight: 18,
   },
   macroCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.hero,
+    backgroundColor: MOM_THEME.white,
+    borderRadius: 24,
     padding: 18,
-    marginBottom: 18,
+    marginBottom: 22,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
   },
   macroTop: {
     flexDirection: 'row',
@@ -465,24 +572,35 @@ const styles = StyleSheet.create({
   calorieBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
+    gap: 10,
+  },
+  calorieIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FDECEF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   calorieValue: {
-    color: COLORS.textDark,
-    fontSize: 18,
+    color: MOM_THEME.charcoal,
+    fontSize: 17,
     fontWeight: '800',
   },
   calorieLabel: {
-    color: COLORS.textMuted,
+    color: MOM_THEME.muted,
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '500',
+    marginTop: 1,
   },
-  macroBadge: {
-    color: COLORS.emerald,
-    backgroundColor: COLORS.emeraldLight,
+  balanceBadge: {
+    backgroundColor: MOM_THEME.sageLight,
     borderRadius: RADII.pill,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
+  },
+  balanceBadgeText: {
+    color: MOM_THEME.sageDark,
     fontSize: 11,
     fontWeight: '800',
   },
@@ -492,72 +610,79 @@ const styles = StyleSheet.create({
   },
   nutrient: {
     flex: 1,
-    backgroundColor: COLORS.background,
-    borderRadius: RADII.control,
+    borderRadius: 14,
     paddingVertical: 10,
     alignItems: 'center',
   },
   nutrientValue: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
   },
   nutrientLabel: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '700',
+    color: MOM_THEME.muted,
+    fontSize: 10,
+    fontWeight: '600',
     marginTop: 2,
   },
+  sectionHeader: {
+    marginBottom: 12,
+  },
   sectionTitle: {
-    color: COLORS.textDark,
+    color: MOM_THEME.charcoal,
     fontSize: 18,
-    lineHeight: 24,
     fontWeight: '800',
-    marginBottom: 10,
+  },
+  sectionSub: {
+    color: MOM_THEME.muted,
+    fontSize: 12,
+    marginTop: 2,
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: COLORS.amberLight,
-    borderRadius: RADII.control,
+    backgroundColor: '#FFF4EB',
+    borderRadius: 14,
     padding: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#FFE6AA',
+    borderColor: '#FFE0C2',
   },
   errorText: {
     flex: 1,
-    color: '#855100',
+    color: MOM_THEME.amberDark,
     fontSize: 12,
     lineHeight: 18,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   loadingBox: {
     alignItems: 'center',
     padding: 28,
   },
   loadingText: {
-    color: COLORS.textMuted,
+    color: MOM_THEME.muted,
     fontSize: 12,
     marginTop: 8,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   mealCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.card,
-    padding: 14,
-    marginBottom: 10,
+    backgroundColor: MOM_THEME.white,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
   },
-  mealIcon: {
+  mealEmojiWrap: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    backgroundColor: MOM_THEME.cream,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
   mealCopy: {
     flex: 1,
@@ -568,24 +693,37 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   mealSlot: {
-    color: COLORS.textMuted,
-    fontSize: 11,
+    color: MOM_THEME.charcoalMid,
+    fontSize: 12,
     fontWeight: '800',
   },
   mealTime: {
-    color: COLORS.primary,
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  mealName: {
-    color: COLORS.textDark,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  mealMeta: {
-    color: COLORS.textMuted,
+    color: MOM_THEME.roseDark,
     fontSize: 11,
     fontWeight: '700',
-    marginTop: 3,
+  },
+  mealName: {
+    color: MOM_THEME.charcoal,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  mealMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  mealMetaKcal: {
+    color: MOM_THEME.roseDark,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  mealMetaDot: {
+    color: MOM_THEME.mutedLight,
+  },
+  mealMetaSub: {
+    color: MOM_THEME.muted,
+    fontSize: 11,
   },
 });
+

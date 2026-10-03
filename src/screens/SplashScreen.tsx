@@ -23,7 +23,7 @@ export default function SplashScreen() {
       if (isAuthenticated) {
         navigation.replace('MainTabs');
       } else {
-        navigation.replace('Login');
+        navigation.replace('GuestHome');
       }
     }
   }, [isLoading, isAuthenticated, navigation]);

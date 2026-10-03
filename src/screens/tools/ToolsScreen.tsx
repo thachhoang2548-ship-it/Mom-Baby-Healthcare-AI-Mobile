@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -28,7 +29,7 @@ import {
 } from 'lucide-react-native';
 import featureService, { TIERS_DATA } from '../../services/featureService';
 import { getTierDisplayName, useAuthStore } from '../../stores/authStore';
-import { COLORS, RADII, SHADOWS } from '../../theme/colors';
+import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 
 type MenuKey =
   | 'dashboard'
@@ -79,23 +80,23 @@ export default function ToolsScreen() {
 
   const menuItems = useMemo(
     () => [
-      { key: 'dashboard' as const, label: 'Tổng quan', icon: LayoutDashboard, color: COLORS.primary },
-      { key: 'fertility' as const, label: 'Rụng trứng', icon: Calendar, color: COLORS.primary },
-      { key: 'pregnancy' as const, label: 'Thai kỳ', icon: Heart, color: COLORS.secondary },
-      { key: 'postpartum' as const, label: 'Hậu sản', icon: Activity, color: COLORS.primary },
-      { key: 'baby' as const, label: 'Bé yêu', icon: Baby, color: COLORS.emerald },
-      { key: 'upgrade' as const, label: 'Gói dịch vụ', icon: Sparkles, color: COLORS.amber },
-      { key: 'calendar' as const, label: 'Lịch chăm sóc', icon: Calendar, color: COLORS.primary },
-      { key: 'emergency' as const, label: 'Khẩn cấp', icon: LifeBuoy, color: COLORS.rose },
-      { key: 'feedback' as const, label: 'Hỗ trợ', icon: MessageSquare, color: COLORS.blue },
-      { key: 'relax' as const, label: 'Thư giãn', icon: Headphones, color: COLORS.secondary },
-      { key: 'subscription' as const, label: 'Lịch sử gói', icon: ReceiptText, color: COLORS.emerald },
-      { key: 'profile' as const, label: 'Hồ sơ mẹ', icon: User, color: COLORS.primary },
-      { key: 'recipes' as const, label: 'Món ăn', icon: Utensils, color: COLORS.amber },
-      { key: 'notifications' as const, label: 'Thông báo', icon: Bell, color: COLORS.amber },
-      { key: 'medication' as const, label: 'Lịch uống thuốc', icon: Pill, color: COLORS.secondary },
-      { key: 'symptoms' as const, label: 'Lịch sử AI', icon: HeartPulse, color: COLORS.emerald },
-      { key: 'monitoring' as const, label: 'Theo dõi ngày', icon: HeartPulse, color: COLORS.emerald },
+      { key: 'dashboard' as const, label: 'Tổng quan', icon: LayoutDashboard, color: MOM_THEME.roseDark },
+      { key: 'fertility' as const, label: 'Rụng trứng', icon: Calendar, color: MOM_THEME.roseDark },
+      { key: 'pregnancy' as const, label: 'Thai kỳ', icon: Heart, color: MOM_THEME.roseDark },
+      { key: 'postpartum' as const, label: 'Hậu sản', icon: Activity, color: MOM_THEME.sageDark },
+      { key: 'baby' as const, label: 'Bé yêu', icon: Baby, color: MOM_THEME.sageDark },
+      { key: 'upgrade' as const, label: 'Gói dịch vụ', icon: Sparkles, color: MOM_THEME.amberDark },
+      { key: 'calendar' as const, label: 'Lịch chăm sóc', icon: Calendar, color: MOM_THEME.roseDark },
+      { key: 'emergency' as const, label: 'Khẩn cấp', icon: LifeBuoy, color: '#D95368' },
+      { key: 'feedback' as const, label: 'Hỗ trợ', icon: MessageSquare, color: '#4A88C7' },
+      { key: 'relax' as const, label: 'Thư giãn', icon: Headphones, color: '#8E6BB8' },
+      { key: 'subscription' as const, label: 'Lịch sử gói', icon: ReceiptText, color: MOM_THEME.sageDark },
+      { key: 'profile' as const, label: 'Hồ sơ mẹ', icon: User, color: MOM_THEME.roseDark },
+      { key: 'recipes' as const, label: 'Món ăn', icon: Utensils, color: MOM_THEME.amberDark },
+      { key: 'notifications' as const, label: 'Thông báo', icon: Bell, color: MOM_THEME.amberDark },
+      { key: 'medication' as const, label: 'Lịch uống thuốc', icon: Pill, color: '#8E6BB8' },
+      { key: 'symptoms' as const, label: 'Lịch sử AI', icon: HeartPulse, color: MOM_THEME.roseDark },
+      { key: 'monitoring' as const, label: 'Theo dõi ngày', icon: HeartPulse, color: MOM_THEME.sageDark },
     ],
     []
   );
@@ -335,45 +336,71 @@ export default function ToolsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.eyebrow}>Menu website</Text>
-        <Text style={styles.title}>Chức năng Mom Ơi</Text>
-        <Text style={styles.subtitle}>Các mục bên dưới được lấy theo route trong src/App.jsx của web.</Text>
-      </View>
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" backgroundColor={MOM_THEME.cream} />
 
-      <View style={styles.menuGrid}>
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const selected = active === item.key;
-          return (
-            <TouchableOpacity
-              key={item.key}
-              style={[styles.menuItem, selected && styles.menuItemActive]}
-              onPress={() => setActive(item.key)}
-              activeOpacity={0.86}
-            >
-              <Icon size={18} color={selected ? COLORS.white : item.color} />
-              <Text style={[styles.menuText, selected && styles.menuTextActive]}>{item.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {renderPanel()}
-
-      <View style={[styles.resultCard, SHADOWS.card]}>
-        <Text style={styles.resultTitle}>Kết quả API</Text>
-        {loading ? (
-          <View style={styles.loadingRow}>
-            <ActivityIndicator color={COLORS.primary} />
-            <Text style={styles.loadingText}>Đang xử lý...</Text>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View style={styles.eyebrowWrap}>
+            <Text style={styles.eyebrow}>HỆ SINH THÁI TIỆN ÍCH</Text>
           </View>
-        ) : (
-          <Text style={styles.resultText}>{result}</Text>
-        )}
-      </View>
-    </ScrollView>
+          <Text style={styles.title}>Chức năng Mom Ơi</Text>
+          <Text style={styles.subtitle}>
+            Trọn bộ công cụ theo dõi chu kỳ, sức khỏe thai kỳ và chăm sóc bé yêu 🌸
+          </Text>
+        </View>
+
+        <View style={styles.menuGrid}>
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const selected = active === item.key;
+            return (
+              <TouchableOpacity
+                key={item.key}
+                style={[styles.menuItem, selected && styles.menuItemActive]}
+                onPress={() => setActive(item.key)}
+                activeOpacity={0.86}
+              >
+                <View
+                  style={[
+                    styles.menuIconWrap,
+                    selected && { backgroundColor: 'rgba(255, 255, 255, 0.25)' },
+                  ]}
+                >
+                  <Icon size={18} color={selected ? MOM_THEME.white : item.color} />
+                </View>
+                <Text style={[styles.menuText, selected && styles.menuTextActive]}>
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {renderPanel()}
+
+        <View style={[styles.resultCard, SHADOWS.card]}>
+          <View style={styles.resultHeader}>
+            <Text style={styles.resultTitle}>Dữ liệu & Kết quả</Text>
+            <View style={styles.resultBadge}>
+              <Text style={styles.resultBadgeText}>Đồng bộ hệ thống</Text>
+            </View>
+          </View>
+          {loading ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color={MOM_THEME.roseDark} size="small" />
+              <Text style={styles.loadingText}>Đang xử lý dữ liệu cùng server...</Text>
+            </View>
+          ) : (
+            <Text style={styles.resultText}>{result}</Text>
+          )}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -406,7 +433,7 @@ function Field({
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}
-        placeholderTextColor={COLORS.textLight}
+        placeholderTextColor={MOM_THEME.mutedLight}
       />
     </View>
   );
@@ -449,115 +476,267 @@ function Plan({ name, price }: { name: string; price: string }) {
 function Warning({ text }: { text: string }) {
   return (
     <View style={styles.warning}>
-      <LifeBuoy size={17} color={COLORS.rose} />
+      <LifeBuoy size={17} color="#D95368" />
       <Text style={styles.warningText}>{text}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: 20, paddingTop: 56, paddingBottom: 40 },
-  header: { marginBottom: 16 },
-  eyebrow: { color: COLORS.primary, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
-  title: { color: COLORS.textDark, fontSize: 26, lineHeight: 32, fontWeight: '800' },
-  subtitle: { color: COLORS.textMuted, fontSize: 13, lineHeight: 18, marginTop: 4 },
-  menuGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  root: {
+    flex: 1,
+    backgroundColor: MOM_THEME.cream,
+  },
+  container: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 54,
+    paddingBottom: 40,
+  },
+  header: {
+    marginBottom: 18,
+  },
+  eyebrowWrap: {
+    marginBottom: 2,
+  },
+  eyebrow: {
+    color: MOM_THEME.roseDark,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  title: {
+    color: MOM_THEME.charcoal,
+    fontSize: 26,
+    lineHeight: 32,
+    fontWeight: '800',
+  },
+  subtitle: {
+    color: MOM_THEME.muted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 4,
+  },
+  menuGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 20,
+  },
   menuItem: {
-    width: '48.8%',
+    width: '48.6%',
     minHeight: 52,
-    borderRadius: RADII.card,
-    backgroundColor: COLORS.white,
+    borderRadius: 18,
+    backgroundColor: MOM_THEME.white,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingHorizontal: 12,
+    borderColor: MOM_THEME.border,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 9,
   },
-  menuItemActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  menuText: { flex: 1, color: COLORS.textDark, fontSize: 12, fontWeight: '800' },
-  menuTextActive: { color: COLORS.white },
-  panel: { backgroundColor: COLORS.white, borderRadius: RADII.hero, padding: 18, marginBottom: 16 },
-  panelTitle: { color: COLORS.textDark, fontSize: 20, lineHeight: 26, fontWeight: '800' },
-  panelSubtitle: { color: COLORS.textMuted, fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 14 },
-  field: { marginBottom: 10 },
-  fieldLabel: { color: COLORS.textDark, fontSize: 12, fontWeight: '800', marginBottom: 6 },
+  menuItemActive: {
+    backgroundColor: MOM_THEME.roseDark,
+    borderColor: MOM_THEME.roseDark,
+  },
+  menuIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: MOM_THEME.cream,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuText: {
+    flex: 1,
+    color: MOM_THEME.charcoal,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  menuTextActive: {
+    color: MOM_THEME.white,
+  },
+  panel: {
+    backgroundColor: MOM_THEME.white,
+    borderRadius: 24,
+    padding: 18,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
+  },
+  panelTitle: {
+    color: MOM_THEME.charcoal,
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: '800',
+  },
+  panelSubtitle: {
+    color: MOM_THEME.muted,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 3,
+    marginBottom: 16,
+  },
+  field: {
+    marginBottom: 12,
+  },
+  fieldLabel: {
+    color: MOM_THEME.charcoalMid,
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
   input: {
     minHeight: 46,
-    borderRadius: RADII.control,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
-    paddingHorizontal: 12,
-    color: COLORS.textDark,
-    fontSize: 14,
+    borderColor: MOM_THEME.border,
+    backgroundColor: MOM_THEME.cream,
+    paddingHorizontal: 14,
+    color: MOM_THEME.charcoal,
+    fontSize: 13,
   },
   textArea: {
     minHeight: 96,
-    borderRadius: RADII.control,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
+    borderColor: MOM_THEME.border,
+    backgroundColor: MOM_THEME.cream,
     padding: 12,
-    color: COLORS.textDark,
-    fontSize: 14,
+    color: MOM_THEME.charcoal,
+    fontSize: 13,
     textAlignVertical: 'top',
     marginBottom: 12,
   },
   primaryButton: {
     minHeight: 48,
-    borderRadius: RADII.control,
-    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    backgroundColor: MOM_THEME.roseDark,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4,
+    marginTop: 6,
   },
-  primaryButtonText: { color: COLORS.white, fontSize: 14, fontWeight: '800' },
+  primaryButtonText: {
+    color: MOM_THEME.white,
+    fontSize: 14,
+    fontWeight: '800',
+  },
   secondaryButton: {
     minHeight: 44,
-    borderRadius: RADII.control,
-    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    backgroundColor: MOM_THEME.pinkLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
   },
-  secondaryButtonText: { color: COLORS.primary, fontSize: 13, fontWeight: '800' },
+  secondaryButtonText: {
+    color: MOM_THEME.roseDark,
+    fontSize: 13,
+    fontWeight: '700',
+  },
   infoRow: {
-    borderRadius: RADII.control,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
+    borderColor: MOM_THEME.border,
+    backgroundColor: MOM_THEME.cream,
     padding: 12,
     marginBottom: 8,
   },
-  infoLabel: { color: COLORS.textMuted, fontSize: 11, fontWeight: '800', marginBottom: 4 },
-  infoValue: { color: COLORS.textDark, fontSize: 13, lineHeight: 18, fontWeight: '700' },
+  infoLabel: {
+    color: MOM_THEME.muted,
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 3,
+  },
+  infoValue: {
+    color: MOM_THEME.charcoal,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+  },
   plan: {
-    borderRadius: RADII.control,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
-    padding: 12,
-    marginBottom: 8,
+    borderColor: MOM_THEME.border,
+    backgroundColor: MOM_THEME.cream,
+    padding: 14,
+    marginBottom: 10,
   },
-  planName: { color: COLORS.textDark, fontSize: 14, fontWeight: '800' },
-  planPrice: { color: COLORS.primary, fontSize: 13, fontWeight: '800', marginTop: 3 },
+  planName: {
+    color: MOM_THEME.charcoal,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  planPrice: {
+    color: MOM_THEME.roseDark,
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: 3,
+  },
   warning: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    borderRadius: RADII.control,
-    backgroundColor: COLORS.roseLight,
+    borderRadius: 14,
+    backgroundColor: '#FDECEF',
     borderWidth: 1,
-    borderColor: '#FFD1D7',
+    borderColor: '#FECACA',
     padding: 12,
     marginBottom: 8,
   },
-  warningText: { flex: 1, color: COLORS.rose, fontSize: 12, lineHeight: 18, fontWeight: '700' },
-  resultCard: { backgroundColor: COLORS.white, borderRadius: RADII.card, padding: 16 },
-  resultTitle: { color: COLORS.textDark, fontSize: 15, fontWeight: '800', marginBottom: 8 },
-  resultText: { color: COLORS.textMuted, fontSize: 12, lineHeight: 17 },
-  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  loadingText: { color: COLORS.textMuted, fontSize: 13, fontWeight: '700' },
+  warningText: {
+    flex: 1,
+    color: '#D95368',
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: '700',
+  },
+  resultCard: {
+    backgroundColor: MOM_THEME.white,
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
+    marginBottom: 10,
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  resultTitle: {
+    color: MOM_THEME.charcoal,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  resultBadge: {
+    backgroundColor: MOM_THEME.sageLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADII.pill,
+  },
+  resultBadgeText: {
+    color: MOM_THEME.sageDark,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  resultText: {
+    color: MOM_THEME.muted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    color: MOM_THEME.muted,
+    fontSize: 13,
+    fontWeight: '600',
+  },
 });

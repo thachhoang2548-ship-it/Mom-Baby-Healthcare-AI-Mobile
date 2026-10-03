@@ -1,39 +1,79 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  Dimensions,
+  Image,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import {
   Activity,
   Baby,
   Bell,
+  Calendar,
   ChevronRight,
   Droplet,
+  Heart,
   HeartPulse,
+  LogOut,
   Moon,
   Plus,
   Sparkles,
   Utensils,
 } from 'lucide-react-native';
-import { MainTabParamList } from '../../navigation/types';
+import { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import profileService, { MomProfileDto } from '../../services/profileService';
-import { COLORS, RADII, SHADOWS } from '../../theme/colors';
+import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 
-const moods = ['Bình an', 'Vui vẻ', 'Hơi mệt', 'Lo lắng'];
+const { width: SCREEN_W } = Dimensions.get('window');
+
+const moods = [
+  { label: 'Bình an', emoji: '🌸' },
+  { label: 'Hạnh phúc', emoji: '✨' },
+  { label: 'Khỏe khoắn', emoji: '🌿' },
+  { label: 'Hơi mệt', emoji: '😴' },
+  { label: 'Lo lắng', emoji: '💭' },
+];
 
 export default function DashboardScreen() {
-  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
-  const { user } = useAuthStore();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const tabNav = navigation.getParent<BottomTabNavigationProp<MainTabParamList>>();
+  const { user, logout } = useAuthStore();
   const [profile, setProfile] = useState<MomProfileDto | null>(null);
-  const [waterCups, setWaterCups] = useState(4);
+  const [waterCups, setWaterCups] = useState(5);
   const [mood, setMood] = useState('Bình an');
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Đăng xuất',
+      'Mẹ có chắc muốn đăng xuất khỏi Mom Ơi không?',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Đăng xuất',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'GuestHome' }],
+              })
+            );
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   const loadProfile = useCallback(async () => {
     try {
@@ -50,366 +90,623 @@ export default function DashboardScreen() {
     loadProfile();
   }, [loadProfile]);
 
-  const stageTitle =
-    profile?.stage === 1 || profile?.stage === 'Pregnant'
-      ? 'Thai kỳ'
-      : profile?.stage === 2 || profile?.stage === 'Postpartum'
-        ? 'Hậu sản'
-        : 'Chuẩn bị mang thai';
+  const isPregnant = profile?.stage === 1 || profile?.stage === 'Pregnant';
+  const isPostpartum = profile?.stage === 2 || profile?.stage === 'Postpartum';
 
-  const stageValue =
-    profile?.stage === 1 || profile?.stage === 'Pregnant'
-      ? `Tuần ${profile?.pregnancyWeek || 14}`
-      : profile?.stage === 2 || profile?.stage === 'Postpartum'
-        ? 'Tập trung phục hồi'
-        : 'Theo dõi chu kỳ';
+  const stageTitle = isPregnant
+    ? 'Thai kỳ hạnh phúc'
+    : isPostpartum
+      ? 'Chăm sóc hậu sản'
+      : 'Chuẩn bị làm mẹ';
+
+  const stageValue = isPregnant
+    ? `Tuần thứ ${profile?.pregnancyWeek || 14}`
+    : isPostpartum
+      ? 'Phục hồi & chăm bé'
+      : 'Theo dõi chu kỳ';
+
+  const stageNote = isPregnant
+    ? 'Bé bằng một quả chanh tây 🍋 (~8.7cm). Bé đã biết mút ngón tay và chuyển động nhẹ nhàng!'
+    : isPostpartum
+      ? 'Mẹ nhớ dành thời gian nghỉ ngơi, uống canh ấm và ôm ấp bé yêu nhé.'
+      : 'Thời điểm vàng để bổ sung acid folic và giữ tinh thần luôn thư thái.';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.topBar}>
-        <View>
-          <Text style={styles.greeting}>Chào {user?.fullName || 'mẹ'},</Text>
-          <Text style={styles.title}>Hôm nay mẹ thế nào?</Text>
-        </View>
-        <TouchableOpacity style={styles.notifyButton} activeOpacity={0.8}>
-          <Bell size={20} color={COLORS.textDark} />
-          <View style={styles.notifyDot} />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" backgroundColor={MOM_THEME.cream} />
 
-      <TouchableOpacity
-        style={[styles.heroCard, SHADOWS.card]}
-        activeOpacity={0.9}
-        onPress={() => navigation.navigate('Journey')}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.heroTop}>
-          <View style={styles.heroBadge}>
-            <Sparkles size={13} color={COLORS.primary} />
-            <Text style={styles.heroBadgeText}>Lộ trình cá nhân hóa</Text>
+        {/* ── Top Bar ── */}
+        <View style={styles.topBar}>
+          <View style={styles.userInfo}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>🌸</Text>
+            </View>
+            <View>
+              <Text style={styles.greeting}>Xin chào mẹ,</Text>
+              <Text style={styles.userName}>{user?.fullName || 'Mẹ yêu'}</Text>
+            </View>
           </View>
-          <ChevronRight size={18} color={COLORS.primary} />
+          <View style={styles.topBarActions}>
+            <TouchableOpacity style={styles.actionBtn} activeOpacity={0.8}>
+              <Bell size={19} color={MOM_THEME.charcoalMid} />
+              <View style={styles.notifyDot} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.logoutBtn]}
+              onPress={handleLogout}
+              activeOpacity={0.8}
+            >
+              <LogOut size={17} color={MOM_THEME.roseDark} />
+            </TouchableOpacity>
+          </View>
         </View>
-        <Text style={styles.heroLabel}>{stageTitle}</Text>
-        <Text style={styles.heroTitle}>{stageValue}</Text>
-        <Text style={styles.heroBody}>
-          Trọng tâm hôm nay: uống đủ nước, vận động nhẹ và kiểm tra triệu chứng nếu mẹ hoặc bé thấy bất thường.
-        </Text>
-      </TouchableOpacity>
 
-      <Text style={styles.sectionTitle}>Ưu tiên hôm nay</Text>
-      <View style={styles.priorityRow}>
-        <MetricCard icon={<Droplet size={18} color={COLORS.blue} />} label="Nước" value={`${waterCups}/10`} />
-        <MetricCard icon={<Moon size={18} color={COLORS.secondary} />} label="Nghỉ ngơi" value="Mục tiêu 7h" />
-        <MetricCard icon={<HeartPulse size={18} color={COLORS.emerald} />} label="Tâm trạng" value={mood} />
-      </View>
+        {/* ── Hero Milestone Card with Real Visual ── */}
+        <TouchableOpacity
+          style={[styles.heroCard, SHADOWS.card]}
+          activeOpacity={0.93}
+          onPress={() => tabNav?.navigate('Journey')}
+        >
+          <Image
+            source={require('../../../assets/images/pregnancy.jpg')}
+            style={styles.heroImage}
+            resizeMode="cover"
+          />
+          <View style={styles.heroOverlay} />
 
-      <View style={styles.shortcutGrid}>
-        <ShortcutCard
-          title="Chẩn đoán AI"
-          body="Hỏi an toàn"
-          icon={<Activity size={22} color={COLORS.rose} />}
-          onPress={() => navigation.navigate('SymptomAI')}
-        />
-        <ShortcutCard
-          title="Bé yêu"
-          body="Tăng trưởng và dinh dưỡng"
-          icon={<Baby size={22} color={COLORS.secondary} />}
-          onPress={() => navigation.navigate('Nutrition')}
-        />
-        <ShortcutCard
-          title="Gợi ý bữa ăn"
-          body="Lên kế hoạch hôm nay"
-          icon={<Utensils size={22} color={COLORS.amber} />}
-          onPress={() => navigation.navigate('Nutrition')}
-        />
-      </View>
+          <View style={styles.heroContent}>
+            <View style={styles.heroPill}>
+              <Sparkles size={13} color={MOM_THEME.white} />
+              <Text style={styles.heroPillText}>{stageTitle}</Text>
+            </View>
 
-      <View style={[styles.checkInCard, SHADOWS.card]}>
-        <View style={styles.cardHeader}>
-          <View>
-            <Text style={styles.cardTitle}>Ghi nhận hôm nay</Text>
-            <Text style={styles.cardSub}>Những tín hiệu nhỏ giúp app cá nhân hóa chăm sóc cho mẹ.</Text>
+            <Text style={styles.heroMainTitle}>{stageValue}</Text>
+            <Text style={styles.heroDescription} numberOfLines={2}>
+              {stageNote}
+            </Text>
+
+            <View style={styles.heroFooter}>
+              <Text style={styles.heroFooterText}>Xem chi tiết lộ trình tuần này</Text>
+              <View style={styles.heroFooterArrow}>
+                <ChevronRight size={14} color={MOM_THEME.roseDark} />
+              </View>
+            </View>
           </View>
+        </TouchableOpacity>
+
+        {/* ── Section: Ưu tiên hôm nay ── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Chăm sóc hôm nay</Text>
+          <Text style={styles.sectionSubtitle}>Mẹ nhớ lắng nghe cơ thể mình nhé</Text>
+        </View>
+
+        <View style={styles.priorityRow}>
+          {/* Water card */}
+          <View style={[styles.priorityCard, { backgroundColor: '#F0F6FB' }]}>
+            <View style={[styles.priorityIconCircle, { backgroundColor: '#DCEBFA' }]}>
+              <Droplet size={18} color="#4A88C7" />
+            </View>
+            <Text style={styles.priorityVal}>{waterCups}/10 ly</Text>
+            <Text style={styles.priorityLbl}>Uống nước</Text>
+            <TouchableOpacity
+              style={styles.quickAddWater}
+              onPress={() =>
+                waterCups < 12
+                  ? setWaterCups((c) => c + 1)
+                  : Alert.alert('Tuyệt vời!', 'Mẹ đã uống đủ nước cho hôm nay.')
+              }
+            >
+              <Plus size={13} color="#4A88C7" />
+              <Text style={styles.quickAddWaterText}>+1 ly</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Sleep / Rest card */}
+          <View style={[styles.priorityCard, { backgroundColor: '#F6F2FB' }]}>
+            <View style={[styles.priorityIconCircle, { backgroundColor: '#EADFF8' }]}>
+              <Moon size={18} color="#8E6BB8" />
+            </View>
+            <Text style={styles.priorityVal}>7 - 8h</Text>
+            <Text style={styles.priorityLbl}>Giấc ngủ ngon</Text>
+            <View style={styles.priorityStatusPill}>
+              <Text style={styles.priorityStatusText}>Nghỉ ngơi đủ</Text>
+            </View>
+          </View>
+
+          {/* Mood card */}
+          <View style={[styles.priorityCard, { backgroundColor: '#FCF2F4' }]}>
+            <View style={[styles.priorityIconCircle, { backgroundColor: '#F9DCE3' }]}>
+              <HeartPulse size={18} color={MOM_THEME.roseDark} />
+            </View>
+            <Text style={styles.priorityVal}>{mood}</Text>
+            <Text style={styles.priorityLbl}>Tâm trạng</Text>
+            <View style={[styles.priorityStatusPill, { backgroundColor: '#F9DCE3' }]}>
+              <Text style={[styles.priorityStatusText, { color: MOM_THEME.roseDark }]}>Thư thái</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* ── Quick Tools Grid ── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Tiện ích cùng mẹ</Text>
+          <Text style={styles.sectionSubtitle}>Trợ lý sức khỏe thông minh</Text>
+        </View>
+
+        <View style={styles.gridContainer}>
           <TouchableOpacity
-            style={styles.addButton}
-            onPress={() =>
-              waterCups < 12
-                ? setWaterCups((value) => value + 1)
-                : Alert.alert('Tuyệt vời', 'Mẹ đã đạt mục tiêu uống nước hôm nay.')
-            }
+            style={[styles.gridCard, SHADOWS.sm]}
+            onPress={() => tabNav?.navigate('SymptomAI')}
+            activeOpacity={0.88}
           >
-            <Plus size={18} color={COLORS.white} />
+            <View style={[styles.gridIconWrap, { backgroundColor: '#FDECEF' }]}>
+              <Activity size={22} color={MOM_THEME.roseDark} />
+            </View>
+            <Text style={styles.gridCardTitle}>Bác sĩ AI</Text>
+            <Text style={styles.gridCardSub}>Hỏi an tâm mọi biểu hiện lạ</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.gridCard, SHADOWS.sm]}
+            onPress={() => tabNav?.navigate('Nutrition')}
+            activeOpacity={0.88}
+          >
+            <View style={[styles.gridIconWrap, { backgroundColor: '#E8F2EC' }]}>
+              <Baby size={22} color={MOM_THEME.sageDark} />
+            </View>
+            <Text style={styles.gridCardTitle}>Bé yêu</Text>
+            <Text style={styles.gridCardSub}>Chỉ số tăng trưởng & cữ bú</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.gridCard, SHADOWS.sm]}
+            onPress={() => tabNav?.navigate('Nutrition')}
+            activeOpacity={0.88}
+          >
+            <View style={[styles.gridIconWrap, { backgroundColor: '#FFF4EB' }]}>
+              <Utensils size={22} color={MOM_THEME.amberDark} />
+            </View>
+            <Text style={styles.gridCardTitle}>Món ăn dinh dưỡng</Text>
+            <Text style={styles.gridCardSub}>Gợi ý thực đơn thanh lành</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.gridCard, SHADOWS.sm]}
+            onPress={() => tabNav?.navigate('Journey')}
+            activeOpacity={0.88}
+          >
+            <View style={[styles.gridIconWrap, { backgroundColor: '#F3EEF8' }]}>
+              <Calendar size={22} color="#8E6BB8" />
+            </View>
+            <Text style={styles.gridCardTitle}>Lịch khám thai</Text>
+            <Text style={styles.gridCardSub}>Nhắc hẹn & mốc quan trọng</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.waterTrack}>
-          {Array.from({ length: 10 }).map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.waterSegment,
-                index < waterCups && { backgroundColor: COLORS.blue },
-              ]}
-            />
-          ))}
-        </View>
+        {/* ── Daily Check-in Card ── */}
+        <View style={[styles.checkInCard, SHADOWS.card]}>
+          <View style={styles.checkInHeader}>
+            <View>
+              <Text style={styles.checkInTitle}>Ghi nhận trong ngày</Text>
+              <Text style={styles.checkInSub}>Tín hiệu nhỏ giúp Mom Ơi hiểu mẹ hơn mỗi ngày</Text>
+            </View>
+            <View style={styles.checkInHeart}>
+              <Heart size={18} color={MOM_THEME.roseDark} fill={MOM_THEME.roseDark} />
+            </View>
+          </View>
 
-        <View style={styles.moodRow}>
-          {moods.map((item) => (
+          {/* Water progress */}
+          <View style={styles.waterHeader}>
+            <Text style={styles.waterLabel}>Mục tiêu nước: {waterCups}/10 ly</Text>
             <TouchableOpacity
-              key={item}
-              style={[styles.moodChip, mood === item && styles.moodChipActive]}
-              onPress={() => setMood(item)}
+              style={styles.waterAddBtn}
+              onPress={() =>
+                waterCups < 12
+                  ? setWaterCups((c) => c + 1)
+                  : Alert.alert('Tuyệt vời!', 'Mẹ đã uống đủ nước cho hôm nay.')
+              }
             >
-              <Text style={[styles.moodText, mood === item && styles.moodTextActive]}>{item}</Text>
+              <Plus size={14} color={MOM_THEME.white} />
+              <Text style={styles.waterAddBtnText}>Thêm ly</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+          </View>
 
-      <View style={styles.insightCard}>
-        <View style={styles.insightIcon}>
-          <Sparkles size={18} color={COLORS.primary} />
-        </View>
-        <View style={styles.insightCopy}>
-          <Text style={styles.insightTitle}>Gợi ý từ AI</Text>
-          <Text style={styles.insightBody}>
-            Gợi ý AI chỉ có tính tham khảo. Nếu đau nhiều, ra máu, sốt cao hoặc thai máy ít hơn bình thường, mẹ nên
-            liên hệ cơ sở y tế ngay.
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
-  );
-}
+          <View style={styles.waterTrack}>
+            {Array.from({ length: 10 }).map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.waterSegment,
+                  index < waterCups && styles.waterSegmentActive,
+                ]}
+              />
+            ))}
+          </View>
 
-function MetricCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <View style={[styles.metricCard, SHADOWS.sm]}>
-      {icon}
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
+          {/* Mood Selector */}
+          <Text style={styles.moodSectionTitle}>Mẹ đang cảm thấy thế nào?</Text>
+          <View style={styles.moodRow}>
+            {moods.map((item) => {
+              const active = mood === item.label;
+              return (
+                <TouchableOpacity
+                  key={item.label}
+                  style={[styles.moodChip, active && styles.moodChipActive]}
+                  onPress={() => setMood(item.label)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.moodEmoji}>{item.emoji}</Text>
+                  <Text style={[styles.moodText, active && styles.moodTextActive]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* ── Compassionate AI Note ── */}
+        <View style={styles.warmNoteCard}>
+          <View style={styles.warmNoteIcon}>
+            <Sparkles size={20} color={MOM_THEME.amberDark} />
+          </View>
+          <View style={styles.warmNoteContent}>
+            <Text style={styles.warmNoteTitle}>Lời nhắn gửi mẹ yêu 💛</Text>
+            <Text style={styles.warmNoteBody}>
+              Hôm nay hãy dành cho bản thân ít phút thở sâu và nghe một bản nhạc êm dịu nhé. Nếu thấy bất kỳ cơn đau bất thường, ra máu hay thai máy giảm, mẹ hãy liên hệ bác sĩ ngay.
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
-function ShortcutCard({
-  title,
-  body,
-  icon,
-  onPress,
-}: {
-  title: string;
-  body: string;
-  icon: React.ReactNode;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity style={[styles.shortcutCard, SHADOWS.sm]} onPress={onPress} activeOpacity={0.86}>
-      <View style={styles.shortcutIcon}>{icon}</View>
-      <Text style={styles.shortcutTitle}>{title}</Text>
-      <Text style={styles.shortcutBody}>{body}</Text>
-    </TouchableOpacity>
-  );
-}
-
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: MOM_THEME.cream,
+  },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   content: {
-    padding: 20,
-    paddingTop: 56,
-    paddingBottom: 36,
+    paddingHorizontal: 20,
+    paddingTop: 54,
+    paddingBottom: 40,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 18,
+    marginBottom: 20,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: MOM_THEME.pink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: MOM_THEME.white,
+  },
+  avatarText: {
+    fontSize: 22,
   },
   greeting: {
-    color: COLORS.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600',
+    fontSize: 13,
+    color: MOM_THEME.muted,
+    fontWeight: '500',
   },
-  title: {
-    color: COLORS.textDark,
-    fontSize: 28,
-    lineHeight: 34,
+  userName: {
+    fontSize: 20,
     fontWeight: '800',
+    color: MOM_THEME.charcoal,
   },
-  notifyButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.white,
+  topBarActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: MOM_THEME.white,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: MOM_THEME.border,
     position: 'relative',
   },
+  logoutBtn: {
+    backgroundColor: MOM_THEME.pinkLight,
+    borderColor: MOM_THEME.pink,
+  },
   notifyDot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: 4,
-    backgroundColor: COLORS.rose,
+    backgroundColor: MOM_THEME.roseDark,
     position: 'absolute',
-    top: 10,
-    right: 11,
+    top: 9,
+    right: 10,
   },
   heroCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.hero,
-    padding: 20,
+    height: 190,
+    borderRadius: 24,
+    overflow: 'hidden',
     marginBottom: 24,
+    position: 'relative',
   },
-  heroTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  heroImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  heroOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(44, 33, 24, 0.42)',
+  },
+  heroContent: {
+    flex: 1,
+    padding: 18,
     justifyContent: 'space-between',
-    marginBottom: 18,
   },
-  heroBadge: {
+  heroPill: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: 'rgba(201, 122, 149, 0.85)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: RADII.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
   },
-  heroBadgeText: {
-    color: COLORS.primary,
+  heroPillText: {
     fontSize: 11,
     fontWeight: '700',
+    color: MOM_THEME.white,
+    letterSpacing: 0.2,
   },
-  heroLabel: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  heroTitle: {
-    color: COLORS.textDark,
+  heroMainTitle: {
     fontSize: 24,
-    lineHeight: 30,
     fontWeight: '800',
-    marginTop: 4,
+    color: MOM_THEME.white,
+    marginTop: 6,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
-  heroBody: {
-    color: COLORS.textMuted,
-    fontSize: 14,
-    lineHeight: 20,
+  heroDescription: {
+    fontSize: 13,
+    color: '#FBF8F5',
+    lineHeight: 18,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  heroFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
     marginTop: 8,
   },
-  sectionTitle: {
-    color: COLORS.textDark,
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: '800',
+  heroFooterText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: MOM_THEME.charcoal,
+  },
+  heroFooterArrow: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: MOM_THEME.pinkLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionHeader: {
     marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: MOM_THEME.charcoal,
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    color: MOM_THEME.muted,
+    marginTop: 2,
   },
   priorityRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 18,
+    marginBottom: 24,
   },
-  metricCard: {
+  priorityCard: {
     flex: 1,
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.card,
+    borderRadius: 20,
     padding: 12,
-    minHeight: 98,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
-  metricValue: {
-    color: COLORS.textDark,
-    fontSize: 16,
-    fontWeight: '800',
-    marginTop: 10,
-  },
-  metricLabel: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  shortcutGrid: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 18,
-  },
-  shortcutCard: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.card,
-    padding: 12,
-    minHeight: 116,
-  },
-  shortcutIcon: {
+  priorityIconCircle: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  shortcutTitle: {
-    color: COLORS.textDark,
-    fontSize: 13,
+  priorityVal: {
+    fontSize: 14,
     fontWeight: '800',
+    color: MOM_THEME.charcoal,
+    textAlign: 'center',
   },
-  shortcutBody: {
-    color: COLORS.textMuted,
+  priorityLbl: {
     fontSize: 11,
-    lineHeight: 16,
+    color: MOM_THEME.muted,
+    fontWeight: '500',
     marginTop: 2,
+    marginBottom: 8,
   },
-  checkInCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.hero,
-    padding: 18,
-    marginBottom: 16,
-  },
-  cardHeader: {
+  quickAddWater: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    gap: 2,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
-  cardTitle: {
-    color: COLORS.textDark,
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: '800',
+  quickAddWaterText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#4A88C7',
   },
-  cardSub: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 2,
+  priorityStatusPill: {
+    backgroundColor: '#EADFF8',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
   },
-  addButton: {
+  priorityStatusText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#8E6BB8',
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 24,
+  },
+  gridCard: {
+    width: (SCREEN_W - 52) / 2,
+    backgroundColor: MOM_THEME.white,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
+  },
+  gridIconWrap: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.primary,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 12,
+  },
+  gridCardTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: MOM_THEME.charcoal,
+    marginBottom: 4,
+  },
+  gridCardSub: {
+    fontSize: 11,
+    color: MOM_THEME.muted,
+    lineHeight: 15,
+  },
+  checkInCard: {
+    backgroundColor: MOM_THEME.white,
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
+    marginBottom: 20,
+  },
+  checkInHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  checkInTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: MOM_THEME.charcoal,
+  },
+  checkInSub: {
+    fontSize: 12,
+    color: MOM_THEME.muted,
+    marginTop: 2,
+  },
+  checkInHeart: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: MOM_THEME.pinkLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  waterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  waterLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: MOM_THEME.charcoal,
+  },
+  waterAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#4A88C7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  waterAddBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: MOM_THEME.white,
   },
   waterTrack: {
     flexDirection: 'row',
     gap: 5,
-    marginBottom: 14,
+    marginBottom: 18,
   },
   waterSegment: {
     flex: 1,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: COLORS.borderLight,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EAE6DF',
+  },
+  waterSegmentActive: {
+    backgroundColor: '#4A88C7',
+  },
+  moodSectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: MOM_THEME.charcoal,
+    marginBottom: 10,
   },
   moodRow: {
     flexDirection: 'row',
@@ -417,56 +714,62 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   moodChip: {
-    minHeight: 36,
-    borderRadius: RADII.pill,
-    paddingHorizontal: 14,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.background,
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADII.pill,
+    backgroundColor: MOM_THEME.cream,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: MOM_THEME.border,
   },
   moodChipActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: MOM_THEME.roseDark,
+    borderColor: MOM_THEME.roseDark,
+  },
+  moodEmoji: {
+    fontSize: 13,
   },
   moodText: {
-    color: COLORS.textMuted,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
+    color: MOM_THEME.charcoalMid,
   },
   moodTextActive: {
-    color: COLORS.white,
+    color: MOM_THEME.white,
   },
-  insightCard: {
+  warmNoteCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: RADII.card,
+    alignItems: 'flex-start',
+    backgroundColor: '#FFF8F0',
+    borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: COLORS.primarySoft,
+    borderColor: '#F7E7D0',
+    gap: 12,
   },
-  insightIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: COLORS.white,
+  warmNoteIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFE9D4',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
-  insightCopy: {
+  warmNoteContent: {
     flex: 1,
   },
-  insightTitle: {
-    color: COLORS.primaryDark,
-    fontSize: 14,
+  warmNoteTitle: {
+    fontSize: 13,
     fontWeight: '800',
+    color: MOM_THEME.amberDark,
+    marginBottom: 4,
   },
-  insightBody: {
-    color: COLORS.textMuted,
+  warmNoteBody: {
     fontSize: 12,
+    color: MOM_THEME.charcoalMid,
     lineHeight: 18,
-    marginTop: 4,
   },
 });
+

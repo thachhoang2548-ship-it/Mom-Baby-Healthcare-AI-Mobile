@@ -1,5 +1,6 @@
 export type RootStackParamList = {
   Splash: undefined;
+  GuestHome: undefined;
   Login: undefined;
   Register: undefined;
   MainTabs: undefined;

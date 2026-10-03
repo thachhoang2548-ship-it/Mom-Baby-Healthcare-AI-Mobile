@@ -4,6 +4,7 @@ import {
   Alert,
   Image,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -15,14 +16,26 @@ import {
   AlertCircle,
   Camera,
   CheckCircle2,
+  ChevronRight,
+  Heart,
   ImageIcon,
   Info,
+  ShieldCheck,
   Sparkles,
   Stethoscope,
   X,
 } from 'lucide-react-native';
 import symptomService, { SymptomAnalysisResult, SymptomLogDto } from '../../services/symptomService';
-import { COLORS, RADII, SHADOWS } from '../../theme/colors';
+import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+
+const quickSymptoms = [
+  'Ốm nghén mệt mỏi',
+  'Đau thắt lưng dưới',
+  'Bé sốt nhẹ 37.8°C',
+  'Bé nổi mẩn đỏ ở má',
+  'Thai máy ít hơn',
+  'Ợ chua, khó tiêu',
+];
 
 export default function SymptomCheckerScreen() {
   const [description, setDescription] = useState('');
@@ -37,7 +50,7 @@ export default function SymptomCheckerScreen() {
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Cần quyền truy cập', 'Mẹ vui lòng cấp quyền truy cập ảnh để tải ảnh triệu chứng.');
+      Alert.alert('Cần quyền truy cập', 'Mẹ vui lòng cấp quyền truy cập thư viện ảnh để tải ảnh triệu chứng.');
       return;
     }
 
@@ -61,7 +74,7 @@ export default function SymptomCheckerScreen() {
   const takePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Cần quyền camera', 'Mẹ vui lòng cấp quyền camera để chụp ảnh triệu chứng.');
+      Alert.alert('Cần quyền camera', 'Mẹ vui lòng cấp quyền máy ảnh để chụp ảnh triệu chứng nhé.');
       return;
     }
 
@@ -82,8 +95,8 @@ export default function SymptomCheckerScreen() {
   };
 
   const submit = async () => {
-    if (description.trim().length < 10) {
-      Alert.alert('Cần mô tả rõ hơn', 'Mẹ nhập ít nhất 10 ký tự để AI có thêm ngữ cảnh phân tích.');
+    if (description.trim().length < 8) {
+      Alert.alert('Mô tả thêm một chút', 'Mẹ nhập rõ hơn về biểu hiện (khoảng 8 ký tự trở lên) để AI hiểu đúng ngữ cảnh nhé.');
       return;
     }
 
@@ -103,12 +116,12 @@ export default function SymptomCheckerScreen() {
       if ((res.isSuccess || res.success) && res.data) {
         setResult(res.data);
       } else {
-        Alert.alert('Chưa phân tích được', res.message || 'Backend chưa trả kết quả hợp lệ.');
+        Alert.alert('Chưa phân tích được', res.message || 'Hệ thống AI đang phản hồi chậm, mẹ thử lại một lát nữa nhé.');
       }
     } catch (err: any) {
       Alert.alert(
-        'Lỗi phân tích',
-        err?.response?.data?.message || 'Máy chủ AI đang bận. Mẹ thử lại sau nhé.'
+        'Thông báo',
+        err?.response?.data?.message || 'Máy chủ AI đang bận. Mẹ kiểm tra kết nối mạng và thử lại nhé.'
       );
     } finally {
       setIsAnalyzing(false);
@@ -119,200 +132,345 @@ export default function SymptomCheckerScreen() {
   const badge = getUrgencyBadge(analysis?.urgencyLevel);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.headerIcon}>
-          <Stethoscope size={24} color={COLORS.primary} />
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" backgroundColor={MOM_THEME.cream} />
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Header ── */}
+        <View style={styles.header}>
+          <View style={styles.headerIconWrap}>
+            <Stethoscope size={24} color={MOM_THEME.roseDark} />
+          </View>
+          <View style={styles.headerEyebrowWrap}>
+            <Text style={styles.headerEyebrow}>TRỢ LÝ SỨC KHỎE THÔNG MINH</Text>
+          </View>
+          <Text style={styles.title}>Hỏi bác sĩ AI</Text>
+          <Text style={styles.subtitle}>
+            Chia sẻ cảm giác hoặc biểu hiện lạ mẹ và bé đang gặp phải để nhận tư vấn y khoa tham khảo kịp thời 🌸
+          </Text>
         </View>
-        <Text style={styles.title}>Chẩn đoán AI</Text>
-        <Text style={styles.subtitle}>
-          Mô tả điều mẹ hoặc bé đang cảm thấy. AI chỉ đưa ra gợi ý tham khảo, không thay thế bác sĩ.
-        </Text>
-      </View>
 
-      <View style={[styles.card, SHADOWS.card]}>
-        <Text style={styles.label}>Mẹ hoặc bé đang thấy gì?</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Ví dụ: Bé nổi mẩn đỏ ở má 2 ngày, hơi sốt 37.8 độ, quấy khi ăn..."
-          placeholderTextColor={COLORS.textLight}
-          multiline
-          value={description}
-          onChangeText={setDescription}
-          textAlignVertical="top"
-        />
+        {/* ── Quick Symptom Suggestions ── */}
+        <View style={styles.quickWrap}>
+          <Text style={styles.quickTitle}>Gợi ý nhanh:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickScroll}>
+            {quickSymptoms.map((sym, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.quickChip}
+                onPress={() => setDescription((prev) => (prev ? `${prev}, ${sym}` : sym))}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.quickChipText}>{sym}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
-        {selectedImage ? (
-          <View style={styles.previewWrap}>
-            <Image source={{ uri: selectedImage.uri }} style={styles.preview} />
-            <TouchableOpacity style={styles.removeButton} onPress={() => setSelectedImage(null)}>
-              <X size={14} color={COLORS.white} />
+        {/* ── Main Input Card ── */}
+        <View style={[styles.card, SHADOWS.card]}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.label}>Mẹ hoặc bé đang gặp vấn đề gì?</Text>
+            <Text style={styles.charCount}>{description.length} ký tự</Text>
+          </View>
+
+          <TextInput
+            style={styles.textArea}
+            placeholder="Ví dụ: Em bé bị nổi nốt đỏ li ti quanh cổ, sốt 38 độ từ chiều nay, bú ít hơn mọi ngày..."
+            placeholderTextColor={MOM_THEME.mutedLight}
+            multiline
+            value={description}
+            onChangeText={setDescription}
+            textAlignVertical="top"
+          />
+
+          {/* Photo Preview */}
+          {selectedImage ? (
+            <View style={styles.previewWrap}>
+              <Image source={{ uri: selectedImage.uri }} style={styles.preview} />
+              <TouchableOpacity style={styles.removeButton} onPress={() => setSelectedImage(null)}>
+                <X size={13} color={MOM_THEME.white} />
+              </TouchableOpacity>
+              <View style={styles.previewBadge}>
+                <Text style={styles.previewBadgeText}>Đã đính kèm ảnh</Text>
+              </View>
+            </View>
+          ) : null}
+
+          {/* Media Pickers */}
+          <View style={styles.mediaRow}>
+            <TouchableOpacity style={styles.mediaButton} onPress={pickImage} activeOpacity={0.8}>
+              <ImageIcon size={17} color={MOM_THEME.sageDark} />
+              <Text style={styles.mediaText}>Chọn từ thư viện</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.mediaButton} onPress={takePhoto} activeOpacity={0.8}>
+              <Camera size={17} color={MOM_THEME.sageDark} />
+              <Text style={styles.mediaText}>Chụp ảnh triệu chứng</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={[styles.primaryButton, isAnalyzing && styles.disabledButton]}
+            onPress={submit}
+            disabled={isAnalyzing}
+            activeOpacity={0.88}
+          >
+            {isAnalyzing ? (
+              <View style={styles.analyzingRow}>
+                <ActivityIndicator color={MOM_THEME.white} size="small" />
+                <Text style={styles.primaryText}>AI đang phân tích triệu chứng...</Text>
+              </View>
+            ) : (
+              <>
+                <Sparkles size={18} color={MOM_THEME.white} />
+                <Text style={styles.primaryText}>Tư vấn cùng AI ngay</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Result Card ── */}
+        {result ? (
+          <View style={[styles.resultCard, SHADOWS.card]}>
+            <View style={styles.resultHeader}>
+              <Text style={styles.resultTitle}>Đánh giá sơ bộ</Text>
+              <View style={styles.aiTag}>
+                <Sparkles size={12} color={MOM_THEME.white} />
+                <Text style={styles.aiTagText}>Mom Ơi AI Medical</Text>
+              </View>
+            </View>
+
+            {/* Urgency Badge */}
+            <View style={[styles.urgencyBox, { backgroundColor: badge.bg }]}>
+              <AlertCircle size={20} color={badge.color} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.urgencyText, { color: badge.color }]}>{badge.label}</Text>
+                <Text style={styles.urgencySubText}>{badge.sub}</Text>
+              </View>
+            </View>
+
+            {/* Possible Conditions */}
+            {analysis?.possibleConditions?.length ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Các khả năng mẹ cần lưu ý</Text>
+                {analysis.possibleConditions.map((condition, index) => (
+                  <View key={index} style={styles.conditionCard}>
+                    <Text style={styles.conditionTitle}>
+                      {condition.conditionName || condition.name || 'Dấu hiệu sức khỏe'}
+                    </Text>
+                    {condition.advice ? (
+                      <Text style={styles.conditionBody}>{condition.advice}</Text>
+                    ) : null}
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {/* Recommendations */}
+            {analysis?.recommendations?.length ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Hướng xử lý đề xuất</Text>
+                {analysis.recommendations.map((item, index) => (
+                  <View key={index} style={styles.recommendation}>
+                    <View style={styles.recIconWrap}>
+                      <CheckCircle2 size={15} color={MOM_THEME.sageDark} />
+                    </View>
+                    <Text style={styles.recommendationText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
+            {/* Reassuring Disclaimer */}
+            <View style={styles.disclaimer}>
+              <ShieldCheck size={16} color={MOM_THEME.amberDark} />
+              <Text style={styles.disclaimerText}>
+                Phân tích AI mang tính chất định hướng chăm sóc tại nhà. Nếu có dấu hiệu sốt cao liên tục, co giật, khó thở hoặc ra máu bất thường, mẹ hãy đưa bé tới cơ sở y tế gần nhất.
+              </Text>
+            </View>
+          </View>
         ) : null}
-
-        <View style={styles.mediaRow}>
-          <TouchableOpacity style={styles.mediaButton} onPress={pickImage}>
-            <ImageIcon size={18} color={COLORS.secondary} />
-            <Text style={styles.mediaText}>Chọn ảnh</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.mediaButton} onPress={takePhoto}>
-            <Camera size={18} color={COLORS.secondary} />
-            <Text style={styles.mediaText}>Chụp ảnh</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.primaryButton, isAnalyzing && styles.disabledButton]}
-          onPress={submit}
-          disabled={isAnalyzing}
-        >
-          {isAnalyzing ? (
-            <ActivityIndicator color={COLORS.white} />
-          ) : (
-            <>
-              <Sparkles size={18} color={COLORS.white} />
-              <Text style={styles.primaryText}>Phân tích cùng AI</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {result ? (
-        <View style={[styles.resultCard, SHADOWS.card]}>
-          <Text style={styles.resultTitle}>Kết quả tham khảo</Text>
-          <View style={[styles.urgencyBox, { backgroundColor: badge.bg }]}>
-            <AlertCircle size={18} color={badge.color} />
-            <Text style={[styles.urgencyText, { color: badge.color }]}>{badge.label}</Text>
-          </View>
-
-          {analysis?.possibleConditions?.length ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Khả năng gợi ý</Text>
-              {analysis.possibleConditions.map((condition, index) => (
-                <View key={index} style={styles.condition}>
-                  <Text style={styles.conditionTitle}>
-                    {condition.conditionName || condition.name || 'Triệu chứng cần theo dõi'}
-                  </Text>
-                  {condition.advice ? <Text style={styles.conditionBody}>{condition.advice}</Text> : null}
-                </View>
-              ))}
-            </View>
-          ) : null}
-
-          {analysis?.recommendations?.length ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Bước tiếp theo</Text>
-              {analysis.recommendations.map((item, index) => (
-                <View key={index} style={styles.recommendation}>
-                  <CheckCircle2 size={15} color={COLORS.emerald} />
-                  <Text style={styles.recommendationText}>{item}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-
-          <View style={styles.disclaimer}>
-            <Info size={14} color={COLORS.textMuted} />
-            <Text style={styles.disclaimerText}>
-              Kết quả AI chỉ nhằm hỗ trợ tham khảo. Nếu triệu chứng nặng lên, mẹ hãy liên hệ bác sĩ hoặc cơ sở y tế.
-            </Text>
-          </View>
-        </View>
-      ) : null}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 function getUrgencyBadge(urgency = '') {
   const value = urgency.toLowerCase();
   if (value.includes('khẩn') || value.includes('nguy') || value.includes('high')) {
-    return { label: 'Cần khám sớm', color: COLORS.rose, bg: COLORS.roseLight };
+    return {
+      label: 'Cần gặp bác sĩ sớm',
+      sub: 'Triệu chứng có thể cần thăm khám trực tiếp để xử lý an toàn',
+      color: '#D95368',
+      bg: '#FDECEF',
+    };
   }
   if (value.includes('theo') || value.includes('medium')) {
-    return { label: 'Cần theo dõi thêm', color: COLORS.amber, bg: COLORS.amberLight };
+    return {
+      label: 'Cần theo dõi thêm trong 24-48h',
+      sub: 'Chăm sóc tại nhà kết hợp quan sát các biểu hiện đi kèm',
+      color: MOM_THEME.amberDark,
+      bg: '#FFF4EB',
+    };
   }
-  return { label: 'Có thể theo dõi tại nhà', color: COLORS.emerald, bg: COLORS.emeraldLight };
+  return {
+    label: 'Có thể an tâm chăm sóc tại nhà',
+    sub: 'Biểu hiện thường gặp, mẹ chú ý nghỉ ngơi và uống đủ nước',
+    color: MOM_THEME.sageDark,
+    bg: MOM_THEME.sageLight,
+  };
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: MOM_THEME.cream,
+  },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   content: {
-    padding: 20,
-    paddingTop: 56,
+    paddingHorizontal: 20,
+    paddingTop: 54,
     paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 20,
   },
-  headerIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: COLORS.primaryLight,
+  headerIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: MOM_THEME.pinkLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: MOM_THEME.pink,
+  },
+  headerEyebrowWrap: {
+    marginBottom: 3,
+  },
+  headerEyebrow: {
+    color: MOM_THEME.roseDark,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
   title: {
-    color: COLORS.textDark,
-    fontSize: 28,
-    lineHeight: 34,
+    color: MOM_THEME.charcoal,
+    fontSize: 26,
+    lineHeight: 32,
     fontWeight: '800',
   },
   subtitle: {
-    color: COLORS.textMuted,
+    color: MOM_THEME.muted,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
     marginTop: 6,
+    paddingHorizontal: 10,
   },
-  card: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.hero,
-    padding: 18,
+  quickWrap: {
     marginBottom: 16,
   },
-  label: {
-    color: COLORS.textDark,
-    fontSize: 14,
-    fontWeight: '800',
+  quickTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: MOM_THEME.charcoalMid,
     marginBottom: 8,
   },
-  textArea: {
-    minHeight: 116,
-    borderRadius: RADII.control,
+  quickScroll: {
+    flexDirection: 'row',
+  },
+  quickChip: {
+    backgroundColor: MOM_THEME.white,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADII.pill,
+    marginRight: 8,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.background,
-    padding: 12,
-    color: COLORS.textDark,
+    borderColor: MOM_THEME.border,
+  },
+  quickChipText: {
+    fontSize: 12,
+    color: MOM_THEME.charcoal,
+    fontWeight: '600',
+  },
+  card: {
+    backgroundColor: MOM_THEME.white,
+    borderRadius: 24,
+    padding: 18,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  label: {
+    color: MOM_THEME.charcoal,
     fontSize: 14,
+    fontWeight: '800',
+  },
+  charCount: {
+    fontSize: 11,
+    color: MOM_THEME.mutedLight,
+  },
+  textArea: {
+    minHeight: 120,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
+    backgroundColor: MOM_THEME.cream,
+    padding: 14,
+    color: MOM_THEME.charcoal,
+    fontSize: 14,
+    lineHeight: 20,
   },
   previewWrap: {
     marginTop: 12,
-    alignSelf: 'flex-start',
     position: 'relative',
+    alignSelf: 'flex-start',
   },
   preview: {
-    width: 86,
-    height: 86,
-    borderRadius: RADII.control,
+    width: 90,
+    height: 90,
+    borderRadius: 14,
   },
   removeButton: {
     position: 'absolute',
-    top: -7,
-    right: -7,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.rose,
+    top: -6,
+    right: -6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#D95368',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  previewBadge: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  previewBadgeText: {
+    color: '#FFF',
+    fontSize: 9,
+    fontWeight: '700',
   },
   mediaRow: {
     flexDirection: 'row',
@@ -322,113 +480,150 @@ const styles = StyleSheet.create({
   mediaButton: {
     flex: 1,
     minHeight: 44,
-    borderRadius: RADII.control,
-    backgroundColor: COLORS.secondaryLight,
+    borderRadius: 14,
+    backgroundColor: MOM_THEME.sageLight,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 6,
   },
   mediaText: {
-    color: COLORS.secondaryDark,
-    fontSize: 13,
-    fontWeight: '800',
+    color: MOM_THEME.sageDark,
+    fontSize: 12,
+    fontWeight: '700',
   },
   primaryButton: {
     minHeight: 50,
-    borderRadius: RADII.control,
-    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    backgroundColor: MOM_THEME.roseDark,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
-    marginTop: 14,
+    marginTop: 16,
   },
   disabledButton: {
     opacity: 0.7,
   },
+  analyzingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   primaryText: {
-    color: COLORS.white,
+    color: MOM_THEME.white,
     fontSize: 14,
     fontWeight: '800',
   },
   resultCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADII.hero,
-    padding: 18,
+    backgroundColor: MOM_THEME.white,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
   },
   resultTitle: {
-    color: COLORS.textDark,
-    fontSize: 20,
-    lineHeight: 26,
+    color: MOM_THEME.charcoal,
+    fontSize: 18,
     fontWeight: '800',
-    marginBottom: 12,
+  },
+  aiTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: MOM_THEME.roseDark,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  aiTagText: {
+    color: MOM_THEME.white,
+    fontSize: 10,
+    fontWeight: '700',
   },
   urgencyBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    borderRadius: RADII.control,
-    padding: 12,
-    marginBottom: 14,
+    gap: 12,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 16,
   },
   urgencyText: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  section: {
-    marginBottom: 14,
-  },
-  sectionTitle: {
-    color: COLORS.textDark,
     fontSize: 14,
     fontWeight: '800',
-    marginBottom: 8,
   },
-  condition: {
-    borderRadius: RADII.control,
-    backgroundColor: COLORS.background,
+  urgencySubText: {
+    fontSize: 11,
+    color: MOM_THEME.charcoalMid,
+    marginTop: 2,
+  },
+  section: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    color: MOM_THEME.charcoal,
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 10,
+  },
+  conditionCard: {
+    borderRadius: 16,
+    backgroundColor: MOM_THEME.cream,
     padding: 12,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
   },
   conditionTitle: {
-    color: COLORS.textDark,
+    color: MOM_THEME.charcoal,
     fontSize: 13,
     fontWeight: '800',
   },
   conditionBody: {
-    color: COLORS.textMuted,
+    color: MOM_THEME.muted,
     fontSize: 12,
-    lineHeight: 17,
+    lineHeight: 18,
     marginTop: 4,
   },
   recommendation: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
-    marginBottom: 7,
+    gap: 10,
+    marginBottom: 8,
+  },
+  recIconWrap: {
+    marginTop: 2,
   },
   recommendationText: {
     flex: 1,
-    color: COLORS.textDark,
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: '600',
+    color: MOM_THEME.charcoalMid,
+    fontSize: 13,
+    lineHeight: 19,
   },
   disclaimer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
-    borderRadius: RADII.control,
-    backgroundColor: COLORS.background,
+    gap: 10,
+    borderRadius: 16,
+    backgroundColor: '#FFF8F0',
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#F7E7D0',
     padding: 12,
+    marginTop: 4,
   },
   disclaimerText: {
     flex: 1,
-    color: COLORS.textMuted,
+    color: MOM_THEME.charcoalMid,
     fontSize: 11,
     lineHeight: 16,
   },
 });
+

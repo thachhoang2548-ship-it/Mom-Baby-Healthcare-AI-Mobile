@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Activity, Baby, Grid3X3, HeartPulse, Home } from 'lucide-react-native';
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
@@ -6,7 +7,7 @@ import JourneyScreen from '../screens/journey/JourneyScreen';
 import BabyNutritionScreen from '../screens/nutrition/BabyNutritionScreen';
 import SymptomCheckerScreen from '../screens/symptoms/SymptomCheckerScreen';
 import ToolsScreen from '../screens/tools/ToolsScreen';
-import { COLORS } from '../theme/colors';
+import { COLORS, MOM_THEME } from '../theme/colors';
 import { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -16,19 +17,25 @@ export default function TabNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textLight,
+        tabBarActiveTintColor: MOM_THEME.roseDark,
+        tabBarInactiveTintColor: MOM_THEME.mutedLight,
         tabBarStyle: {
-          backgroundColor: COLORS.white,
+          backgroundColor: MOM_THEME.white,
           borderTopWidth: 1,
-          borderTopColor: COLORS.border,
-          height: 66,
-          paddingBottom: 8,
-          paddingTop: 8,
+          borderTopColor: MOM_THEME.border,
+          height: Platform.OS === 'ios' ? 84 : 68,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+          paddingTop: 10,
+          elevation: 8,
+          shadowColor: MOM_THEME.charcoal,
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.04,
+          shadowRadius: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '700',
+          fontWeight: '600',
+          marginTop: 2,
         },
       }}
     >
