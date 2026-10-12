@@ -10,7 +10,6 @@ export const ENDPOINTS = {
   // Profile
   USER_PROFILE: '/api/user-profile',
   SETUP_PREGNANCY: '/api/pregnancy/setup',
-  LOG_WEIGHT: '/api/pregnancy/weight',
 
   // Baby
   BABY_PROFILES: '/api/baby/profiles',
@@ -29,11 +28,9 @@ export const ENDPOINTS = {
 
   // Alerts / notifications
   ALERTS: '/api/alerts',
-  ALERT_RESOLVE: (id: string | number) => `/api/alerts/${id}/resolve`,
-
-  // Chat AI
-  CHAT_SEND: '/api/chat/send',
-  CHAT_HISTORY: '/api/chat/history',
+  // Dùng /status (có kiểm tra chủ sở hữu) thay cho /resolve: /resolve không kiểm tra
+  // người gọi và đóng cùng lúc cảnh báo trùng id ở các bảng khác.
+  ALERT_STATUS: (id: string | number) => `/api/alerts/${id}/status`,
 
   // Daily monitoring
   DAILY_MONITORING: '/api/daily-monitoring',
@@ -55,6 +52,7 @@ export const ENDPOINTS = {
   PREGNANCY_MEAL_PLAN: '/api/pregnancy/meal-plan',
   PREGNANCY_EXERCISE_PLAN: '/api/pregnancy/exercise-plan',
   PREGNANCY_WEIGHT_LOG: '/api/pregnancy/weight-log',
+  PREGNANCY_WEIGHT_LOGS: '/api/pregnancy/weight-logs',
   PREGNANCY_FOOD_LOG: '/api/pregnancy/food-log',
   PREGNANCY_EXERCISE_LOG: '/api/pregnancy/exercise-log',
 

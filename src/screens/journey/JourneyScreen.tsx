@@ -1,7 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
-  Alert,
-  Dimensions,
   Image,
   ScrollView,
   StatusBar,
@@ -10,25 +8,26 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
-  Activity,
   Baby,
-  Calendar,
-  CalendarPlus,
+  CalendarHeart,
   CheckCircle2,
   ChevronRight,
+  ClipboardList,
   Heart,
-  Info,
+  Pill,
   RefreshCw,
   Sparkles,
   Sprout,
-  Stethoscope,
+  UserRoundPen,
 } from 'lucide-react-native';
-import profileService, { MomProfileDto } from '../../services/profileService';
-import featureService from '../../services/featureService';
-import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
-
-const { width: SCREEN_W } = Dimensions.get('window');
+import profileService, { getStageIndex, MomProfileDto } from '../../services/profileService';
+import featureService, { PregnancyWeekInfo } from '../../services/featureService';
+import { RootStackParamList } from '../../navigation/types';
+import { formatDate, fromUtcDateIso } from '../../utils/date';
+import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 
 const stages = [
   { key: 'fertility', title: 'Chuẩn bị', subtitle: 'Thụ thai & dinh dưỡng', icon: Sprout, color: MOM_THEME.sageDark, bg: MOM_THEME.sageLight },
@@ -36,49 +35,91 @@ const stages = [
   { key: 'postpartum', title: 'Sau sinh', subtitle: 'Phục hồi & chăm bé', icon: Baby, color: MOM_THEME.amberDark, bg: MOM_THEME.amberLight },
 ];
 
+const STAGE_INSIGHT = [
+  'Mẹ nên bổ sung acid folic 400 mcg mỗi ngày ít nhất 1 tháng trước khi mang thai, ngủ đủ giấc và ghi lại chu kỳ để biết ngày dễ thụ thai.',
+  '',
+  'Những tuần đầu sau sinh, mẹ ưu tiên nghỉ ngơi, ăn đủ chất và uống nhiều nước. Đừng ngại nhờ người thân hỗ trợ chăm bé để mẹ phục hồi.',
+];
+
+const trimesterOf = (week: number) => (week <= 13 ? 1 : week <= 27 ? 2 : 3);
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
+
 export default function JourneyScreen() {
+  const navigation = useNavigation<Nav>();
   const [profile, setProfile] = useState<MomProfileDto | null>(null);
-  const [insight, setInsight] = useState('Mom Ơi sẵn sàng đồng hành cùng mẹ theo từng giai đoạn thai kỳ.');
+  const [weekInfo, setWeekInfo] = useState<PregnancyWeekInfo | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
+
+  const loadWeekInsight = useCallback(async () => {
+    setLoadingInsight(true);
+    try {
+      setWeekInfo(await featureService.getPregnancyThisWeek());
+    } catch {
+      setWeekInfo(null);
+    } finally {
+      setLoadingInsight(false);
+    }
+  }, []);
 
   const loadProfile = useCallback(async () => {
     try {
       const res = await profileService.getProfile();
-      if ((res?.isSuccess || res?.success) && res.data) {
-        setProfile(res.data);
-      }
+      const p = (res?.isSuccess || res?.success) && res.data ? res.data : null;
+      setProfile(p);
+      if (p && getStageIndex(p.stage) === 1) loadWeekInsight();
+      else setWeekInfo(null);
     } catch {
       setProfile(null);
     }
-  }, []);
+  }, [loadWeekInsight]);
 
-  useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [loadProfile])
+  );
 
-  const currentIndex = profile?.stage === 2 || profile?.stage === 'Postpartum'
-    ? 2
-    : profile?.stage === 1 || profile?.stage === 'Pregnant'
-      ? 1
-      : 0;
-
-  const loadWeekInsight = async () => {
-    setLoadingInsight(true);
-    try {
-      const data = await featureService.getPregnancyThisWeek();
-      setInsight(
-        data?.summary ||
-          data?.message ||
-          `Tuần ${profile?.pregnancyWeek || 14}: Mẹ chú ý uống đủ 2 lít nước mỗi ngày, ăn nhiều rau xanh, và dành 20 phút đi dạo nhẹ nhàng nhé.`
-      );
-    } catch (err: any) {
-      setInsight(`Tuần ${profile?.pregnancyWeek || 14}: Chăm sóc cơ thể nhẹ nhàng, bổ sung đầy đủ vitamin và nghỉ ngơi khi thấy mệt mẹ nhé.`);
-    } finally {
-      setLoadingInsight(false);
-    }
-  };
-
+  const currentIndex = getStageIndex(profile?.stage);
   const currentStageInfo = stages[currentIndex];
+  const week = weekInfo?.week ?? profile?.pregnancyWeek ?? null;
+  const dueDate = fromUtcDateIso(profile?.deliveryDate);
+
+  const insight =
+    currentIndex === 1
+      ? weekInfo
+        ? [weekInfo.development, weekInfo.momTips].filter(Boolean).join('\n\n')
+        : 'Mẹ cập nhật ngày kinh cuối trong hồ sơ để Mom Ơi gợi ý đúng theo tuần thai nhé.'
+      : STAGE_INSIGHT[currentIndex];
+
+  const badges: string[] =
+    currentIndex === 1
+      ? [
+          week ? `🌱 Tam cá nguyệt ${trimesterOf(week)}` : '',
+          dueDate ? `📅 Dự sinh ${formatDate(dueDate)}` : '',
+        ].filter(Boolean)
+      : currentIndex === 2 && dueDate
+        ? [`👶 Bé sinh ngày ${formatDate(dueDate)}`]
+        : [];
+
+  const actions =
+    currentIndex === 1
+      ? [
+          { icon: <Heart size={20} color={MOM_THEME.roseDark} />, bg: MOM_THEME.pinkLight, title: 'Theo dõi thai kỳ', body: 'Xem bé phát triển thế nào tuần này và ghi cân nặng của mẹ.', go: () => navigation.navigate('Pregnancy') },
+          { icon: <ClipboardList size={20} color={MOM_THEME.sageDark} />, bg: MOM_THEME.sageLight, title: 'Ghi nhật ký sức khỏe', body: 'Giấc ngủ, bữa ăn, huyết áp và triệu chứng trong ngày.', go: () => navigation.navigate('DailyMonitoring') },
+          { icon: <Pill size={20} color="#8E6BB8" />, bg: '#F3EEF8', title: 'Nhắc uống vitamin & sắt', body: 'Duy trì cữ uống đều đặn mỗi ngày để con hấp thụ trọn vẹn.', go: () => navigation.navigate('Medications') },
+        ]
+      : currentIndex === 2
+        ? [
+            { icon: <Heart size={20} color={MOM_THEME.roseDark} />, bg: MOM_THEME.pinkLight, title: 'Phục hồi sau sinh', body: 'Kế hoạch vận động theo ngày và khảo sát tâm lý EPDS.', go: () => navigation.navigate('Postpartum') },
+            { icon: <Baby size={20} color={MOM_THEME.sageDark} />, bg: MOM_THEME.sageLight, title: 'Hồ sơ & thực đơn của bé', body: 'Cập nhật cân nặng, chiều cao và xem thực đơn theo tuổi.', go: () => navigation.navigate('MainTabs', { screen: 'Nutrition' }) },
+            { icon: <ClipboardList size={20} color="#8E6BB8" />, bg: '#F3EEF8', title: 'Ghi nhật ký sức khỏe', body: 'Giấc ngủ, bữa ăn và tâm trạng của mẹ mỗi ngày.', go: () => navigation.navigate('DailyMonitoring') },
+          ]
+        : [
+            { icon: <CalendarHeart size={20} color={MOM_THEME.roseDark} />, bg: MOM_THEME.pinkLight, title: 'Chu kỳ & rụng trứng', body: 'Ghi kỳ kinh để biết những ngày dễ thụ thai.', go: () => navigation.navigate('Fertility') },
+            { icon: <Pill size={20} color={MOM_THEME.sageDark} />, bg: MOM_THEME.sageLight, title: 'Nhắc uống acid folic', body: 'Bổ sung acid folic đều đặn trước khi mang thai.', go: () => navigation.navigate('Medications') },
+            { icon: <ClipboardList size={20} color="#8E6BB8" />, bg: '#F3EEF8', title: 'Ghi nhật ký sức khỏe', body: 'Giấc ngủ, bữa ăn và tâm trạng mỗi ngày.', go: () => navigation.navigate('DailyMonitoring') },
+          ];
 
   return (
     <View style={styles.root}>
@@ -99,10 +140,11 @@ export default function JourneyScreen() {
           </View>
           <TouchableOpacity
             style={styles.iconButton}
-            onPress={loadWeekInsight}
+            onPress={() => navigation.navigate('Profile')}
+            accessibilityLabel="Cập nhật giai đoạn"
             activeOpacity={0.8}
           >
-            <CalendarPlus size={20} color={MOM_THEME.roseDark} />
+            <UserRoundPen size={20} color={MOM_THEME.roseDark} />
           </TouchableOpacity>
         </View>
 
@@ -123,7 +165,9 @@ export default function JourneyScreen() {
 
             <Text style={styles.heroTitle}>
               {currentIndex === 1
-                ? `Tuần thai thứ ${profile?.pregnancyWeek || 14}`
+                ? week
+                  ? `Tuần thai thứ ${week}`
+                  : 'Mẹ đang mang thai'
                 : currentIndex === 2
                   ? 'Phục hồi sau sinh & nuôi con'
                   : 'Chuẩn bị đón con yêu'}
@@ -131,20 +175,23 @@ export default function JourneyScreen() {
 
             <Text style={styles.heroBody}>
               {currentIndex === 1
-                ? 'Em bé đang phát triển các giác quan. Cột mốc sắp tới: Khám thai định kỳ & xét nghiệm sàng lọc.'
+                ? weekInfo?.babySize
+                  ? `Bé đang ${weekInfo.babySize}.`
+                  : 'Theo dõi sự phát triển của bé qua từng tuần.'
                 : currentIndex === 2
                   ? 'Giai đoạn thiêng liêng cần sự nghỉ ngơi, dinh dưỡng ấm nóng và thấu hiểu tâm lý mẹ.'
                   : 'Theo dõi ngày rụng trứng, giữ tinh thần thư thái và bổ sung acid folic đều đặn.'}
             </Text>
 
-            <View style={styles.heroBadgeRow}>
-              <View style={styles.miniBadge}>
-                <Text style={styles.miniBadgeText}>🌱 Tam cá nguyệt 2</Text>
+            {badges.length ? (
+              <View style={styles.heroBadgeRow}>
+                {badges.map((badge) => (
+                  <View key={badge} style={styles.miniBadge}>
+                    <Text style={styles.miniBadgeText}>{badge}</Text>
+                  </View>
+                ))}
               </View>
-              <View style={[styles.miniBadge, { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}>
-                <Text style={styles.miniBadgeText}>🌸 Sức khỏe ổn định</Text>
-              </View>
-            </View>
+            ) : null}
           </View>
         </View>
 
@@ -198,17 +245,21 @@ export default function JourneyScreen() {
           </View>
         </View>
 
-        {/* ── Gợi ý chăm sóc tuần này (AI Advice) ── */}
+        {/* ── Gợi ý chăm sóc (theo tuần thai nếu đang mang thai) ── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Gợi ý tuần thai này</Text>
-          <TouchableOpacity
-            style={styles.refreshLink}
-            onPress={loadWeekInsight}
-            disabled={loadingInsight}
-          >
-            <RefreshCw size={13} color={MOM_THEME.roseDark} />
-            <Text style={styles.refreshLinkText}>Làm mới</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>
+            {currentIndex === 1 ? 'Gợi ý tuần thai này' : 'Gợi ý cho mẹ'}
+          </Text>
+          {currentIndex === 1 ? (
+            <TouchableOpacity
+              style={styles.refreshLink}
+              onPress={loadWeekInsight}
+              disabled={loadingInsight}
+            >
+              <RefreshCw size={13} color={MOM_THEME.roseDark} />
+              <Text style={styles.refreshLinkText}>Làm mới</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         <View style={[styles.insightCard, SHADOWS.sm]}>
@@ -217,8 +268,10 @@ export default function JourneyScreen() {
               <Sparkles size={18} color={MOM_THEME.amberDark} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.insightTitle}>Lời nhắn gửi từ Mom Ơi AI</Text>
-              <Text style={styles.insightWeekText}>Cá nhân hóa theo tuần thai của mẹ</Text>
+              <Text style={styles.insightTitle}>Lời nhắn gửi từ Mom Ơi</Text>
+              <Text style={styles.insightWeekText}>
+                {currentIndex === 1 && week ? `Theo tuần thai thứ ${week}` : `Giai đoạn ${currentStageInfo.title.toLowerCase()}`}
+              </Text>
             </View>
           </View>
           <Text style={styles.insightBodyText}>{insight}</Text>
@@ -229,26 +282,16 @@ export default function JourneyScreen() {
           <Text style={styles.sectionTitle}>Việc mẹ nên làm tiếp theo</Text>
         </View>
 
-        <ActionCard
-          icon={<Heart size={20} color={MOM_THEME.roseDark} />}
-          iconBg={MOM_THEME.pinkLight}
-          title="Cập nhật chỉ số sức khỏe"
-          body="Ghi nhận cân nặng, huyết áp và triệu chứng mới để app theo dõi sát sao hơn."
-        />
-
-        <ActionCard
-          icon={<Stethoscope size={20} color={MOM_THEME.sageDark} />}
-          iconBg={MOM_THEME.sageLight}
-          title="Đặt mốc khám thai định kỳ"
-          body="Khám siêu âm hình thái học & kiểm tra các mốc quan trọng tiếp theo."
-        />
-
-        <ActionCard
-          icon={<Calendar size={20} color="#8E6BB8" />}
-          iconBg="#F3EEF8"
-          title="Nhắc uống vitamin & sắt"
-          body="Duy trì cữ uống đều đặn mỗi sáng sau khi ăn để con hấp thụ trọn vẹn."
-        />
+        {actions.map((action) => (
+          <ActionCard
+            key={action.title}
+            icon={action.icon}
+            iconBg={action.bg}
+            title={action.title}
+            body={action.body}
+            onPress={action.go}
+          />
+        ))}
       </ScrollView>
     </View>
   );

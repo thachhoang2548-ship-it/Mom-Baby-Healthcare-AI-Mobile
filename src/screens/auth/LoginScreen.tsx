@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,11 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Lỗi lưu trong store dùng chung với màn Đăng ký: xóa khi mở màn để không hiện lỗi cũ.
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {

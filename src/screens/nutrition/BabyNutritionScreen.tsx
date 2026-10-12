@@ -1,8 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
-  Dimensions,
   Image,
   ScrollView,
   StatusBar,
@@ -11,23 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {
-  Award,
-  Baby,
-  ChevronRight,
-  Flame,
-  Heart,
-  Info,
-  RefreshCw,
-  Ruler,
-  Sparkles,
-  Utensils,
-  Weight,
-} from 'lucide-react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Award, Flame, Info, Pencil, Plus, RefreshCw, Ruler, Sparkles, Weight } from 'lucide-react-native';
 import babyService, { BabyProfileDto, DailyMenuDto, MealItem } from '../../services/babyService';
-import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
-
-const { width: SCREEN_W } = Dimensions.get('window');
+import { EmptyState, ErrorState, LoadingView, TierLockedCard } from '../../components/ui';
+import { RootStackParamList } from '../../navigation/types';
+import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
+import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 
 const MEAL_SLOTS = [
   { key: 'breakfast', label: 'Bữa sáng', time: '07:30', icon: '🥣' },
@@ -37,17 +26,24 @@ const MEAL_SLOTS = [
   { key: 'supplementary_snack', label: 'Cữ phụ', time: '20:00', icon: '🍼' },
 ];
 
+const formatMeasure = (value: number | undefined, unit: string) =>
+  value ? `${value} ${unit}` : 'Chưa có';
+
 export default function BabyNutritionScreen() {
-  const [babies, setBabies] = useState<BabyProfileDto[]>([]);
-  const [selectedBaby, setSelectedBaby] = useState<BabyProfileDto | null>(null);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [babies, setBabies] = useState<BabyProfileDto[] | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedIdRef = useRef<string | null>(null);
+  const [locked, setLocked] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [dailyMenu, setDailyMenu] = useState<DailyMenuDto | null>(null);
-  const [menuError, setMenuError] = useState<string | null>(null);
+  const [menuMessage, setMenuMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadMenu = async (babyId: string | number, force = false) => {
+  const loadMenu = useCallback(async (babyId: string, force = false) => {
     setIsLoading(true);
-    setMenuError(null);
+    setMenuMessage(null);
     try {
       const res = await babyService.getDailyMenu(babyId, force);
       if ((res.isSuccess || res.success) && res.data) {
@@ -55,120 +51,116 @@ export default function BabyNutritionScreen() {
         return true;
       }
       setDailyMenu(null);
-      setMenuError(res.message || 'Chưa thể tạo thực đơn cho bé.');
+      setMenuMessage(res.message || 'Chưa thể tạo thực đơn cho bé.');
       return false;
-    } catch (err: any) {
+    } catch (err) {
       setDailyMenu(null);
-      setMenuError(
-        err?.response?.data?.message ||
-          err?.response?.data?.title ||
-          'Backend chưa tạo được thực đơn. App đang hiển thị gợi ý mẫu theo chuẩn dinh dưỡng.'
+      setMenuMessage(
+        getApiErrorMessage(err, 'Chưa tạo được thực đơn cho bé. Mẹ thử làm mới sau ít phút nhé.')
       );
       return false;
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const loadBabies = useCallback(async () => {
-    try {
-      const res = await babyService.getProfiles();
-      if ((res.isSuccess || res.success) && Array.isArray(res.data) && res.data.length > 0) {
-        setBabies(res.data);
-        setSelectedBaby(res.data[0]);
-        loadMenu(res.data[0].id);
-      } else {
-        setBabies([]);
-        setSelectedBaby(null);
-      }
-    } catch {
-      setBabies([]);
-      setSelectedBaby(null);
-    }
   }, []);
 
-  useEffect(() => {
-    loadBabies();
-  }, [loadBabies]);
+  const selectBaby = useCallback(
+    (babyId: string | null) => {
+      selectedIdRef.current = babyId;
+      setSelectedId(babyId);
+      if (babyId) loadMenu(babyId);
+    },
+    [loadMenu]
+  );
+
+  const loadBabies = useCallback(async () => {
+    setLoadError(null);
+    try {
+      const res = await babyService.getProfiles();
+      const list = (res.isSuccess || res.success) && Array.isArray(res.data) ? res.data : [];
+      setLocked(false);
+      setBabies(list);
+      const keep = list.find((b) => b.id === selectedIdRef.current);
+      selectBaby(keep ? keep.id : list[0]?.id ?? null);
+    } catch (err) {
+      if (isTierLocked(err)) {
+        setLocked(true);
+        setBabies([]);
+      } else {
+        setLoadError(getApiErrorMessage(err));
+      }
+    }
+  }, [selectBaby]);
+
+  // Tải lại khi quay về từ màn thêm/sửa hồ sơ bé.
+  useFocusEffect(
+    useCallback(() => {
+      loadBabies();
+    }, [loadBabies])
+  );
 
   const refreshMenu = async () => {
-    if (!selectedBaby) return;
+    if (!selectedId) return;
     setIsRefreshing(true);
-    const ok = await loadMenu(selectedBaby.id, true);
+    await loadMenu(selectedId, true);
     setIsRefreshing(false);
-    Alert.alert(
-      'Thực đơn dinh dưỡng',
-      ok
-        ? 'Đã làm mới thực đơn theo chuẩn dinh dưỡng cho bé.'
-        : 'Backend chưa trả về thực đơn mới. App đang hiển thị gợi ý khoa học mẫu.'
-    );
   };
 
-  const ageMonths = selectedBaby?.ageMonths || 8;
+  const selectedBaby = babies?.find((b) => b.id === selectedId) ?? null;
+  const ageMonths = selectedBaby?.ageMonths ?? 0;
   const tip = getNutritionTip(ageMonths);
   const totals = dailyMenu?.nutrition_totals || {};
   const goals = dailyMenu?.goals || {};
+  const meals = MEAL_SLOTS.map((slot) => ({
+    slot,
+    meal: dailyMenu?.meals?.[slot.key as keyof NonNullable<DailyMenuDto['meals']>] as MealItem | undefined,
+  })).filter((item) => item.meal);
 
-  return (
-    <View style={styles.root}>
-      <StatusBar barStyle="dark-content" backgroundColor={MOM_THEME.cream} />
+  const renderBody = () => {
+    if (loadError) return <ErrorState message={loadError} onRetry={loadBabies} />;
+    if (babies === null) return <LoadingView />;
+    if (locked) return <TierLockedCard feature="Hồ sơ & thực đơn cho bé" />;
+    if (!selectedBaby) {
+      return (
+        <EmptyState
+          emoji="👶"
+          title="Chưa có hồ sơ bé yêu"
+          body="Thêm ngày sinh, cân nặng và dị ứng của bé để nhận thực đơn theo đúng độ tuổi."
+          actionLabel="Thêm hồ sơ bé"
+          onAction={() => navigation.navigate('BabyProfileForm')}
+        />
+      );
+    }
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── Top Bar ── */}
-        <View style={styles.topBar}>
-          <View>
-            <View style={styles.eyebrowWrap}>
-              <Text style={styles.eyebrow}>DINH DƯỠNG & PHÁT TRIỂN</Text>
-            </View>
-            <Text style={styles.title}>Bé yêu của mẹ</Text>
-          </View>
+    return (
+      <>
+        {/* ── Baby Selector Chips ── */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.babyScroller}>
+          {babies.map((baby) => {
+            const active = selectedId === baby.id;
+            return (
+              <TouchableOpacity
+                key={baby.id}
+                style={[styles.babyChip, active && styles.babyChipActive]}
+                onPress={() => selectBaby(baby.id)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.babyChipEmoji}>👶</Text>
+                <Text style={[styles.babyChipText, active && styles.babyChipTextActive]}>
+                  {baby.babyName || 'Bé yêu'} · {baby.ageMonths ?? 0} tháng
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
           <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={refreshMenu}
-            disabled={!selectedBaby || isRefreshing}
+            style={styles.babyChip}
+            onPress={() => navigation.navigate('BabyProfileForm')}
             activeOpacity={0.8}
           >
-            {isRefreshing ? (
-              <ActivityIndicator size="small" color={MOM_THEME.roseDark} />
-            ) : (
-              <RefreshCw size={19} color={MOM_THEME.roseDark} />
-            )}
+            <Plus size={14} color={MOM_THEME.roseDark} />
+            <Text style={styles.babyChipText}>Thêm bé</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* ── Baby Selector Chips ── */}
-        {babies.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.babyScroller}>
-            {babies.map((baby) => {
-              const active = selectedBaby?.id === baby.id;
-              return (
-                <TouchableOpacity
-                  key={baby.id}
-                  style={[styles.babyChip, active && styles.babyChipActive]}
-                  onPress={() => {
-                    setSelectedBaby(baby);
-                    loadMenu(baby.id);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.babyChipEmoji}>👶</Text>
-                  <Text style={[styles.babyChipText, active && styles.babyChipTextActive]}>
-                    {baby.babyName || baby.name || 'Bé yêu'} · {baby.ageMonths || 0} tháng
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        ) : (
-          <View style={styles.emptyBox}>
-            <Text style={styles.emptyTitle}>Chưa có hồ sơ bé yêu</Text>
-            <Text style={styles.emptyText}>Mẹ có thể thêm thông tin bé ở mục Menu / Hồ sơ để nhận thực đơn cá nhân hóa nhé.</Text>
-          </View>
-        )}
+        </ScrollView>
 
         {/* ── Baby Hero Card with Real Visual ── */}
         <View style={[styles.heroCard, SHADOWS.card]}>
@@ -183,32 +175,35 @@ export default function BabyNutritionScreen() {
             <View style={styles.heroTopRow}>
               <View style={styles.statusBadge}>
                 <Award size={13} color={MOM_THEME.white} />
-                <Text style={styles.statusText}>Tiêu chuẩn WHO</Text>
+                <Text style={styles.statusText}>{selectedBaby.gender === 0 ? 'Bé trai' : 'Bé gái'}</Text>
               </View>
-              <View style={styles.agePill}>
-                <Text style={styles.agePillText}>{ageMonths} tháng tuổi</Text>
-              </View>
+              <TouchableOpacity
+                style={styles.agePill}
+                onPress={() => navigation.navigate('BabyProfileForm', { baby: selectedBaby })}
+                activeOpacity={0.85}
+              >
+                <Pencil size={12} color={MOM_THEME.roseDark} />
+                <Text style={styles.agePillText}>Sửa hồ sơ</Text>
+              </TouchableOpacity>
             </View>
 
             <View>
-              <Text style={styles.heroBabyName}>
-                {selectedBaby?.babyName || selectedBaby?.name || 'Bé yêu của mẹ'}
-              </Text>
-              <Text style={styles.heroBabySub}>Phát triển khỏe mạnh, ăn ngon chóng lớn ✨</Text>
+              <Text style={styles.heroBabyName}>{selectedBaby.babyName || 'Bé yêu của mẹ'}</Text>
+              <Text style={styles.heroBabySub}>{ageMonths} tháng tuổi</Text>
             </View>
 
             <View style={styles.statsCardRow}>
               <View style={styles.statMiniCard}>
                 <Weight size={15} color={MOM_THEME.roseDark} />
                 <View>
-                  <Text style={styles.statMiniVal}>{selectedBaby?.currentWeightKg || 8.5} kg</Text>
+                  <Text style={styles.statMiniVal}>{formatMeasure(selectedBaby.currentWeightKg, 'kg')}</Text>
                   <Text style={styles.statMiniLbl}>Cân nặng</Text>
                 </View>
               </View>
               <View style={styles.statMiniCard}>
                 <Ruler size={15} color={MOM_THEME.sageDark} />
                 <View>
-                  <Text style={styles.statMiniVal}>{selectedBaby?.currentHeightCm || 71} cm</Text>
+                  <Text style={styles.statMiniVal}>{formatMeasure(selectedBaby.currentHeightCm, 'cm')}</Text>
                   <Text style={styles.statMiniLbl}>Chiều cao</Text>
                 </View>
               </View>
@@ -228,75 +223,112 @@ export default function BabyNutritionScreen() {
         </View>
 
         {/* ── Macro Nutrition Card ── */}
-        <View style={[styles.macroCard, SHADOWS.card]}>
-          <View style={styles.macroTop}>
-            <View style={styles.calorieBox}>
-              <View style={styles.calorieIconWrap}>
-                <Flame size={18} color="#D95368" />
-              </View>
-              <View>
-                <Text style={styles.calorieValue}>{Math.round(totals.calories || 620)} kcal</Text>
-                <Text style={styles.calorieLabel}>Mục tiêu hôm nay: {Math.round(goals.calories || 700)} kcal</Text>
+        {dailyMenu ? (
+          <View style={[styles.macroCard, SHADOWS.card]}>
+            <View style={styles.macroTop}>
+              <View style={styles.calorieBox}>
+                <View style={styles.calorieIconWrap}>
+                  <Flame size={18} color="#D95368" />
+                </View>
+                <View>
+                  <Text style={styles.calorieValue}>{Math.round(totals.calories || 0)} kcal</Text>
+                  {goals.calories ? (
+                    <Text style={styles.calorieLabel}>Mục tiêu hôm nay: {Math.round(goals.calories)} kcal</Text>
+                  ) : null}
+                </View>
               </View>
             </View>
-            <View style={styles.balanceBadge}>
-              <Text style={styles.balanceBadgeText}>Cân đối</Text>
-            </View>
-          </View>
 
-          <View style={styles.nutrientRow}>
-            <Nutrient label="Đạm (Protein)" value={`${totals.protein_g || 18}g`} color="#4A88C7" bg="#EEF5FA" />
-            <Nutrient label="Chất béo" value={`${totals.fat_g || 22}g`} color={MOM_THEME.amberDark} bg="#FFF5EB" />
-            <Nutrient label="Tinh bột" value={`${totals.carbs_g || 85}g`} color={MOM_THEME.sageDark} bg="#E8F2EC" />
+            <View style={styles.nutrientRow}>
+              <Nutrient label="Đạm (Protein)" value={`${Math.round(totals.protein_g || 0)}g`} color="#4A88C7" bg="#EEF5FA" />
+              <Nutrient label="Chất béo" value={`${Math.round(totals.fat_g || 0)}g`} color={MOM_THEME.amberDark} bg="#FFF5EB" />
+              <Nutrient label="Tinh bột" value={`${Math.round(totals.carbs_g || 0)}g`} color={MOM_THEME.sageDark} bg="#E8F2EC" />
+            </View>
           </View>
-        </View>
+        ) : null}
 
         {/* ── Section: Thực đơn theo cữ ── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Thực đơn các cữ hôm nay</Text>
-          <Text style={styles.sectionSub}>Gợi ý chuẩn định lượng theo độ tuổi</Text>
+          <Text style={styles.sectionSub}>Gợi ý định lượng theo độ tuổi của bé</Text>
         </View>
-
-        {menuError ? (
-          <View style={styles.errorBox}>
-            <Info size={15} color={MOM_THEME.amberDark} />
-            <Text style={styles.errorText}>{menuError}</Text>
-          </View>
-        ) : null}
 
         {isLoading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator color={MOM_THEME.roseDark} />
             <Text style={styles.loadingText}>Đang chuẩn bị thực đơn dinh dưỡng...</Text>
           </View>
+        ) : menuMessage || !meals.length ? (
+          <View style={styles.errorBox}>
+            <Info size={15} color={MOM_THEME.amberDark} />
+            <Text style={styles.errorText}>{menuMessage || 'Chưa có thực đơn cho hôm nay.'}</Text>
+          </View>
         ) : (
-          MEAL_SLOTS.map((slot) => {
-            const meal: MealItem | undefined = dailyMenu?.meals?.[
-              slot.key as keyof NonNullable<DailyMenuDto['meals']>
-            ];
-            return (
-              <View key={slot.key} style={[styles.mealCard, SHADOWS.sm]}>
-                <View style={styles.mealEmojiWrap}>
-                  <Text style={{ fontSize: 20 }}>{slot.icon}</Text>
-                </View>
-                <View style={styles.mealCopy}>
-                  <View style={styles.mealHeader}>
-                    <Text style={styles.mealSlot}>{slot.label}</Text>
-                    <Text style={styles.mealTime}>{slot.time}</Text>
-                  </View>
-                  <Text style={styles.mealName}>
-                    {meal?.name_vi || meal?.name_en || 'Cháo bí đỏ thịt nạc xay mịn / sữa mẹ ấm'}
-                  </Text>
-                  <View style={styles.mealMetaRow}>
-                    <Text style={styles.mealMetaKcal}>{Math.round(meal?.total_calories || 120)} kcal</Text>
-                    <Text style={styles.mealMetaDot}>·</Text>
-                    <Text style={styles.mealMetaSub}>Dễ tiêu hóa, thơm ngon</Text>
-                  </View>
-                </View>
+          meals.map(({ slot, meal }) => (
+            <View key={slot.key} style={[styles.mealCard, SHADOWS.sm]}>
+              <View style={styles.mealEmojiWrap}>
+                <Text style={{ fontSize: 20 }}>{slot.icon}</Text>
               </View>
-            );
-          })
+              <View style={styles.mealCopy}>
+                <View style={styles.mealHeader}>
+                  <Text style={styles.mealSlot}>{slot.label}</Text>
+                  <Text style={styles.mealTime}>{slot.time}</Text>
+                </View>
+                <Text style={styles.mealName}>{meal?.name_vi || meal?.name_en}</Text>
+                {meal?.total_calories ? (
+                  <View style={styles.mealMetaRow}>
+                    <Text style={styles.mealMetaKcal}>{Math.round(meal.total_calories)} kcal</Text>
+                    {meal.protein_g ? (
+                      <>
+                        <Text style={styles.mealMetaDot}>·</Text>
+                        <Text style={styles.mealMetaSub}>Đạm {Math.round(meal.protein_g)}g</Text>
+                      </>
+                    ) : null}
+                  </View>
+                ) : null}
+              </View>
+            </View>
+          ))
         )}
+      </>
+    );
+  };
+
+  return (
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" backgroundColor={MOM_THEME.cream} />
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Top Bar ── */}
+        <View style={styles.topBar}>
+          <View>
+            <View style={styles.eyebrowWrap}>
+              <Text style={styles.eyebrow}>DINH DƯỠNG & PHÁT TRIỂN</Text>
+            </View>
+            <Text style={styles.title}>Bé yêu của mẹ</Text>
+          </View>
+          {selectedBaby ? (
+            <TouchableOpacity
+              style={styles.refreshButton}
+              onPress={refreshMenu}
+              disabled={isRefreshing}
+              accessibilityLabel="Tạo lại thực đơn"
+              activeOpacity={0.8}
+            >
+              {isRefreshing ? (
+                <ActivityIndicator size="small" color={MOM_THEME.roseDark} />
+              ) : (
+                <RefreshCw size={19} color={MOM_THEME.roseDark} />
+              )}
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        {renderBody()}
       </ScrollView>
     </View>
   );
@@ -478,10 +510,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   agePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.88)',
     borderRadius: RADII.pill,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 6,
   },
   agePillText: {
     color: MOM_THEME.charcoal,

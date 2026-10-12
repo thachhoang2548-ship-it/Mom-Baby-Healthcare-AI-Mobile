@@ -66,6 +66,39 @@ export interface DailyMenuDto {
   };
 }
 
+export interface BabyFormData {
+  babyName: string;
+  dateOfBirth: string;
+  gender: number | string;
+  currentWeightKg?: number | null;
+  currentHeightCm?: number | null;
+  allergies?: string[];
+  foodHistory?: string[];
+}
+
+/** Kết quả đánh giá tăng trưởng theo chuẩn WHO do backend trả về. */
+export interface GrowthEvaluation {
+  isHealthy: boolean;
+  weightStatus: string; // Underweight | Normal | Overweight
+  heightStatus: string; // Short | Normal | Tall
+  feedback: string;
+}
+
+const toBabyPayload = (babyData: BabyFormData) => ({
+  babyName: babyData.babyName,
+  dateOfBirth: babyData.dateOfBirth,
+  gender:
+    babyData.gender === 0 ||
+    babyData.gender === 'boy' ||
+    (babyData.gender || '').toString().toLowerCase() === 'male'
+      ? 0
+      : 1,
+  currentWeightKg: babyData.currentWeightKg ? Number(babyData.currentWeightKg) : null,
+  currentHeightCm: babyData.currentHeightCm ? Number(babyData.currentHeightCm) : null,
+  allergies: babyData.allergies || [],
+  foodHistory: babyData.foodHistory || [],
+});
+
 const babyService = {
   getProfiles: async (): Promise<ApiResponse<BabyProfileDto[]>> => {
     const response = await axiosClient.get(ENDPOINTS.BABY_PROFILES);
@@ -88,8 +121,9 @@ const babyService = {
         birthDate: b.dateOfBirth,
         dateOfBirth: b.dateOfBirth,
         ageMonths: b.ageMonths ?? 0,
-        currentWeightKg: b.currentWeightKg || 3.2,
-        currentHeightCm: b.currentHeightCm || 50,
+        // Không gán số mặc định: hồ sơ chưa có cân nặng/chiều cao thì để trống.
+        currentWeightKg: b.currentWeightKg ?? undefined,
+        currentHeightCm: b.currentHeightCm ?? undefined,
         allergies: b.allergies || [],
         foodHistory: b.foodHistory || [],
         growthRecords: b.growthRecords || [],
@@ -100,30 +134,17 @@ const babyService = {
     return response.data;
   },
 
-  createProfile: async (babyData: {
-    babyName: string;
-    dateOfBirth: string;
-    gender: number | string;
-    currentWeightKg?: number;
-    currentHeightCm?: number;
-    allergies?: string[];
-  }): Promise<ApiResponse<BabyProfileDto>> => {
-    const payload = {
-      babyName: babyData.babyName,
-      dateOfBirth: babyData.dateOfBirth,
-      gender:
-        babyData.gender === 0 ||
-        babyData.gender === 'boy' ||
-        (babyData.gender || '').toString().toLowerCase() === 'male'
-          ? 0
-          : 1,
-      currentWeightKg: babyData.currentWeightKg ? Number(babyData.currentWeightKg) : null,
-      currentHeightCm: babyData.currentHeightCm ? Number(babyData.currentHeightCm) : null,
-      allergies: babyData.allergies || [],
-      foodHistory: [],
-      growthRecords: [],
-    };
-    const response = await axiosClient.post(ENDPOINTS.CREATE_BABY, payload);
+  createProfile: async (babyData: BabyFormData): Promise<ApiResponse<BabyProfileDto>> => {
+    const response = await axiosClient.post(ENDPOINTS.CREATE_BABY, toBabyPayload(babyData));
+    return response.data;
+  },
+
+  /** PUT ghi đè tên, ngày sinh, giới tính, chỉ số, dị ứng và lịch sử món ăn. */
+  updateProfile: async (
+    babyId: string | number,
+    babyData: BabyFormData
+  ): Promise<ApiResponse<BabyProfileDto>> => {
+    const response = await axiosClient.put(ENDPOINTS.UPDATE_BABY(babyId), toBabyPayload(babyData));
     return response.data;
   },
 
@@ -131,10 +152,11 @@ const babyService = {
     babyId: string | number,
     weightKg: number,
     heightCm: number
-  ): Promise<ApiResponse<GrowthRecord>> => {
+  ): Promise<ApiResponse<GrowthEvaluation>> => {
     const response = await axiosClient.post(ENDPOINTS.LOG_GROWTH(babyId), {
       weightKg: parseFloat(weightKg.toString()),
       heightCm: parseFloat(heightCm.toString()),
+      recordedAt: new Date().toISOString(),
     });
     return response.data;
   },
