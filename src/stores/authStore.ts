@@ -166,7 +166,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      await authService.logout().catch(() => {});
+      // Lấy token từ storage: interceptor cập nhật storage khi refresh, không cập nhật store.
+      const storedRefreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+      await authService.logout(storedRefreshToken).catch(() => {});
     } finally {
       await AsyncStorage.multiRemove([
         STORAGE_KEYS.TOKEN,

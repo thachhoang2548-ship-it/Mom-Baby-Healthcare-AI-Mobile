@@ -35,7 +35,7 @@ const profileService = {
     return res.data;
   },
 
-  /** PUT ghi đè toàn bộ hồ sơ: luôn gửi đủ các trường, trường thiếu sẽ bị đặt về null. */
+  /** PUT cập nhật một phần: trường không gửi giữ nguyên, trường gửi null sẽ bị xóa. */
   updateProfile: async (profileData: Partial<MomProfileDto>): Promise<ApiResponse<MomProfileDto>> => {
     const res = await axiosClient.put(ENDPOINTS.USER_PROFILE, profileData);
     return res.data;
