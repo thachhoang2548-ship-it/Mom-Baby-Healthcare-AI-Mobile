@@ -168,8 +168,8 @@ export default function PostpartumScreen() {
               </View>
               {epds?.data?.takenAt ? (
                 <View style={styles.flex}>
-                  <Text style={[styles.epdsRisk, { color: epdsRisk(epds.data.score).color }]}>
-                    {epdsRisk(epds.data.score).label} · {epds.data.score}/30 điểm
+                  <Text style={[styles.epdsRisk, { color: epdsRisk(epds.data.score, epds.data.isUrgent).color }]}>
+                    {epdsRisk(epds.data.score, epds.data.isUrgent).label} · {epds.data.score}/30 điểm
                   </Text>
                   <Text style={uiStyles.muted}>Lần gần nhất: {formatDateTime(epds.data.takenAt)}</Text>
                 </View>

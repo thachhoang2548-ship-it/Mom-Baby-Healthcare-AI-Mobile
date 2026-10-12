@@ -121,8 +121,8 @@ export default function EpdsScreen() {
   }
 
   if (result) {
-    const risk = epdsRisk(result.score);
     const selfHarm = (answers[EPDS_SELF_HARM_INDEX] ?? 0) > 0;
+    const risk = epdsRisk(result.score, selfHarm || result.isUrgent);
     const resources = usableResources(result.resources);
     return (
       <Screen {...header} subtitle={undefined}>

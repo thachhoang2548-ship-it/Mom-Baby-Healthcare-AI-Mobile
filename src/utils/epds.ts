@@ -92,8 +92,20 @@ export const EPDS_QUESTIONS: { text: string; options: { label: string; score: nu
   },
 ];
 
-/** Cùng ngưỡng với backend (BusinessRuleEngine.EvaluateEpdsScore). */
-export function epdsRisk(score: number) {
+/**
+ * Cùng ngưỡng với backend (BusinessRuleEngine.EvaluateEpdsScore). `urgent` = backend báo IsUrgent
+ * hoặc câu 10 dương tính: khi đó luôn là mức cần hỗ trợ, dù tổng điểm thấp.
+ */
+export function epdsRisk(score: number, urgent = false) {
+  if (urgent) {
+    return {
+      label: 'Cần hỗ trợ ngay',
+      color: '#B42318',
+      bg: '#FEE4E2',
+      advice:
+        'Mẹ đã chia sẻ có lúc xuất hiện ý nghĩ làm hại bản thân. Mẹ hãy nói ngay với người thân và liên hệ bác sĩ hoặc chuyên gia tâm lý.',
+    };
+  }
   if (score >= 13) {
     return {
       label: 'Nguy cơ cao',
