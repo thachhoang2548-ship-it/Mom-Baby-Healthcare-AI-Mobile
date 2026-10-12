@@ -38,11 +38,11 @@ export interface MealItem {
 
 export interface DailyMenuDto {
   meals?: {
-    breakfast?: MealItem;
-    lunch?: MealItem;
-    snack?: MealItem;
-    dinner?: MealItem;
-    supplementary_snack?: MealItem;
+    breakfast?: MealItem | null;
+    lunch?: MealItem | null;
+    snack?: MealItem | null;
+    dinner?: MealItem | null;
+    supplementary_snack?: MealItem | null;
   };
   nutrition_totals?: {
     calories?: number;

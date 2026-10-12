@@ -111,10 +111,15 @@ export default function BabyNutritionScreen() {
   const tip = getNutritionTip(ageMonths);
   const totals = dailyMenu?.nutrition_totals || {};
   const goals = dailyMenu?.goals || {};
+  // Backend trả null cho bữa không còn món an toàn với dị ứng của bé. Bữa chính vẫn hiện
+  // (kèm lời giải thích) để mẹ biết cần tự chuẩn bị; cữ phụ không phải ngày nào cũng có nên ẩn đi.
   const meals = MEAL_SLOTS.map((slot) => ({
     slot,
-    meal: dailyMenu?.meals?.[slot.key as keyof NonNullable<DailyMenuDto['meals']>] as MealItem | undefined,
-  })).filter((item) => item.meal);
+    meal: (dailyMenu?.meals?.[slot.key as keyof NonNullable<DailyMenuDto['meals']>] ?? undefined) as
+      | MealItem
+      | undefined,
+  })).filter((item) => item.meal || item.slot.key !== 'supplementary_snack');
+  const hasAnyMeal = meals.some((item) => item.meal);
 
   const renderBody = () => {
     if (loadError) return <ErrorState message={loadError} onRetry={loadBabies} />;
@@ -258,7 +263,7 @@ export default function BabyNutritionScreen() {
             <ActivityIndicator color={MOM_THEME.roseDark} />
             <Text style={styles.loadingText}>Đang chuẩn bị thực đơn dinh dưỡng...</Text>
           </View>
-        ) : menuMessage || !meals.length ? (
+        ) : menuMessage || !hasAnyMeal ? (
           <View style={styles.errorBox}>
             <Info size={15} color={MOM_THEME.amberDark} />
             <Text style={styles.errorText}>{menuMessage || 'Chưa có thực đơn cho hôm nay.'}</Text>
@@ -274,7 +279,14 @@ export default function BabyNutritionScreen() {
                   <Text style={styles.mealSlot}>{slot.label}</Text>
                   <Text style={styles.mealTime}>{slot.time}</Text>
                 </View>
-                <Text style={styles.mealName}>{meal?.name_vi || meal?.name_en}</Text>
+                {meal ? (
+                  <Text style={styles.mealName}>{meal.name_vi || meal.name_en}</Text>
+                ) : (
+                  <Text style={styles.mealMissing}>
+                    Chưa có món phù hợp với dị ứng của bé. Mẹ tự chuẩn bị món quen, tránh{' '}
+                    {selectedBaby.allergies?.length ? selectedBaby.allergies.join(', ').toLowerCase() : 'thực phẩm bé dị ứng'}.
+                  </Text>
+                )}
                 {meal?.total_calories ? (
                   <View style={styles.mealMetaRow}>
                     <Text style={styles.mealMetaKcal}>{Math.round(meal.total_calories)} kcal</Text>
@@ -741,6 +753,12 @@ const styles = StyleSheet.create({
     color: MOM_THEME.charcoal,
     fontSize: 14,
     fontWeight: '700',
+  },
+  mealMissing: {
+    color: MOM_THEME.amberDark,
+    fontSize: 13,
+    lineHeight: 19,
+    fontStyle: 'italic',
   },
   mealMetaRow: {
     flexDirection: 'row',
