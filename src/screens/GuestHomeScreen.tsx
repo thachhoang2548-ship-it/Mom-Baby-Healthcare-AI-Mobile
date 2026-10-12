@@ -232,7 +232,7 @@ export default function GuestHomeScreen() {
             <View style={styles.lifestyleOverlay} />
             <View style={styles.lifestyleQuote}>
               <Text style={styles.lifestyleQuoteText}>
-                "Mỗi ngày của mẹ đều quan trọng.{'\n'}Mỗi khoảnh khắc bên bé đều quý giá."
+                “Mỗi ngày của mẹ đều quan trọng.{'\n'}Mỗi khoảnh khắc bên bé đều quý giá.”
               </Text>
             </View>
           </View>

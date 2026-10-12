@@ -35,7 +35,8 @@
           "photosPermission": "Ung dung can quyen truy cap anh de chan doan trieu chung AI.",
           "cameraPermission": "Ung dung can quyen mo camera de chup anh trieu chung AI."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }
