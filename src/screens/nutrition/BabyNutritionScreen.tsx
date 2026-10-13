@@ -11,9 +11,21 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Award, Flame, Info, Pencil, Plus, RefreshCw, Ruler, Sparkles, Weight } from 'lucide-react-native';
+import {
+  Award,
+  CalendarDays,
+  ChartLine,
+  Flame,
+  Info,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Ruler,
+  Sparkles,
+  Weight,
+} from 'lucide-react-native';
 import babyService, { BabyProfileDto, DailyMenuDto, MealItem } from '../../services/babyService';
-import { EmptyState, ErrorState, LoadingView, TierLockedCard } from '../../components/ui';
+import { EmptyState, ErrorState, LoadingView, SecondaryButton, TierLockedCard } from '../../components/ui';
 import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
@@ -214,6 +226,26 @@ export default function BabyNutritionScreen() {
               </View>
             </View>
           </View>
+        </View>
+
+        <View style={styles.quickLinks}>
+          <SecondaryButton
+            label="Tăng trưởng"
+            icon={<ChartLine size={16} color={MOM_THEME.roseDeep} />}
+            onPress={() => navigation.navigate('GrowthChart', { babyId: String(selectedBaby.id) })}
+            style={styles.quickLink}
+          />
+          <SecondaryButton
+            label="Thực đơn 7 ngày"
+            icon={<CalendarDays size={16} color={MOM_THEME.roseDeep} />}
+            onPress={() =>
+              navigation.navigate('BabyWeeklyMenu', {
+                babyId: String(selectedBaby.id),
+                babyName: selectedBaby.babyName || 'bé',
+              })
+            }
+            style={styles.quickLink}
+          />
         </View>
 
         {/* ── Age Tip Card ── */}
@@ -571,6 +603,16 @@ const styles = StyleSheet.create({
   statMiniLbl: {
     fontSize: 10,
     color: MOM_THEME.muted,
+  },
+  quickLinks: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 14,
+  },
+  quickLink: {
+    flex: 1,
+    marginTop: 0,
+    paddingHorizontal: 8,
   },
   tipCard: {
     flexDirection: 'row',

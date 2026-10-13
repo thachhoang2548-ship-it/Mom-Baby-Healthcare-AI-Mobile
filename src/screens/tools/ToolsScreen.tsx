@@ -37,7 +37,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 
-type PanelKey = 'recipes' | 'upgrade' | 'subscription' | 'feedback' | 'emergency' | 'relax';
+type PanelKey = 'upgrade' | 'subscription' | 'feedback' | 'emergency' | 'relax';
 
 const formatResult = (value: unknown) => {
   if (value === null || value === undefined || value === '') return 'Chưa có dữ liệu.';
@@ -62,9 +62,6 @@ export default function ToolsScreen() {
   const [feedback, setFeedback] = useState('');
   const [feedbackCategories, setFeedbackCategories] = useState<FeedbackCategory[]>(FALLBACK_FEEDBACK);
   const [feedbackCategory, setFeedbackCategory] = useState('Bug');
-  const [dietType, setDietType] = useState('Thường');
-  const [allergies, setAllergies] = useState('Không');
-  const [ingredients, setIngredients] = useState('');
 
   useEffect(() => {
     featureService
@@ -81,6 +78,7 @@ export default function ToolsScreen() {
     { label: 'Lịch uống thuốc', icon: Pill, color: '#8E6BB8', go: () => navigation.navigate('Medications') },
     { label: 'Thông báo', icon: Bell, color: MOM_THEME.amberDark, go: () => navigation.navigate('Notifications') },
     { label: 'Lịch sử Bác sĩ AI', icon: HeartPulse, color: MOM_THEME.roseDark, go: () => navigation.navigate('SymptomHistory') },
+    { label: 'Món ăn AI', icon: Utensils, color: MOM_THEME.amberDark, go: () => navigation.navigate('Recipes') },
   ];
 
   const stageItems = [
@@ -91,7 +89,6 @@ export default function ToolsScreen() {
   ];
 
   const panelItems: { key: PanelKey; label: string; icon: typeof User; color: string }[] = [
-    { key: 'recipes', label: 'Món ăn AI', icon: Utensils, color: MOM_THEME.amberDark },
     { key: 'upgrade', label: 'Gói dịch vụ', icon: Sparkles, color: MOM_THEME.amberDark },
     { key: 'subscription', label: 'Lịch sử gói', icon: ReceiptText, color: MOM_THEME.sageDark },
     { key: 'feedback', label: 'Góp ý', icon: MessageSquare, color: '#4A88C7' },
@@ -205,28 +202,6 @@ export default function ToolsScreen() {
             <PrimaryButton label="Tải lịch sử thanh toán" onPress={() => run(() => featureService.getPaymentHistory())} />
           </Panel>
         );
-      case 'recipes':
-        return (
-          <Panel title="Món ăn AI" subtitle="Gợi ý món theo chế độ ăn và nguyên liệu sẵn có.">
-            <Field label="Chế độ ăn" value={dietType} onChangeText={setDietType} />
-            <Field label="Dị ứng" value={allergies} onChangeText={setAllergies} />
-            <Field label="Nguyên liệu có sẵn" value={ingredients} onChangeText={setIngredients} />
-            <PrimaryButton
-              label="Tạo món ăn AI"
-              onPress={() =>
-                run(() =>
-                  featureService.generateRecipes({
-                    dietType,
-                    allergies,
-                    maxCookTime: 30,
-                    availableIngredients: ingredients,
-                  })
-                )
-              }
-            />
-            <SecondaryButton label="Món ăn của tôi" onPress={() => run(() => featureService.getMyRecipes())} />
-          </Panel>
-        );
       default:
         return null;
     }
@@ -338,40 +313,10 @@ function Panel({ title, subtitle, children }: React.PropsWithChildren<{ title: s
   );
 }
 
-function Field({
-  label,
-  value,
-  onChangeText,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (value: string) => void;
-}) {
-  return (
-    <View style={styles.field}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChangeText}
-        placeholderTextColor={MOM_THEME.mutedLight}
-      />
-    </View>
-  );
-}
-
 function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <TouchableOpacity style={styles.primaryButton} onPress={onPress} activeOpacity={0.86}>
       <Text style={styles.primaryButtonText}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <TouchableOpacity style={styles.secondaryButton} onPress={onPress} activeOpacity={0.86}>
-      <Text style={styles.secondaryButtonText}>{label}</Text>
     </TouchableOpacity>
   );
 }
