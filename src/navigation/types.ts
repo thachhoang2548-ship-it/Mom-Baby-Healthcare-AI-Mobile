@@ -28,4 +28,12 @@ export type RootStackParamList = {
   Postpartum: undefined;
   Epds: undefined;
   Fertility: undefined;
+
+  // P3 – nhóm "Nên có"
+  GrowthChart: { babyId: string };
+  BabyWeeklyMenu: { babyId: string; babyName: string };
+  PregnancyMealPlan: undefined;
+  ExercisePlan: undefined;
+  IvfTimeline: undefined;
+  Recipes: undefined;
 };

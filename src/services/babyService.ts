@@ -3,7 +3,7 @@ import { ENDPOINTS } from '../api/endpoints';
 import { ApiResponse } from './authService';
 
 export interface GrowthRecord {
-  id?: string;
+  id?: string | number;
   weightKg: number;
   heightCm: number;
   recordedAt?: string;
@@ -28,12 +28,16 @@ export interface BabyProfileDto {
 export interface MealItem {
   name_vi?: string;
   name_en?: string;
+  description?: string;
+  texture?: string;
+  prep_time_min?: number;
   total_calories?: number;
   protein_g?: number;
   fat_g?: number;
   carbs_g?: number;
-  ingredients?: string[];
-  cooking_instructions?: string[];
+  ingredients?: { ingredient: { vietnamese_name?: string; english_name?: string }; weight_grams?: number }[];
+  cooking_steps?: { step: number; instruction: string; duration?: string }[];
+  allergens?: string[];
 }
 
 export interface DailyMenuDto {
@@ -64,6 +68,11 @@ export interface DailyMenuDto {
     carbs_g?: number;
     iron_mg?: number;
   };
+}
+
+/** Thực đơn 7 ngày: mỗi ngày cùng cấu trúc với thực đơn ngày, kèm cờ đạt 80% mục tiêu. */
+export interface WeeklyMenuDto {
+  days: (DailyMenuDto & { meets_80pct?: boolean })[];
 }
 
 export interface BabyFormData {
@@ -148,15 +157,32 @@ const babyService = {
     return response.data;
   },
 
+  /** recordedAt mặc định là lúc gọi; truyền ngày đo khi mẹ ghi lại số liệu cũ. */
   logGrowth: async (
     babyId: string | number,
     weightKg: number,
-    heightCm: number
+    heightCm: number,
+    recordedAt: string = new Date().toISOString()
   ): Promise<ApiResponse<GrowthEvaluation>> => {
     const response = await axiosClient.post(ENDPOINTS.LOG_GROWTH(babyId), {
       weightKg: parseFloat(weightKg.toString()),
       heightCm: parseFloat(heightCm.toString()),
-      recordedAt: new Date().toISOString(),
+      recordedAt,
+    });
+    return response.data;
+  },
+
+  deleteGrowth: async (babyId: string | number, recordId: string | number): Promise<ApiResponse<unknown>> => {
+    const response = await axiosClient.delete(ENDPOINTS.DELETE_GROWTH(babyId, recordId));
+    return response.data;
+  },
+
+  getWeeklyMenu: async (
+    babyId: string | number,
+    forceRefresh: boolean = false
+  ): Promise<ApiResponse<WeeklyMenuDto>> => {
+    const response = await axiosClient.get(ENDPOINTS.WEEKLY_MENU(babyId), {
+      params: forceRefresh ? { force: true } : undefined,
     });
     return response.data;
   },

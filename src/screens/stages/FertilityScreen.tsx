@@ -1,7 +1,9 @@
 import React, { useCallback, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { CalendarRange, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { RootStackParamList } from '../../navigation/types';
 import {
   Card,
   Chip,
@@ -10,6 +12,7 @@ import {
   LoadingView,
   PrimaryButton,
   Screen,
+  SecondaryButton,
   SectionTitle,
   uiStyles,
 } from '../../components/ui';
@@ -107,6 +110,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 }
 
 export default function FertilityScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [month, setMonth] = useState(() => {
     const t = startOfToday();
     return new Date(t.getFullYear(), t.getMonth(), 1);
@@ -225,6 +229,13 @@ export default function FertilityScreen() {
           </Text>
         ) : null}
       </Card>
+
+      <SecondaryButton
+        label="Lịch trình IVF"
+        icon={<CalendarRange size={16} color={MOM_THEME.roseDeep} />}
+        onPress={() => navigation.navigate('IvfTimeline')}
+        style={styles.ivf}
+      />
 
       <SectionTitle title="Ghi kỳ kinh mới" />
       <Card>
@@ -369,6 +380,10 @@ const styles = StyleSheet.create({
   },
   prediction: {
     marginTop: 10,
+  },
+  ivf: {
+    marginTop: 0,
+    marginBottom: 6,
   },
   symptoms: {
     marginBottom: 12,

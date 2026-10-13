@@ -186,6 +186,52 @@ export interface RecoveryPlan {
   };
 }
 
+export interface PregnancyMealDay {
+  day: string;
+  breakfast?: string;
+  lunch?: string;
+  snack?: string;
+  dinner?: string;
+  dailyNutrients?: {
+    calories?: number;
+    protein?: string;
+    carbs?: string;
+    fat?: string;
+    iron?: string;
+  };
+}
+
+export interface ExercisePlan {
+  trimester: number;
+  exercises: { name: string; reps?: string; duration?: string }[];
+}
+
+export interface IvfMilestone {
+  dayNumber: number;
+  date: string;
+  title: string;
+  description: string;
+}
+
+export interface RecipeDto {
+  id: number;
+  category: 'Mom' | 'Baby' | string;
+  title: string;
+  description?: string;
+  ingredientsJson?: string;
+  stepsJson?: string;
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  prepTimeMinutes?: number;
+  difficulty?: string; // Easy | Medium | Hard
+  isSaved: boolean;
+  status: string; // PendingReview | Approved | Rejected
+  expertNote?: string | null;
+  generatedAt?: string;
+}
+
 export interface FeedbackCategory {
   value: string;
   label: string;
@@ -238,16 +284,27 @@ const featureService = {
 
   getOvulationToday: () => call<OvulationToday>(axiosClient.get(ENDPOINTS.FERTILITY_OVULATION_TODAY)),
 
-  createIvfTimeline: (ivfStartDate: string, protocol = 'long') =>
-    call(axiosClient.post(ENDPOINTS.FERTILITY_IVF_TIMELINE, { ivfStartDate, protocol })),
+  /** protocol: "long" (phác đồ dài) hoặc "short" (phác đồ ngắn / antagonist). */
+  createIvfTimeline: (ivfStartDateIso: string, protocol: 'long' | 'short' = 'long') =>
+    call<IvfMilestone[]>(
+      axiosClient.post(ENDPOINTS.FERTILITY_IVF_TIMELINE, { ivfStartDate: ivfStartDateIso, protocol })
+    ),
 
   // Thai kỳ
   getPregnancyThisWeek: () =>
     call<PregnancyWeekInfo>(axiosClient.get(ENDPOINTS.PREGNANCY_THIS_WEEK)),
 
-  getPregnancyMealPlan: () => call(axiosClient.get(ENDPOINTS.PREGNANCY_MEAL_PLAN)),
+  getPregnancyMealPlan: () =>
+    call<PregnancyMealDay[]>(axiosClient.get(ENDPOINTS.PREGNANCY_MEAL_PLAN)),
 
-  getExercisePlan: () => call(axiosClient.get(ENDPOINTS.PREGNANCY_EXERCISE_PLAN)),
+  getExercisePlan: () => call<ExercisePlan>(axiosClient.get(ENDPOINTS.PREGNANCY_EXERCISE_PLAN)),
+
+  logExercise: (exerciseType: string, durationMinutes: number, stepCount = 0) =>
+    call(
+      axiosClient.post(ENDPOINTS.PREGNANCY_EXERCISE_LOG, { exerciseType, durationMinutes, stepCount })
+    ),
+
+  getTodaySteps: () => call<{ todaySteps: number }>(axiosClient.get(ENDPOINTS.PREGNANCY_TODAY_STEPS)),
 
   logPregnancyWeight: (weightKg: number) =>
     call<WeightLogResult>(
@@ -303,10 +360,17 @@ const featureService = {
     }, Thời gian nấu tối đa: ${
       preferences.maxCookTime || 30
     } phút, Nguyên liệu có sẵn: ${preferences.availableIngredients || 'Không'}`;
+    // Backend lưu các món vừa tạo vào "món của tôi" (category Mom, chờ chuyên gia duyệt).
     return call(axiosClient.post(ENDPOINTS.AI_RECIPES, { query }));
   },
 
-  getMyRecipes: () => call(axiosClient.get(ENDPOINTS.MY_RECIPES)),
+  getMyRecipes: (filters: { category?: 'Mom' | 'Baby'; isSaved?: boolean } = {}) =>
+    call<{ total: number; recipes: RecipeDto[] }>(
+      axiosClient.get(ENDPOINTS.MY_RECIPES, { params: { limit: 50, ...filters } })
+    ),
+
+  toggleSaveRecipe: (id: number) =>
+    call<{ isSaved: boolean }>(axiosClient.patch(ENDPOINTS.RECIPE_SAVE(id))),
 
   // Góp ý
   getFeedbackOptions: () =>

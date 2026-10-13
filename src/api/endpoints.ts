@@ -16,6 +16,7 @@ export const ENDPOINTS = {
   CREATE_BABY: '/api/baby/profile',
   UPDATE_BABY: (id: string | number) => `/api/baby/${id}`,
   LOG_GROWTH: (id: string | number) => `/api/baby/${id}/growth`,
+  DELETE_GROWTH: (id: string | number, recordId: string | number) => `/api/baby/${id}/growth/${recordId}`,
   DAILY_MENU: (id: string | number) => `/api/baby/${id}/menu/daily`,
   WEEKLY_MENU: (id: string | number) => `/api/baby/${id}/menu/weekly`,
 
@@ -55,6 +56,7 @@ export const ENDPOINTS = {
   PREGNANCY_WEIGHT_LOGS: '/api/pregnancy/weight-logs',
   PREGNANCY_FOOD_LOG: '/api/pregnancy/food-log',
   PREGNANCY_EXERCISE_LOG: '/api/pregnancy/exercise-log',
+  PREGNANCY_TODAY_STEPS: '/api/pregnancy/today-steps',
 
   // Postpartum
   POSTPARTUM_SETUP: '/api/postpartum/setup',
@@ -74,4 +76,5 @@ export const ENDPOINTS = {
   // Recipes
   AI_RECIPES: '/api/ai/recipes',
   MY_RECIPES: '/api/recipes/my',
+  RECIPE_SAVE: (id: string | number) => `/api/recipes/${id}/save`,
 };

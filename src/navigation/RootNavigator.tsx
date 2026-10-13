@@ -17,6 +17,12 @@ import PregnancyScreen from '../screens/stages/PregnancyScreen';
 import PostpartumScreen from '../screens/stages/PostpartumScreen';
 import EpdsScreen from '../screens/stages/EpdsScreen';
 import FertilityScreen from '../screens/stages/FertilityScreen';
+import GrowthChartScreen from '../screens/nutrition/GrowthChartScreen';
+import BabyWeeklyMenuScreen from '../screens/nutrition/BabyWeeklyMenuScreen';
+import PregnancyMealPlanScreen from '../screens/stages/PregnancyMealPlanScreen';
+import ExercisePlanScreen from '../screens/stages/ExercisePlanScreen';
+import IvfTimelineScreen from '../screens/stages/IvfTimelineScreen';
+import RecipesScreen from '../screens/recipes/RecipesScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -47,6 +53,12 @@ export default function RootNavigator() {
         <Stack.Screen name="Postpartum" component={PostpartumScreen} />
         <Stack.Screen name="Epds" component={EpdsScreen} />
         <Stack.Screen name="Fertility" component={FertilityScreen} />
+        <Stack.Screen name="GrowthChart" component={GrowthChartScreen} />
+        <Stack.Screen name="BabyWeeklyMenu" component={BabyWeeklyMenuScreen} />
+        <Stack.Screen name="PregnancyMealPlan" component={PregnancyMealPlanScreen} />
+        <Stack.Screen name="ExercisePlan" component={ExercisePlanScreen} />
+        <Stack.Screen name="IvfTimeline" component={IvfTimelineScreen} />
+        <Stack.Screen name="Recipes" component={RecipesScreen} />
       </Stack.Group>
     </Stack.Navigator>
   );

@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Baby, HeartPulse, Pill, Scale } from 'lucide-react-native';
+import { Baby, Dumbbell, HeartPulse, Pill, Salad, Scale } from 'lucide-react-native';
 import {
   Card,
   EmptyState,
@@ -215,6 +215,16 @@ export default function PregnancyScreen() {
         label="Lịch uống vitamin & sắt"
         icon={<Pill size={16} color={MOM_THEME.roseDeep} />}
         onPress={() => navigation.navigate('Medications')}
+      />
+      <SecondaryButton
+        label="Thực đơn thai kỳ 7 ngày"
+        icon={<Salad size={16} color={MOM_THEME.roseDeep} />}
+        onPress={() => navigation.navigate('PregnancyMealPlan')}
+      />
+      <SecondaryButton
+        label="Bài tập an toàn"
+        icon={<Dumbbell size={16} color={MOM_THEME.roseDeep} />}
+        onPress={() => navigation.navigate('ExercisePlan')}
       />
     </Screen>
   );
