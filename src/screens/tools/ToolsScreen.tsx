@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -10,47 +11,33 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   Activity,
   Baby,
   Bell,
   Calendar,
+  ClipboardList,
   Headphones,
   Heart,
   HeartPulse,
-  LayoutDashboard,
   LifeBuoy,
   MessageSquare,
+  PhoneCall,
   Pill,
   ReceiptText,
   Sparkles,
   User,
   Utensils,
 } from 'lucide-react-native';
-import featureService, { TIERS_DATA } from '../../services/featureService';
+import featureService, { FeedbackCategory, TIERS_DATA } from '../../services/featureService';
 import { getTierDisplayName, useAuthStore } from '../../stores/authStore';
+import { RootStackParamList } from '../../navigation/types';
+import { getApiErrorMessage } from '../../utils/apiError';
 import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 
-type MenuKey =
-  | 'dashboard'
-  | 'fertility'
-  | 'pregnancy'
-  | 'postpartum'
-  | 'baby'
-  | 'upgrade'
-  | 'calendar'
-  | 'emergency'
-  | 'feedback'
-  | 'relax'
-  | 'subscription'
-  | 'profile'
-  | 'recipes'
-  | 'notifications'
-  | 'medication'
-  | 'symptoms'
-  | 'monitoring';
-
-const today = new Date().toISOString().slice(0, 10);
+type PanelKey = 'recipes' | 'upgrade' | 'subscription' | 'feedback' | 'emergency' | 'relax';
 
 const formatResult = (value: unknown) => {
   if (value === null || value === undefined || value === '') return 'Chưa có dữ liệu.';
@@ -58,56 +45,72 @@ const formatResult = (value: unknown) => {
   return JSON.stringify(value, null, 2);
 };
 
-export default function ToolsScreen() {
-  const { user, tier } = useAuthStore();
-  const [active, setActive] = useState<MenuKey>('dashboard');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState('Chọn một chức năng để xem dữ liệu hoặc đồng bộ với backend.');
+const FALLBACK_FEEDBACK: FeedbackCategory[] = [
+  { value: 'Bug', label: 'Lỗi chức năng' },
+  { value: 'Payment', label: 'Thanh toán / gói' },
+  { value: 'Content', label: 'Nội dung chăm sóc' },
+  { value: 'Idea', label: 'Ý tưởng mới' },
+];
 
-  const [periodStart, setPeriodStart] = useState(today);
-  const [cycleLength, setCycleLength] = useState('28');
-  const [ivfStart, setIvfStart] = useState(today);
-  const [weightKg, setWeightKg] = useState('');
-  const [epdsCsv, setEpdsCsv] = useState('0,0,0,0,0,0,0,0,0,0');
-  const [medicineName, setMedicineName] = useState('');
-  const [medicineTime, setMedicineTime] = useState('08:00');
-  const [waterCups, setWaterCups] = useState('6');
-  const [mood, setMood] = useState('Bình an');
+export default function ToolsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { tier } = useAuthStore();
+  const [active, setActive] = useState<PanelKey | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
   const [feedback, setFeedback] = useState('');
+  const [feedbackCategories, setFeedbackCategories] = useState<FeedbackCategory[]>(FALLBACK_FEEDBACK);
+  const [feedbackCategory, setFeedbackCategory] = useState('Bug');
   const [dietType, setDietType] = useState('Thường');
   const [allergies, setAllergies] = useState('Không');
   const [ingredients, setIngredients] = useState('');
 
-  const menuItems = useMemo(
-    () => [
-      { key: 'dashboard' as const, label: 'Tổng quan', icon: LayoutDashboard, color: MOM_THEME.roseDark },
-      { key: 'fertility' as const, label: 'Rụng trứng', icon: Calendar, color: MOM_THEME.roseDark },
-      { key: 'pregnancy' as const, label: 'Thai kỳ', icon: Heart, color: MOM_THEME.roseDark },
-      { key: 'postpartum' as const, label: 'Hậu sản', icon: Activity, color: MOM_THEME.sageDark },
-      { key: 'baby' as const, label: 'Bé yêu', icon: Baby, color: MOM_THEME.sageDark },
-      { key: 'upgrade' as const, label: 'Gói dịch vụ', icon: Sparkles, color: MOM_THEME.amberDark },
-      { key: 'calendar' as const, label: 'Lịch chăm sóc', icon: Calendar, color: MOM_THEME.roseDark },
-      { key: 'emergency' as const, label: 'Khẩn cấp', icon: LifeBuoy, color: '#D95368' },
-      { key: 'feedback' as const, label: 'Hỗ trợ', icon: MessageSquare, color: '#4A88C7' },
-      { key: 'relax' as const, label: 'Thư giãn', icon: Headphones, color: '#8E6BB8' },
-      { key: 'subscription' as const, label: 'Lịch sử gói', icon: ReceiptText, color: MOM_THEME.sageDark },
-      { key: 'profile' as const, label: 'Hồ sơ mẹ', icon: User, color: MOM_THEME.roseDark },
-      { key: 'recipes' as const, label: 'Món ăn', icon: Utensils, color: MOM_THEME.amberDark },
-      { key: 'notifications' as const, label: 'Thông báo', icon: Bell, color: MOM_THEME.amberDark },
-      { key: 'medication' as const, label: 'Lịch uống thuốc', icon: Pill, color: '#8E6BB8' },
-      { key: 'symptoms' as const, label: 'Lịch sử AI', icon: HeartPulse, color: MOM_THEME.roseDark },
-      { key: 'monitoring' as const, label: 'Theo dõi ngày', icon: HeartPulse, color: MOM_THEME.sageDark },
-    ],
-    []
-  );
+  useEffect(() => {
+    featureService
+      .getFeedbackOptions()
+      .then((res) => {
+        if (res?.categories?.length) setFeedbackCategories(res.categories);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const healthItems = [
+    { label: 'Hồ sơ mẹ', icon: User, color: MOM_THEME.roseDark, go: () => navigation.navigate('Profile') },
+    { label: 'Nhật ký hằng ngày', icon: ClipboardList, color: MOM_THEME.sageDark, go: () => navigation.navigate('DailyMonitoring') },
+    { label: 'Lịch uống thuốc', icon: Pill, color: '#8E6BB8', go: () => navigation.navigate('Medications') },
+    { label: 'Thông báo', icon: Bell, color: MOM_THEME.amberDark, go: () => navigation.navigate('Notifications') },
+    { label: 'Lịch sử Bác sĩ AI', icon: HeartPulse, color: MOM_THEME.roseDark, go: () => navigation.navigate('SymptomHistory') },
+  ];
+
+  const stageItems = [
+    { label: 'Rụng trứng', icon: Calendar, color: MOM_THEME.roseDark, go: () => navigation.navigate('Fertility') },
+    { label: 'Thai kỳ', icon: Heart, color: MOM_THEME.roseDark, go: () => navigation.navigate('Pregnancy') },
+    { label: 'Hậu sản', icon: Activity, color: MOM_THEME.sageDark, go: () => navigation.navigate('Postpartum') },
+    { label: 'Bé yêu', icon: Baby, color: MOM_THEME.sageDark, go: () => navigation.navigate('MainTabs', { screen: 'Nutrition' }) },
+  ];
+
+  const panelItems: { key: PanelKey; label: string; icon: typeof User; color: string }[] = [
+    { key: 'recipes', label: 'Món ăn AI', icon: Utensils, color: MOM_THEME.amberDark },
+    { key: 'upgrade', label: 'Gói dịch vụ', icon: Sparkles, color: MOM_THEME.amberDark },
+    { key: 'subscription', label: 'Lịch sử gói', icon: ReceiptText, color: MOM_THEME.sageDark },
+    { key: 'feedback', label: 'Góp ý', icon: MessageSquare, color: '#4A88C7' },
+    { key: 'emergency', label: 'Khẩn cấp', icon: LifeBuoy, color: '#D95368' },
+    { key: 'relax', label: 'Thư giãn', icon: Headphones, color: '#8E6BB8' },
+  ];
+
+  const openPanel = (key: PanelKey) => {
+    setActive((current) => (current === key ? null : key));
+    setResult(null);
+  };
 
   const run = async (task: () => Promise<unknown>, success?: string) => {
     setLoading(true);
     try {
       const data = await task();
-      setResult(`${success ? `${success}\n\n` : ''}${formatResult(data)}`);
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Không thể hoàn tất tác vụ.';
+      setResult(success ?? formatResult(data));
+    } catch (err) {
+      const message = getApiErrorMessage(err, 'Không thể hoàn tất tác vụ.');
       setResult(message);
       Alert.alert('Không thành công', message);
     } finally {
@@ -115,138 +118,70 @@ export default function ToolsScreen() {
     }
   };
 
-  const submitEpds = () => {
-    const answers = epdsCsv
-      .split(',')
-      .map((x) => Number(x.trim()))
-      .filter((x) => Number.isFinite(x));
-    if (answers.length !== 10) {
-      Alert.alert('EPDS cần 10 câu', 'Nhập đủ 10 điểm, ngăn cách bằng dấu phẩy.');
-      return;
-    }
-    run(() => featureService.submitEpds(answers), 'Đã gửi đánh giá EPDS.');
-  };
-
-  const submitMedication = () => {
-    if (!medicineName.trim()) {
-      Alert.alert('Thiếu tên thuốc', 'Nhập tên thuốc hoặc vitamin.');
-      return;
-    }
-    run(
-      () =>
-        featureService.addMedication({
-          name: medicineName.trim(),
-          dosage: '1 viên',
-          scheduleTime: medicineTime,
-          notes: 'Tạo từ app mobile',
-        }),
-      'Đã thêm lịch uống thuốc.'
-    );
-  };
-
-  const submitMonitoring = () => {
-    run(
-      () =>
-        featureService.createDailyMonitoring({
-          waterCups: Number(waterCups) || 0,
-          mood,
-          recordedAt: new Date().toISOString(),
-        }),
-      'Đã ghi nhận sức khỏe hôm nay.'
-    );
-  };
-
   const submitFeedback = () => {
-    if (feedback.trim().length < 5) {
-      Alert.alert('Thiếu nội dung', 'Nhập phản hồi ngắn cho đội ngũ Mom Ơi.');
+    if (feedback.trim().length < 10) {
+      Alert.alert('Nội dung quá ngắn', 'Mẹ viết thêm một chút (ít nhất 10 ký tự) để đội ngũ hiểu rõ hơn nhé.');
       return;
     }
-    run(
-      () => featureService.sendFeedback({ message: feedback.trim(), rating: 5, source: 'mobile' }),
-      'Đã gửi phản hồi.'
+    run(async () => {
+      await featureService.sendFeedback({
+        category: feedbackCategory,
+        message: feedback.trim(),
+        page: 'mobile/menu',
+      });
+      setFeedback('');
+    }, 'Cảm ơn mẹ! Góp ý đã được gửi tới đội ngũ Mom Ơi.');
+  };
+
+  const confirmPayment = () => {
+    Alert.alert(
+      'Tạo yêu cầu thanh toán',
+      `Mom Ơi sẽ tạo đơn chuyển khoản cho gói ${TIERS_DATA.SuperMomVip.name} (${TIERS_DATA.SuperMomVip.monthlyPrice}/tháng). Mẹ có muốn tiếp tục?`,
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { text: 'Tạo đơn', onPress: () => run(() => featureService.createPayment('SuperMomVip', 1)) },
+      ]
     );
   };
 
   const renderPanel = () => {
     switch (active) {
-      case 'dashboard':
-        return (
-          <Panel title="Tổng quan" subtitle="Tương ứng route /dashboard trên website.">
-            <InfoRow label="Tài khoản" value={user?.fullName || user?.email || 'Mẹ yêu'} />
-            <InfoRow label="Gói hiện tại" value={getTierDisplayName(tier)} />
-            <InfoRow label="Gợi ý" value="Dùng các mục bên dưới để truy cập đúng chức năng như trên website." />
-          </Panel>
-        );
-      case 'fertility':
-        return (
-          <Panel title="Rụng trứng" subtitle="Tương ứng route /fertility và IVF timeline.">
-            <Field label="Ngày bắt đầu kỳ kinh (YYYY-MM-DD)" value={periodStart} onChangeText={setPeriodStart} />
-            <Field label="Độ dài chu kỳ" value={cycleLength} onChangeText={setCycleLength} keyboardType="numeric" />
-            <PrimaryButton
-              label="Lưu chu kỳ"
-              onPress={() => run(() => featureService.logCycle(periodStart, Number(cycleLength) || 28), 'Đã lưu chu kỳ.')}
-            />
-            <Field label="Ngày bắt đầu IVF" value={ivfStart} onChangeText={setIvfStart} />
-            <SecondaryButton label="Tạo IVF timeline" onPress={() => run(() => featureService.createIvfTimeline(ivfStart))} />
-            <SecondaryButton label="Rụng trứng hôm nay" onPress={() => run(() => featureService.getOvulationToday())} />
-          </Panel>
-        );
-      case 'pregnancy':
-        return (
-          <Panel title="Thai kỳ" subtitle="Tương ứng /pregnancy, /pregnancy/meals, /pregnancy/exercises.">
-            <Field label="Cân nặng hiện tại (kg)" value={weightKg} onChangeText={setWeightKg} keyboardType="numeric" />
-            <PrimaryButton
-              label="Ghi cân nặng"
-              onPress={() => run(() => featureService.logPregnancyWeight(Number(weightKg) || 0), 'Đã ghi cân nặng.')}
-            />
-            <SecondaryButton label="Thông tin tuần này" onPress={() => run(() => featureService.getPregnancyThisWeek())} />
-            <SecondaryButton label="Thực đơn thai kỳ" onPress={() => run(() => featureService.getPregnancyMealPlan())} />
-            <SecondaryButton label="Bài tập an toàn" onPress={() => run(() => featureService.getExercisePlan())} />
-          </Panel>
-        );
-      case 'postpartum':
-        return (
-          <Panel title="Hậu sản" subtitle="Tương ứng /postpartum và /postpartum/epds.">
-            <Field label="10 điểm EPDS, cách nhau bằng dấu phẩy" value={epdsCsv} onChangeText={setEpdsCsv} />
-            <PrimaryButton label="Gửi EPDS" onPress={submitEpds} />
-            <SecondaryButton label="EPDS gần nhất" onPress={() => run(() => featureService.getLatestEpds())} />
-            <SecondaryButton label="Kế hoạch phục hồi" onPress={() => run(() => featureService.getRecoveryPlan())} />
-          </Panel>
-        );
-      case 'baby':
-        return (
-          <Panel title="Bé yêu" subtitle="Tương ứng /baby-nutrition, /menu, /growth, create/edit baby.">
-            <InfoRow label="Trong app" value="Tab Bé yêu đang chứa hồ sơ bé, tăng trưởng và thực đơn dinh dưỡng." />
-            <InfoRow label="Lưu ý" value="Nếu API daily menu trả 400, kiểm tra hồ sơ bé đủ ngày sinh, cân nặng, chiều cao." />
-          </Panel>
-        );
       case 'upgrade':
         return (
-          <Panel title="Gói dịch vụ" subtitle="Tương ứng /upgrade và /payment.">
+          <Panel title="Gói dịch vụ" subtitle={`Gói hiện tại: ${getTierDisplayName(tier)}`}>
             <Plan name={TIERS_DATA.MomHienDai.name} price={TIERS_DATA.MomHienDai.monthlyPrice} />
             <Plan name={TIERS_DATA.SuperMomVip.name} price={TIERS_DATA.SuperMomVip.monthlyPrice} />
-            <PrimaryButton
-              label="Tạo thanh toán Super Mom VIP"
-              onPress={() => run(() => featureService.createPayment('SuperMomVip', 1), 'Đã tạo yêu cầu thanh toán.')}
-            />
-          </Panel>
-        );
-      case 'calendar':
-        return (
-          <Panel title="Lịch chăm sóc" subtitle="Tương ứng /care-calendar.">
-            <InfoRow label="Chức năng" value="Theo dõi lịch khám, vitamin, nhắc chăm sóc và mốc quan trọng." />
+            <PrimaryButton label="Tạo thanh toán Super Mom VIP" onPress={confirmPayment} />
           </Panel>
         );
       case 'emergency':
         return (
-          <Panel title="Khẩn cấp" subtitle="Tương ứng /emergency.">
+          <Panel title="Khẩn cấp" subtitle="Khi có dấu hiệu nguy hiểm, đừng chờ theo dõi tại nhà.">
             <Warning text="Nếu đau nhiều, ra máu, sốt cao, khó thở hoặc thai máy giảm rõ rệt, hãy đến cơ sở y tế ngay." />
             <Warning text="Với bé: bỏ bú, tím tái, co giật, sốt cao kéo dài hoặc li bì là dấu hiệu cần khám ngay." />
+            <TouchableOpacity style={styles.callButton} onPress={() => Linking.openURL('tel:115')}>
+              <PhoneCall size={16} color={MOM_THEME.white} />
+              <Text style={styles.primaryButtonText}>Gọi cấp cứu 115</Text>
+            </TouchableOpacity>
           </Panel>
         );
       case 'feedback':
         return (
-          <Panel title="Hỗ trợ" subtitle="Tương ứng /feedback.">
+          <Panel title="Góp ý" subtitle="Mẹ gặp lỗi hoặc có ý tưởng? Đội ngũ Mom Ơi luôn lắng nghe.">
+            <View style={styles.chipRow}>
+              {feedbackCategories.map((c) => {
+                const selected = feedbackCategory === c.value;
+                return (
+                  <TouchableOpacity
+                    key={c.value}
+                    style={[styles.chip, selected && styles.chipActive]}
+                    onPress={() => setFeedbackCategory(c.value)}
+                  >
+                    <Text style={[styles.chipText, selected && styles.chipTextActive]}>{c.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
             <TextInput
               style={styles.textArea}
               placeholder="Mẹ muốn góp ý gì cho Mom Ơi?"
@@ -255,32 +190,24 @@ export default function ToolsScreen() {
               value={feedback}
               onChangeText={setFeedback}
             />
-            <PrimaryButton label="Gửi phản hồi" onPress={submitFeedback} />
+            <PrimaryButton label="Gửi góp ý" onPress={submitFeedback} />
           </Panel>
         );
       case 'relax':
         return (
-          <Panel title="Thư giãn" subtitle="Tương ứng /relax.">
+          <Panel title="Thư giãn" subtitle="Một phút cho riêng mẹ.">
             <InfoRow label="Bài tập 1 phút" value="Hít vào 4 giây, giữ 2 giây, thở ra 6 giây. Lặp lại 5 lần." />
           </Panel>
         );
       case 'subscription':
         return (
-          <Panel title="Lịch sử gói" subtitle="Tương ứng /subscription-history.">
+          <Panel title="Lịch sử gói" subtitle="Các giao dịch nâng cấp gói của mẹ.">
             <PrimaryButton label="Tải lịch sử thanh toán" onPress={() => run(() => featureService.getPaymentHistory())} />
-          </Panel>
-        );
-      case 'profile':
-        return (
-          <Panel title="Hồ sơ mẹ" subtitle="Tương ứng /profile.">
-            <InfoRow label="Tên" value={user?.fullName || 'Chưa cập nhật'} />
-            <InfoRow label="Email" value={user?.email || 'Chưa cập nhật'} />
-            <InfoRow label="Gói dịch vụ" value={getTierDisplayName(tier)} />
           </Panel>
         );
       case 'recipes':
         return (
-          <Panel title="Món ăn" subtitle="Tương ứng /diet-recipes.">
+          <Panel title="Món ăn AI" subtitle="Gợi ý món theo chế độ ăn và nguyên liệu sẵn có.">
             <Field label="Chế độ ăn" value={dietType} onChangeText={setDietType} />
             <Field label="Dị ứng" value={allergies} onChangeText={setAllergies} />
             <Field label="Nguyên liệu có sẵn" value={ingredients} onChangeText={setIngredients} />
@@ -298,36 +225,6 @@ export default function ToolsScreen() {
               }
             />
             <SecondaryButton label="Món ăn của tôi" onPress={() => run(() => featureService.getMyRecipes())} />
-          </Panel>
-        );
-      case 'notifications':
-        return (
-          <Panel title="Thông báo" subtitle="Tương ứng /notifications.">
-            <PrimaryButton label="Tải thông báo" onPress={() => run(() => featureService.getNotifications())} />
-          </Panel>
-        );
-      case 'medication':
-        return (
-          <Panel title="Lịch uống thuốc" subtitle="Tương ứng /scheduler.">
-            <Field label="Tên thuốc / vitamin" value={medicineName} onChangeText={setMedicineName} />
-            <Field label="Giờ uống" value={medicineTime} onChangeText={setMedicineTime} />
-            <PrimaryButton label="Thêm lịch uống" onPress={submitMedication} />
-            <SecondaryButton label="Tải danh sách thuốc" onPress={() => run(() => featureService.getMedications())} />
-          </Panel>
-        );
-      case 'symptoms':
-        return (
-          <Panel title="Lịch sử AI" subtitle="Tương ứng /symptoms/history. Tab AI dùng cho /symptoms và /symptom-entry.">
-            <PrimaryButton label="Tải lịch sử triệu chứng" onPress={() => run(() => featureService.getSymptomHistory())} />
-          </Panel>
-        );
-      case 'monitoring':
-        return (
-          <Panel title="Theo dõi ngày" subtitle="Tương ứng /daily-monitoring.">
-            <Field label="Số cốc nước" value={waterCups} onChangeText={setWaterCups} keyboardType="numeric" />
-            <Field label="Tâm trạng" value={mood} onChangeText={setMood} />
-            <PrimaryButton label="Lưu hôm nay" onPress={submitMonitoring} />
-            <SecondaryButton label="Xem bản ghi hôm nay" onPress={() => run(() => featureService.getTodayMonitoring())} />
           </Panel>
         );
       default:
@@ -354,53 +251,80 @@ export default function ToolsScreen() {
           </Text>
         </View>
 
+        <Text style={styles.groupTitle}>Sức khỏe của mẹ</Text>
         <View style={styles.menuGrid}>
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const selected = active === item.key;
-            return (
-              <TouchableOpacity
-                key={item.key}
-                style={[styles.menuItem, selected && styles.menuItemActive]}
-                onPress={() => setActive(item.key)}
-                activeOpacity={0.86}
-              >
-                <View
-                  style={[
-                    styles.menuIconWrap,
-                    selected && { backgroundColor: 'rgba(255, 255, 255, 0.25)' },
-                  ]}
-                >
-                  <Icon size={18} color={selected ? MOM_THEME.white : item.color} />
-                </View>
-                <Text style={[styles.menuText, selected && styles.menuTextActive]}>
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          {healthItems.map((item) => (
+            <MenuTile key={item.label} label={item.label} icon={item.icon} color={item.color} onPress={item.go} />
+          ))}
+        </View>
+
+        <Text style={styles.groupTitle}>Theo giai đoạn</Text>
+        <View style={styles.menuGrid}>
+          {stageItems.map((item) => (
+            <MenuTile key={item.label} label={item.label} icon={item.icon} color={item.color} onPress={item.go} />
+          ))}
+        </View>
+
+        <Text style={styles.groupTitle}>Tiện ích khác</Text>
+        <View style={styles.menuGrid}>
+          {panelItems.map((item) => (
+            <MenuTile
+              key={item.key}
+              label={item.label}
+              icon={item.icon}
+              color={item.color}
+              selected={active === item.key}
+              onPress={() => openPanel(item.key)}
+            />
+          ))}
         </View>
 
         {renderPanel()}
 
-        <View style={[styles.resultCard, SHADOWS.card]}>
-          <View style={styles.resultHeader}>
-            <Text style={styles.resultTitle}>Dữ liệu & Kết quả</Text>
-            <View style={styles.resultBadge}>
-              <Text style={styles.resultBadgeText}>Đồng bộ hệ thống</Text>
+        {active && (loading || result) ? (
+          <View style={[styles.resultCard, SHADOWS.card]}>
+            <View style={styles.resultHeader}>
+              <Text style={styles.resultTitle}>Kết quả</Text>
             </View>
+            {loading ? (
+              <View style={styles.loadingRow}>
+                <ActivityIndicator color={MOM_THEME.roseDark} size="small" />
+                <Text style={styles.loadingText}>Đang xử lý dữ liệu cùng server...</Text>
+              </View>
+            ) : (
+              <Text style={styles.resultText}>{result}</Text>
+            )}
           </View>
-          {loading ? (
-            <View style={styles.loadingRow}>
-              <ActivityIndicator color={MOM_THEME.roseDark} size="small" />
-              <Text style={styles.loadingText}>Đang xử lý dữ liệu cùng server...</Text>
-            </View>
-          ) : (
-            <Text style={styles.resultText}>{result}</Text>
-          )}
-        </View>
+        ) : null}
       </ScrollView>
     </View>
+  );
+}
+
+function MenuTile({
+  label,
+  icon: Icon,
+  color,
+  selected,
+  onPress,
+}: {
+  label: string;
+  icon: typeof User;
+  color: string;
+  selected?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      style={[styles.menuItem, selected && styles.menuItemActive]}
+      onPress={onPress}
+      activeOpacity={0.86}
+    >
+      <View style={[styles.menuIconWrap, selected && { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}>
+        <Icon size={18} color={selected ? MOM_THEME.white : color} />
+      </View>
+      <Text style={[styles.menuText, selected && styles.menuTextActive]}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -418,12 +342,10 @@ function Field({
   label,
   value,
   onChangeText,
-  keyboardType,
 }: {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
-  keyboardType?: 'default' | 'numeric';
 }) {
   return (
     <View style={styles.field}>
@@ -432,7 +354,6 @@ function Field({
         style={styles.input}
         value={value}
         onChangeText={onChangeText}
-        keyboardType={keyboardType}
         placeholderTextColor={MOM_THEME.mutedLight}
       />
     </View>
@@ -519,11 +440,53 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: 4,
   },
+  groupTitle: {
+    color: MOM_THEME.charcoal,
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 10,
+  },
   menuGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 20,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  chip: {
+    borderRadius: RADII.pill,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
+    backgroundColor: MOM_THEME.cream,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  chipActive: {
+    backgroundColor: MOM_THEME.roseDark,
+    borderColor: MOM_THEME.roseDark,
+  },
+  chipText: {
+    color: MOM_THEME.charcoalMid,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  chipTextActive: {
+    color: MOM_THEME.white,
+  },
+  callButton: {
+    minHeight: 48,
+    borderRadius: 14,
+    backgroundColor: '#D92D20',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 6,
   },
   menuItem: {
     width: '48.6%',

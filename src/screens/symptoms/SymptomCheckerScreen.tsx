@@ -12,21 +12,14 @@ import {
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import {
-  AlertCircle,
-  Camera,
-  CheckCircle2,
-  ChevronRight,
-  Heart,
-  ImageIcon,
-  Info,
-  ShieldCheck,
-  Sparkles,
-  Stethoscope,
-  X,
-} from 'lucide-react-native';
-import symptomService, { SymptomAnalysisResult, SymptomLogDto } from '../../services/symptomService';
-import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Camera, History, ImageIcon, Sparkles, Stethoscope, X } from 'lucide-react-native';
+import symptomService, { SymptomLogDto } from '../../services/symptomService';
+import SymptomAnalysisView from '../../components/SymptomAnalysisView';
+import { RootStackParamList } from '../../navigation/types';
+import { getApiErrorMessage } from '../../utils/apiError';
+import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 
 const quickSymptoms = [
   'Ốm nghén mệt mỏi',
@@ -38,6 +31,7 @@ const quickSymptoms = [
 ];
 
 export default function SymptomCheckerScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [description, setDescription] = useState('');
   const [selectedImage, setSelectedImage] = useState<{
     uri: string;
@@ -118,18 +112,15 @@ export default function SymptomCheckerScreen() {
       } else {
         Alert.alert('Chưa phân tích được', res.message || 'Hệ thống AI đang phản hồi chậm, mẹ thử lại một lát nữa nhé.');
       }
-    } catch (err: any) {
+    } catch (err) {
       Alert.alert(
         'Thông báo',
-        err?.response?.data?.message || 'Máy chủ AI đang bận. Mẹ kiểm tra kết nối mạng và thử lại nhé.'
+        getApiErrorMessage(err, 'Máy chủ AI đang bận. Mẹ kiểm tra kết nối mạng và thử lại nhé.')
       );
     } finally {
       setIsAnalyzing(false);
     }
   };
-
-  const analysis: SymptomAnalysisResult | undefined = result?.analysisResult;
-  const badge = getUrgencyBadge(analysis?.urgencyLevel);
 
   return (
     <View style={styles.root}>
@@ -142,6 +133,14 @@ export default function SymptomCheckerScreen() {
       >
         {/* ── Header ── */}
         <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.historyButton}
+            onPress={() => navigation.navigate('SymptomHistory')}
+            activeOpacity={0.8}
+          >
+            <History size={15} color={MOM_THEME.roseDark} />
+            <Text style={styles.historyButtonText}>Lịch sử</Text>
+          </TouchableOpacity>
           <View style={styles.headerIconWrap}>
             <Stethoscope size={24} color={MOM_THEME.roseDark} />
           </View>
@@ -245,85 +244,12 @@ export default function SymptomCheckerScreen() {
               </View>
             </View>
 
-            {/* Urgency Badge */}
-            <View style={[styles.urgencyBox, { backgroundColor: badge.bg }]}>
-              <AlertCircle size={20} color={badge.color} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.urgencyText, { color: badge.color }]}>{badge.label}</Text>
-                <Text style={styles.urgencySubText}>{badge.sub}</Text>
-              </View>
-            </View>
-
-            {/* Possible Conditions */}
-            {analysis?.possibleConditions?.length ? (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Các khả năng mẹ cần lưu ý</Text>
-                {analysis.possibleConditions.map((condition, index) => (
-                  <View key={index} style={styles.conditionCard}>
-                    <Text style={styles.conditionTitle}>
-                      {condition.conditionName || condition.name || 'Dấu hiệu sức khỏe'}
-                    </Text>
-                    {condition.advice ? (
-                      <Text style={styles.conditionBody}>{condition.advice}</Text>
-                    ) : null}
-                  </View>
-                ))}
-              </View>
-            ) : null}
-
-            {/* Recommendations */}
-            {analysis?.recommendations?.length ? (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Hướng xử lý đề xuất</Text>
-                {analysis.recommendations.map((item, index) => (
-                  <View key={index} style={styles.recommendation}>
-                    <View style={styles.recIconWrap}>
-                      <CheckCircle2 size={15} color={MOM_THEME.sageDark} />
-                    </View>
-                    <Text style={styles.recommendationText}>{item}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : null}
-
-            {/* Reassuring Disclaimer */}
-            <View style={styles.disclaimer}>
-              <ShieldCheck size={16} color={MOM_THEME.amberDark} />
-              <Text style={styles.disclaimerText}>
-                Phân tích AI mang tính chất định hướng chăm sóc tại nhà. Nếu có dấu hiệu sốt cao liên tục, co giật, khó thở hoặc ra máu bất thường, mẹ hãy đưa bé tới cơ sở y tế gần nhất.
-              </Text>
-            </View>
+            <SymptomAnalysisView analysis={result.analysisResult} />
           </View>
         ) : null}
       </ScrollView>
     </View>
   );
-}
-
-function getUrgencyBadge(urgency = '') {
-  const value = urgency.toLowerCase();
-  if (value.includes('khẩn') || value.includes('nguy') || value.includes('high')) {
-    return {
-      label: 'Cần gặp bác sĩ sớm',
-      sub: 'Triệu chứng có thể cần thăm khám trực tiếp để xử lý an toàn',
-      color: '#D95368',
-      bg: '#FDECEF',
-    };
-  }
-  if (value.includes('theo') || value.includes('medium')) {
-    return {
-      label: 'Cần theo dõi thêm trong 24-48h',
-      sub: 'Chăm sóc tại nhà kết hợp quan sát các biểu hiện đi kèm',
-      color: MOM_THEME.amberDark,
-      bg: '#FFF4EB',
-    };
-  }
-  return {
-    label: 'Có thể an tâm chăm sóc tại nhà',
-    sub: 'Biểu hiện thường gặp, mẹ chú ý nghỉ ngơi và uống đủ nước',
-    color: MOM_THEME.sageDark,
-    bg: MOM_THEME.sageLight,
-  };
 }
 
 const styles = StyleSheet.create({
@@ -342,6 +268,26 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 20,
+  },
+  historyButton: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    height: 34,
+    borderRadius: RADII.pill,
+    backgroundColor: MOM_THEME.white,
+    borderWidth: 1,
+    borderColor: MOM_THEME.border,
+    zIndex: 1,
+  },
+  historyButtonText: {
+    color: MOM_THEME.roseDark,
+    fontSize: 12,
+    fontWeight: '700',
   },
   headerIconWrap: {
     width: 52,

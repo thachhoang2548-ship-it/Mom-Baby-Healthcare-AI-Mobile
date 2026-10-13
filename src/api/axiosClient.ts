@@ -17,6 +17,23 @@ const axiosClient = axios.create({
   },
 });
 
+let onSessionExpired: (() => void) | null = null;
+
+/** Đăng ký hành động khi refresh token không còn hợp lệ (đưa người dùng về màn đăng nhập). */
+export const setSessionExpiredHandler = (handler: (() => void) | null) => {
+  onSessionExpired = handler;
+};
+
+const expireSession = async () => {
+  await AsyncStorage.multiRemove([
+    STORAGE_KEYS.TOKEN,
+    STORAGE_KEYS.REFRESH_TOKEN,
+    STORAGE_KEYS.USER,
+    STORAGE_KEYS.TIER,
+  ]);
+  onSessionExpired?.();
+};
+
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
@@ -104,12 +121,7 @@ axiosClient.interceptors.response.use(
 
         if (!storedRefreshToken) {
           isRefreshing = false;
-          await AsyncStorage.multiRemove([
-            STORAGE_KEYS.TOKEN,
-            STORAGE_KEYS.REFRESH_TOKEN,
-            STORAGE_KEYS.USER,
-            STORAGE_KEYS.TIER,
-          ]);
+          await expireSession();
           return Promise.reject(error);
         }
 
@@ -147,23 +159,13 @@ axiosClient.interceptors.response.use(
         } else {
           processQueue(new Error('Token refresh failed'));
           isRefreshing = false;
-          await AsyncStorage.multiRemove([
-            STORAGE_KEYS.TOKEN,
-            STORAGE_KEYS.REFRESH_TOKEN,
-            STORAGE_KEYS.USER,
-            STORAGE_KEYS.TIER,
-          ]);
+          await expireSession();
           return Promise.reject(error);
         }
       } catch (refreshErr) {
         processQueue(refreshErr);
         isRefreshing = false;
-        await AsyncStorage.multiRemove([
-          STORAGE_KEYS.TOKEN,
-          STORAGE_KEYS.REFRESH_TOKEN,
-          STORAGE_KEYS.USER,
-          STORAGE_KEYS.TIER,
-        ]);
+        await expireSession();
         return Promise.reject(refreshErr);
       }
     }

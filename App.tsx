@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import RootNavigator from './src/navigation/RootNavigator';
+import { navigationRef } from './src/navigation/navigationRef';
+import { setSessionExpiredHandler } from './src/api/axiosClient';
+import { useAuthStore } from './src/stores/authStore';
 import { COLORS } from './src/theme/colors';
 
 const navigationTheme = {
@@ -48,10 +51,23 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren, ErrorBounda
 }
 
 export default function App() {
+  useEffect(() => {
+    // Refresh token hết hạn (hoặc tài khoản vừa đăng nhập ở thiết bị khác): đưa mẹ về màn đăng nhập.
+    setSessionExpiredHandler(() => {
+      if (!useAuthStore.getState().isAuthenticated) return;
+      useAuthStore.getState().clearSession();
+      if (navigationRef.isReady()) {
+        navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
+      }
+      Alert.alert('Phiên đăng nhập đã hết hạn', 'Mẹ vui lòng đăng nhập lại để tiếp tục nhé.');
+    });
+    return () => setSessionExpiredHandler(null);
+  }, []);
+
   return (
     <ErrorBoundary>
       <SafeAreaProvider style={styles.root}>
-        <NavigationContainer theme={navigationTheme}>
+        <NavigationContainer ref={navigationRef} theme={navigationTheme}>
           <RootNavigator />
         </NavigationContainer>
         <StatusBar style="dark" />

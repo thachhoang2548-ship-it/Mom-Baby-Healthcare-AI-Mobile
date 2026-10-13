@@ -11,6 +11,8 @@ export interface PossibleCondition {
 }
 
 export interface SymptomAnalysisResult {
+  /** false khi backend lưu triệu chứng nhưng gọi AI thất bại (possibleConditionsJson rỗng). */
+  aiAvailable: boolean;
   urgencyLevel?: string;
   severityScore?: number;
   shouldSeeDoctor?: boolean;
@@ -54,16 +56,17 @@ const mapSymptomLogToUI = (log: any): SymptomLogDto => {
   return {
     ...log,
     analysisResult: {
-      urgencyLevel: log.urgencyLevel || ai.urgencyLevel || 'Theo dõi',
+      aiAvailable: Object.keys(ai).length > 0,
+      urgencyLevel: log.urgencyLevel || ai.urgencyLevel,
       severityScore: log.severityScore ?? ai.severityScore,
       shouldSeeDoctor: log.shouldSeeDoctor ?? ai.shouldSeeDoctor,
       possibleConditions,
-      urgencyReason: ai.urgencyReason,
-      lifestyleConnection: ai.lifestyleConnection,
-      recommendations: ai.recommendations || [],
-      dietarySuggestions: ai.dietarySuggestions || [],
-      specialistType: ai.specialistType,
-      disclaimer: ai.disclaimer,
+      urgencyReason: log.urgencyReason || ai.urgencyReason,
+      lifestyleConnection: log.lifestyleConnection || ai.lifestyleConnection,
+      recommendations: ai.recommendations || log.recommendations || [],
+      dietarySuggestions: ai.dietarySuggestions || log.dietarySuggestions || [],
+      specialistType: log.specialistType || ai.specialistType,
+      disclaimer: log.disclaimer || ai.disclaimer,
     },
   };
 };

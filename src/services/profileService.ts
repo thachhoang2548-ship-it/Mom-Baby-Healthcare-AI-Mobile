@@ -2,8 +2,18 @@ import axiosClient from '../api/axiosClient';
 import { ENDPOINTS } from '../api/endpoints';
 import { ApiResponse } from './authService';
 
+export type StageIndex = 0 | 1 | 2;
+
+/** Backend trả enum dạng chuỗi (PrePregnancy/Pregnant/Postpartum), web gửi lên dạng số. */
+export function getStageIndex(stage?: number | string | null): StageIndex {
+  if (stage === 1 || stage === 'Pregnant') return 1;
+  if (stage === 2 || stage === 'Postpartum') return 2;
+  return 0;
+}
+
 export interface MomProfileDto {
-  id?: string;
+  id?: number;
+  userId?: string;
   stage?: number | string; // 0: PrePregnancy, 1: Pregnant, 2: Postpartum
   pregnancyWeek?: number | null;
   trimester?: number | null;
@@ -25,6 +35,7 @@ const profileService = {
     return res.data;
   },
 
+  /** PUT cập nhật một phần: trường không gửi giữ nguyên, trường gửi null sẽ bị xóa. */
   updateProfile: async (profileData: Partial<MomProfileDto>): Promise<ApiResponse<MomProfileDto>> => {
     const res = await axiosClient.put(ENDPOINTS.USER_PROFILE, profileData);
     return res.data;
@@ -35,11 +46,6 @@ const profileService = {
       lastMenstrualPeriod,
       dueDate,
     });
-    return res.data;
-  },
-
-  logWeight: async (weightKg: number): Promise<ApiResponse<unknown>> => {
-    const res = await axiosClient.post(ENDPOINTS.LOG_WEIGHT, { weightKg });
     return res.data;
   },
 };

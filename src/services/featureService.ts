@@ -1,7 +1,22 @@
+import { AxiosResponse } from 'axios';
 import axiosClient from '../api/axiosClient';
 import { ENDPOINTS } from '../api/endpoints';
 
-const unwrap = (data: any) => data?.data ?? data;
+/**
+ * Trả về `data` của ApiResponse. Một số endpoint trả HTTP 200 nhưng `success: false`,
+ * nên phải ném lỗi ở đây thay vì coi như thành công.
+ */
+async function call<T = any>(request: Promise<AxiosResponse<any>>): Promise<T> {
+  const res = await request;
+  const body = res.data;
+  if (body && typeof body === 'object' && ('success' in body || 'isSuccess' in body)) {
+    if (body.success === false || body.isSuccess === false) {
+      throw new Error(body.message || 'Thao tác không thành công.');
+    }
+    return body.data as T;
+  }
+  return body as T;
+}
 
 export const TIERS_DATA = {
   MomHienDai: {
@@ -44,122 +59,240 @@ const PLAN_CODES = {
 type TierId = keyof typeof PLAN_CODES;
 type PlanMonths = 1 | 6;
 
+// ── Kiểu dữ liệu theo DTO của backend (Swagger) ──
+
+export interface DailyMonitoringPayload {
+  date?: string;
+  sleepHours?: number;
+  sleepQuality?: number; // 1-5
+  waterLiters?: number;
+  hadBreakfast?: boolean;
+  hadLunch?: boolean;
+  hadDinner?: boolean;
+  moodScore?: number; // 1-5
+  moodNote?: string;
+  bloodSugar?: number;
+  bloodPressureHigh?: number;
+  bloodPressureLow?: number;
+  weight?: number;
+  symptomSeverity?: number; // 0-5
+  symptomNote?: string;
+}
+
+export interface DailyMonitoringLog extends DailyMonitoringPayload {
+  id: number;
+  date: string;
+}
+
+export interface TodayMonitoring {
+  data: DailyMonitoringLog | null;
+  hasSubmittedToday: boolean;
+}
+
+export interface MedicationAdherenceLog {
+  id: number;
+  date: string;
+  status: string; // "Taken" | "Skipped"
+}
+
+export interface MedicationSchedule {
+  id: number;
+  medName: string;
+  dosage: string;
+  times: string[];
+  startDate: string;
+  endDate: string;
+  notes?: string | null;
+  adherenceLogs?: MedicationAdherenceLog[];
+}
+
+export interface MedicationPayload {
+  medName: string;
+  dosage: string;
+  times: string[]; // "HH:mm"
+  startDate: string;
+  endDate: string;
+  notes?: string;
+}
+
+export interface NotificationAlert {
+  id: number;
+  type: string; // Symptom | Medication | RoutineCheck
+  severity: string; // Critical | High | Medium | Warning | Info | Positive
+  message: string;
+  status: string; // Pending | Sent | Resolved
+  createdAt: string;
+}
+
+export interface PregnancyWeekInfo {
+  week: number;
+  babySize?: string;
+  development?: string;
+  momTips?: string;
+}
+
+export interface PregnancyWeightLog {
+  week: number;
+  weight: number;
+  recordedAt: string;
+}
+
+export interface WeightLogResult {
+  weeklyGain?: number;
+  totalGain?: number;
+  recommendation?: string;
+}
+
+export interface FertilityCalendar {
+  fertileWindowDays: string[];
+  ovulationDay: string;
+  periodPrediction: string;
+}
+
+export interface OvulationToday {
+  isInFertileWindow: boolean;
+  daysUntilOvulation: number;
+  recommendation?: string;
+}
+
+export interface EpdsResult {
+  score: number;
+  isUrgent: boolean;
+  aiMessage?: string;
+  resources?: string[];
+}
+
+export interface LatestEpds {
+  score: number;
+  isUrgent: boolean;
+  takenAt: string | null;
+  aiAnalysis?: string;
+}
+
+export interface PostpartumSetupResult {
+  daysPostpartum: number;
+  recoveryPhase: string;
+  initialRecommendations: string;
+}
+
+export interface RecoveryPlan {
+  day: number;
+  recoveryPhase: string;
+  exerciseSchedule?: {
+    week?: number;
+    activeExercise?: string;
+    allowed?: string[];
+    locked?: string[];
+  };
+}
+
+export interface FeedbackCategory {
+  value: string;
+  label: string;
+}
+
 const featureService = {
-  sendChatMessage: async (text: string, sessionId = 'mobile-default') => {
-    const response = await axiosClient.post(ENDPOINTS.CHAT_SEND, { text, sessionId });
-    return unwrap(response.data);
-  },
+  // Theo dõi hằng ngày
+  getTodayMonitoring: () =>
+    call<TodayMonitoring>(axiosClient.get(ENDPOINTS.DAILY_MONITORING_TODAY)),
 
-  getTodayMonitoring: async () => {
-    const response = await axiosClient.get(ENDPOINTS.DAILY_MONITORING_TODAY);
-    return unwrap(response.data);
-  },
+  getMonitoringHistory: (limit = 14) =>
+    call<DailyMonitoringLog[]>(
+      axiosClient.get(ENDPOINTS.DAILY_MONITORING_HISTORY, { params: { limit } })
+    ),
 
-  getNotifications: async () => {
-    const response = await axiosClient.get(ENDPOINTS.ALERTS);
-    return unwrap(response.data);
-  },
+  /** Backend gộp theo ngày: chỉ ghi đè các trường được gửi lên. */
+  saveDailyMonitoring: (payload: DailyMonitoringPayload) =>
+    call<DailyMonitoringLog>(axiosClient.post(ENDPOINTS.DAILY_MONITORING, payload)),
 
-  createDailyMonitoring: async (payload: Record<string, any>) => {
-    const response = await axiosClient.post(ENDPOINTS.DAILY_MONITORING, payload);
-    return unwrap(response.data);
-  },
+  // Thông báo
+  getNotifications: () => call<NotificationAlert[]>(axiosClient.get(ENDPOINTS.ALERTS)),
 
-  getMedications: async () => {
-    const response = await axiosClient.get(ENDPOINTS.MEDICATIONS);
-    return unwrap(response.data);
-  },
+  resolveNotification: (id: number) =>
+    call(axiosClient.patch(ENDPOINTS.ALERT_STATUS(id), { status: 'Resolved' })),
 
-  addMedication: async (payload: Record<string, any>) => {
-    const response = await axiosClient.post(ENDPOINTS.MEDICATIONS, payload);
-    return unwrap(response.data);
-  },
+  // Lịch uống thuốc
+  getMedications: () => call<MedicationSchedule[]>(axiosClient.get(ENDPOINTS.MEDICATIONS)),
 
-  deleteMedication: async (id: string | number) => {
-    const response = await axiosClient.delete(`${ENDPOINTS.MEDICATIONS}/${id}`);
-    return unwrap(response.data);
-  },
+  addMedication: (payload: MedicationPayload) =>
+    call<MedicationSchedule>(axiosClient.post(ENDPOINTS.MEDICATIONS, payload)),
 
-  logCycle: async (periodStartDate: string, cycleLength = 28, symptoms: string[] = []) => {
-    const normalizedDate = new Date(`${periodStartDate}T00:00:00.000Z`).toISOString();
-    const response = await axiosClient.post(ENDPOINTS.FERTILITY_CYCLE_LOG, {
-      periodStartDate: normalizedDate,
-      cycleLength: Number(cycleLength),
-      symptoms,
-    });
-    return unwrap(response.data);
-  },
+  deleteMedication: (id: number) => call(axiosClient.delete(`${ENDPOINTS.MEDICATIONS}/${id}`)),
 
-  getOvulationToday: async () => {
-    const response = await axiosClient.get(ENDPOINTS.FERTILITY_OVULATION_TODAY);
-    return unwrap(response.data);
-  },
+  logAdherence: (id: number, dateIso: string, status: 'taken' | 'skipped') =>
+    call(axiosClient.post(ENDPOINTS.MEDICATION_ADHERENCE(id), { date: dateIso, status })),
 
-  createIvfTimeline: async (ivfStartDate: string, protocol = 'long') => {
-    const response = await axiosClient.post(ENDPOINTS.FERTILITY_IVF_TIMELINE, {
-      ivfStartDate,
-      protocol,
-    });
-    return unwrap(response.data);
-  },
+  // Chuẩn bị mang thai
+  logCycle: (periodStartIso: string, cycleLength = 28, symptoms: string[] = []) =>
+    call(
+      axiosClient.post(ENDPOINTS.FERTILITY_CYCLE_LOG, {
+        periodStartDate: periodStartIso,
+        cycleLength: Number(cycleLength),
+        symptoms,
+      })
+    ),
 
-  getPregnancyThisWeek: async () => {
-    const response = await axiosClient.get(ENDPOINTS.PREGNANCY_THIS_WEEK);
-    return unwrap(response.data);
-  },
+  /** month: "YYYY-MM" */
+  getFertilityCalendar: (month: string) =>
+    call<FertilityCalendar>(axiosClient.get(ENDPOINTS.FERTILITY_CALENDAR, { params: { month } })),
 
-  getPregnancyMealPlan: async () => {
-    const response = await axiosClient.get(ENDPOINTS.PREGNANCY_MEAL_PLAN);
-    return unwrap(response.data);
-  },
+  getOvulationToday: () => call<OvulationToday>(axiosClient.get(ENDPOINTS.FERTILITY_OVULATION_TODAY)),
 
-  getExercisePlan: async () => {
-    const response = await axiosClient.get(ENDPOINTS.PREGNANCY_EXERCISE_PLAN);
-    return unwrap(response.data);
-  },
+  createIvfTimeline: (ivfStartDate: string, protocol = 'long') =>
+    call(axiosClient.post(ENDPOINTS.FERTILITY_IVF_TIMELINE, { ivfStartDate, protocol })),
 
-  logPregnancyWeight: async (weightKg: number) => {
-    const response = await axiosClient.post(ENDPOINTS.PREGNANCY_WEIGHT_LOG, {
-      weightKg,
-      date: new Date().toISOString(),
-    });
-    return unwrap(response.data);
-  },
+  // Thai kỳ
+  getPregnancyThisWeek: () =>
+    call<PregnancyWeekInfo>(axiosClient.get(ENDPOINTS.PREGNANCY_THIS_WEEK)),
 
-  submitEpds: async (answers: number[]) => {
-    const response = await axiosClient.post(ENDPOINTS.POSTPARTUM_EPDS, { answers });
-    return unwrap(response.data);
-  },
+  getPregnancyMealPlan: () => call(axiosClient.get(ENDPOINTS.PREGNANCY_MEAL_PLAN)),
 
-  getLatestEpds: async () => {
-    const response = await axiosClient.get(ENDPOINTS.POSTPARTUM_EPDS_LATEST);
-    return unwrap(response.data);
-  },
+  getExercisePlan: () => call(axiosClient.get(ENDPOINTS.PREGNANCY_EXERCISE_PLAN)),
 
-  getRecoveryPlan: async () => {
-    const response = await axiosClient.get(ENDPOINTS.POSTPARTUM_RECOVERY_PLAN);
-    return unwrap(response.data);
-  },
+  logPregnancyWeight: (weightKg: number) =>
+    call<WeightLogResult>(
+      axiosClient.post(ENDPOINTS.PREGNANCY_WEIGHT_LOG, {
+        weightKg,
+        date: new Date().toISOString(),
+      })
+    ),
 
-  createPayment: async (targetTier: TierId, months: PlanMonths) => {
-    const response = await axiosClient.post(ENDPOINTS.PAYMENT_CREATE, {
-      planCode: PLAN_CODES[targetTier][months],
-      provider: 'BankTransfer',
-    });
-    return unwrap(response.data);
-  },
+  getPregnancyWeightLogs: () =>
+    call<PregnancyWeightLog[]>(axiosClient.get(ENDPOINTS.PREGNANCY_WEIGHT_LOGS)),
 
-  getPaymentHistory: async () => {
-    const response = await axiosClient.get(ENDPOINTS.PAYMENT_HISTORY);
-    return unwrap(response.data);
-  },
+  // Sau sinh
+  setupPostpartum: (deliveryDateIso: string, deliveryType: 'natural' | 'cesarean', isBreastfeeding: boolean) =>
+    call<PostpartumSetupResult>(
+      axiosClient.post(ENDPOINTS.POSTPARTUM_SETUP, {
+        deliveryDate: deliveryDateIso,
+        deliveryType,
+        isBreastfeeding,
+      })
+    ),
 
-  getSymptomHistory: async () => {
-    const response = await axiosClient.get(ENDPOINTS.SYMPTOMS);
-    return unwrap(response.data);
-  },
+  submitEpds: (answers: number[]) =>
+    call<EpdsResult>(axiosClient.post(ENDPOINTS.POSTPARTUM_EPDS, { answers })),
 
-  generateRecipes: async (preferences: {
+  getLatestEpds: () => call<LatestEpds>(axiosClient.get(ENDPOINTS.POSTPARTUM_EPDS_LATEST)),
+
+  getRecoveryPlan: (day?: number) =>
+    call<RecoveryPlan>(
+      axiosClient.get(ENDPOINTS.POSTPARTUM_RECOVERY_PLAN, { params: day ? { day } : undefined })
+    ),
+
+  // Gói dịch vụ
+  createPayment: (targetTier: TierId, months: PlanMonths) =>
+    call(
+      axiosClient.post(ENDPOINTS.PAYMENT_CREATE, {
+        planCode: PLAN_CODES[targetTier][months],
+        provider: 'BankTransfer',
+      })
+    ),
+
+  getPaymentHistory: () => call(axiosClient.get(ENDPOINTS.PAYMENT_HISTORY)),
+
+  // Món ăn
+  generateRecipes: (preferences: {
     dietType?: string;
     allergies?: string;
     maxCookTime?: string | number;
@@ -170,19 +303,17 @@ const featureService = {
     }, Thời gian nấu tối đa: ${
       preferences.maxCookTime || 30
     } phút, Nguyên liệu có sẵn: ${preferences.availableIngredients || 'Không'}`;
-    const response = await axiosClient.post(ENDPOINTS.AI_RECIPES, { query });
-    return unwrap(response.data);
+    return call(axiosClient.post(ENDPOINTS.AI_RECIPES, { query }));
   },
 
-  getMyRecipes: async () => {
-    const response = await axiosClient.get(ENDPOINTS.MY_RECIPES);
-    return unwrap(response.data);
-  },
+  getMyRecipes: () => call(axiosClient.get(ENDPOINTS.MY_RECIPES)),
 
-  sendFeedback: async (payload: Record<string, any>) => {
-    const response = await axiosClient.post(ENDPOINTS.FEEDBACK, payload);
-    return unwrap(response.data);
-  },
+  // Góp ý
+  getFeedbackOptions: () =>
+    call<{ categories: FeedbackCategory[] }>(axiosClient.get(ENDPOINTS.FEEDBACK_OPTIONS)),
+
+  sendFeedback: (payload: { category: string; message: string; page?: string }) =>
+    call(axiosClient.post(ENDPOINTS.FEEDBACK, payload)),
 };
 
 export default featureService;

@@ -39,6 +39,8 @@ interface AuthState {
     fullName: string
   ) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
+  /** Xóa phiên trong bộ nhớ khi refresh token hết hạn (storage đã được axiosClient xóa). */
+  clearSession: () => void;
   clearError: () => void;
 }
 
@@ -52,6 +54,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   error: null,
 
   clearError: () => set({ error: null }),
+
+  clearSession: () =>
+    set({
+      user: null,
+      token: null,
+      refreshToken: null,
+      tier: 'Free',
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    }),
 
   initAuth: async () => {
     try {
@@ -153,7 +166,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      await authService.logout().catch(() => {});
+      // Lấy token từ storage: interceptor cập nhật storage khi refresh, không cập nhật store.
+      const storedRefreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+      await authService.logout(storedRefreshToken).catch(() => {});
     } finally {
       await AsyncStorage.multiRemove([
         STORAGE_KEYS.TOKEN,

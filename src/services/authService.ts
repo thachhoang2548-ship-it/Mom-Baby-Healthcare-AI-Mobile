@@ -34,8 +34,9 @@ const authService = {
     return res.data;
   },
 
-  logout: async (): Promise<ApiResponse<unknown>> => {
-    const res = await axiosClient.post(ENDPOINTS.LOGOUT);
+  /** Gửi refresh token để chỉ đăng xuất thiết bị này; không gửi thì backend đăng xuất mọi thiết bị. */
+  logout: async (refreshToken?: string | null): Promise<ApiResponse<unknown>> => {
+    const res = await axiosClient.post(ENDPOINTS.LOGOUT, refreshToken ? { refreshToken } : undefined);
     return res.data;
   },
 
