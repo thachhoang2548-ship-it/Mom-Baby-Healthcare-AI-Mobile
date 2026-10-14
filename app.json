@@ -1,42 +1,51 @@
 {
   "expo": {
-    "name": "Mom Oi - Healthcare AI",
+    "name": "Mom Ơi",
     "slug": "mom-oi-healthcare-ai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "backgroundColor": "#FDF2F8",
-      "resizeMode": "contain"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.momoi.healthcare"
     },
     "android": {
       "package": "com.momoi.healthcare",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#FDF2F8",
-        "foregroundImage": "./assets/android-icon-foreground.png"
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "CAMERA"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
       [
         "expo-image-picker",
         {
-          "photosPermission": "Ung dung can quyen truy cap anh de chan doan trieu chung AI.",
-          "cameraPermission": "Ung dung can quyen mo camera de chup anh trieu chung AI."
+          "photosPermission": "Mom Ơi cần truy cập ảnh để mẹ gửi ảnh triệu chứng cho trợ lý sức khỏe AI phân tích.",
+          "cameraPermission": "Mom Ơi cần dùng camera để mẹ chụp ảnh triệu chứng cho trợ lý sức khỏe AI phân tích.",
+          "microphonePermission": false
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FDF2F8"
+        }
+      ]
     ]
   }
 }

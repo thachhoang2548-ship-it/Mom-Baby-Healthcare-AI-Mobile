@@ -6,6 +6,8 @@ export const ENDPOINTS = {
   REGISTER: '/api/auth/register',
   REFRESH: '/api/auth/refresh',
   LOGOUT: '/api/auth/logout',
+  // Chờ backend bổ sung (yêu cầu bắt buộc của Google Play): body { password }.
+  DELETE_ACCOUNT: '/api/auth/account',
 
   // Profile
   USER_PROFILE: '/api/user-profile',

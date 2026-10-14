@@ -21,7 +21,7 @@ export default function SymptomDetailScreen() {
         setLog(res.data);
         setError(null);
       } else {
-        setError(res.message || 'Không tìm thấy lần chẩn đoán này.');
+        setError(res.message || 'Không tìm thấy lần phân tích này.');
       }
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -35,7 +35,7 @@ export default function SymptomDetailScreen() {
   );
 
   return (
-    <Screen eyebrow="Bác sĩ AI" title="Chi tiết chẩn đoán">
+    <Screen eyebrow="Trợ lý sức khỏe AI" title="Chi tiết phân tích">
       {error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !log ? (

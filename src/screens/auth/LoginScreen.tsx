@@ -142,11 +142,10 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Demo Fast Fill Info */}
         <View style={styles.demoCard}>
           <Sparkles size={14} color={COLORS.secondary} style={{ marginRight: 6 }} />
           <Text style={styles.demoText}>
-            Hệ thống kết nối trực tiếp với API Cloud Railway
+            Thông tin trong Mom Ơi chỉ mang tính tham khảo, không thay thế bác sĩ.
           </Text>
         </View>
       </ScrollView>

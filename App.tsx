@@ -40,8 +40,11 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren, ErrorBounda
     if (this.state.error) {
       return (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>App failed to start</Text>
-          <Text style={styles.errorMessage}>{this.state.error.message}</Text>
+          <Text style={styles.errorTitle}>Mom Ơi gặp sự cố</Text>
+          <Text style={styles.errorMessage}>
+            Mẹ vui lòng đóng hẳn ứng dụng rồi mở lại. Nếu vẫn lỗi, mẹ cập nhật Mom Ơi lên bản mới nhất nhé.
+          </Text>
+          {__DEV__ ? <Text style={styles.errorMessage}>{this.state.error.message}</Text> : null}
         </View>
       );
     }

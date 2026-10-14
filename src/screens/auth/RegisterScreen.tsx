@@ -10,13 +10,15 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../theme/colors';
-import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
+import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, Check } from 'lucide-react-native';
+import { PRIVACY_POLICY_URL } from '../../constants/links';
 
 export default function RegisterScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -27,6 +29,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
     clearError();
@@ -45,6 +48,15 @@ export default function RegisterScreen() {
 
     if (password.length < 6) {
       Alert.alert('Lỗi', 'Mật khẩu phải có độ dài tối thiểu 6 ký tự.');
+      return;
+    }
+
+    // Dữ liệu sức khỏe là dữ liệu nhạy cảm (Nghị định 13/2023): cần mẹ đồng ý trước khi tạo tài khoản.
+    if (!agreed) {
+      Alert.alert(
+        'Cần mẹ đồng ý',
+        'Mẹ vui lòng đọc và đồng ý với Điều khoản & Chính sách quyền riêng tư để tiếp tục.'
+      );
       return;
     }
 
@@ -160,6 +172,25 @@ export default function RegisterScreen() {
             />
           </View>
 
+          <View style={styles.consentRow}>
+            <TouchableOpacity
+              style={[styles.checkbox, agreed && styles.checkboxChecked]}
+              onPress={() => setAgreed((v) => !v)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: agreed }}
+              accessibilityLabel="Đồng ý điều khoản và chính sách quyền riêng tư"
+            >
+              {agreed ? <Check size={14} color={COLORS.white} /> : null}
+            </TouchableOpacity>
+            <Text style={styles.consentText}>
+              Tôi đã đọc và đồng ý với{' '}
+              <Text style={styles.consentLink} onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}>
+                Điều khoản & Chính sách quyền riêng tư
+              </Text>
+              , đồng ý để Mom Ơi xử lý dữ liệu sức khỏe của tôi và bé nhằm cá nhân hóa gợi ý chăm sóc.
+            </Text>
+          </View>
+
           <TouchableOpacity
             style={[styles.registerBtn, isLoading && styles.registerBtnDisabled]}
             onPress={handleRegister}
@@ -186,6 +217,38 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  consentText: {
+    flex: 1,
+    color: COLORS.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  consentLink: {
+    color: COLORS.primary,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
