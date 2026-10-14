@@ -43,9 +43,9 @@ export default function SymptomHistoryScreen() {
 
   return (
     <Screen
-      eyebrow="Bác sĩ AI"
-      title="Lịch sử chẩn đoán"
-      subtitle="Các lần mẹ đã hỏi Bác sĩ AI, mới nhất ở trên cùng."
+      eyebrow="Trợ lý sức khỏe AI"
+      title="Lịch sử phân tích"
+      subtitle="Các lần mẹ đã hỏi trợ lý AI, mới nhất ở trên cùng."
       refreshing={refreshing}
       onRefresh={refresh}
     >
@@ -56,9 +56,9 @@ export default function SymptomHistoryScreen() {
       ) : items.length === 0 ? (
         <EmptyState
           emoji="🩺"
-          title="Chưa có lần chẩn đoán nào"
+          title="Chưa có lần phân tích nào"
           body="Khi mẹ mô tả triệu chứng ở tab AI, kết quả sẽ được lưu lại tại đây."
-          actionLabel="Hỏi Bác sĩ AI"
+          actionLabel="Hỏi trợ lý AI"
           onAction={() => navigation.navigate('MainTabs', { screen: 'SymptomAI' })}
         />
       ) : (

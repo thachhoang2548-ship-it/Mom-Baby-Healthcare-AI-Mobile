@@ -18,6 +18,7 @@ export type RootStackParamList = {
 
   // Màn hình chi tiết đẩy lên trên thanh tab
   Profile: undefined;
+  DeleteAccount: undefined;
   BabyProfileForm: { baby?: BabyProfileDto } | undefined;
   DailyMonitoring: undefined;
   Medications: undefined;

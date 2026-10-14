@@ -10,7 +10,7 @@ export function getUrgencyMeta(analysis?: SymptomAnalysisResult) {
   return URGENCY_META[normalizeUrgency(analysis.urgencyLevel)];
 }
 
-/** Hiển thị kết quả phân tích AI, dùng chung cho màn Bác sĩ AI và Chi tiết lịch sử. */
+/** Hiển thị kết quả phân tích AI, dùng chung cho màn Trợ lý sức khỏe AI và Chi tiết lịch sử. */
 export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAnalysisResult }) {
   const badge = getUrgencyMeta(analysis);
   const isCritical = badge === URGENCY_META.critical;

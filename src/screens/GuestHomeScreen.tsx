@@ -242,19 +242,20 @@ export default function GuestHomeScreen() {
             TRUST INDICATORS
         ══════════════════════════════════════════ */}
         <View style={styles.trustSection}>
+          {/* Chỉ nêu điều app thực sự có; không dùng số người dùng / đánh giá chưa kiểm chứng. */}
           <View style={styles.trustCard}>
-            <Text style={styles.trustNumber}>10K+</Text>
-            <Text style={styles.trustLabel}>Mẹ đã tin dùng</Text>
+            <Text style={styles.trustNumber}>3</Text>
+            <Text style={styles.trustLabel}>Giai đoạn làm mẹ</Text>
           </View>
           <View style={styles.trustDivider} />
           <View style={styles.trustCard}>
-            <Text style={styles.trustNumber}>4.9★</Text>
-            <Text style={styles.trustLabel}>Đánh giá trung bình</Text>
+            <Text style={styles.trustNumber}>WHO</Text>
+            <Text style={styles.trustLabel}>Chuẩn tăng trưởng của bé</Text>
           </View>
           <View style={styles.trustDivider} />
           <View style={styles.trustCard}>
-            <Text style={styles.trustNumber}>24/7</Text>
-            <Text style={styles.trustLabel}>Hỗ trợ liên tục</Text>
+            <Text style={styles.trustNumber}>EPDS</Text>
+            <Text style={styles.trustLabel}>Sàng lọc tâm lý sau sinh</Text>
           </View>
         </View>
 

@@ -351,7 +351,7 @@ export default function DashboardScreen() {
             <View style={[styles.gridIconWrap, { backgroundColor: '#FDECEF' }]}>
               <Activity size={22} color={MOM_THEME.roseDark} />
             </View>
-            <Text style={styles.gridCardTitle}>Bác sĩ AI</Text>
+            <Text style={styles.gridCardTitle}>Trợ lý sức khỏe AI</Text>
             <Text style={styles.gridCardSub}>Hỏi an tâm mọi biểu hiện lạ</Text>
           </TouchableOpacity>
 

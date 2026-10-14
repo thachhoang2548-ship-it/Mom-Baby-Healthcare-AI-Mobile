@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Baby, CalendarHeart, Heart, LogOut, Plus } from 'lucide-react-native';
@@ -33,6 +33,7 @@ import {
   toUtcDateIso,
 } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { PRIVACY_POLICY_URL } from '../../constants/links';
 
 // Cùng danh sách với web (ProfilePage.jsx); sửa lỗi chính tả "Dị ứng ứng thuốc".
 const COMMON_CONDITIONS = ['Cao huyết áp', 'Thiếu máu', 'Suy nhược', 'Dị ứng thuốc', 'Hen suyễn'];
@@ -400,6 +401,20 @@ export default function ProfileScreen() {
         icon={<LogOut size={16} color={MOM_THEME.roseDeep} />}
         style={styles.logout}
       />
+      <TouchableOpacity
+        style={styles.deleteAccount}
+        onPress={() => navigation.navigate('DeleteAccount')}
+        accessibilityRole="button"
+      >
+        <Text style={styles.deleteAccountText}>Xóa tài khoản</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.policyLink}
+        onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+        accessibilityRole="link"
+      >
+        <Text style={styles.policyText}>Điều khoản & Chính sách quyền riêng tư</Text>
+      </TouchableOpacity>
     </Screen>
   );
 }
@@ -501,5 +516,27 @@ const styles = StyleSheet.create({
   },
   logout: {
     marginTop: 12,
+  },
+  deleteAccount: {
+    alignSelf: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginTop: 4,
+  },
+  policyLink: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  policyText: {
+    color: MOM_THEME.muted,
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
+  deleteAccountText: {
+    color: '#B42318',
+    fontSize: 14,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
 });

@@ -40,6 +40,12 @@ const authService = {
     return res.data;
   },
 
+  /** Xóa vĩnh viễn tài khoản và dữ liệu; backend xác nhận lại bằng mật khẩu. */
+  deleteAccount: async (password: string): Promise<ApiResponse<unknown>> => {
+    const res = await axiosClient.delete(ENDPOINTS.DELETE_ACCOUNT, { data: { password } });
+    return res.data;
+  },
+
   refresh: async (refreshToken: string): Promise<ApiResponse<AuthResponseDto>> => {
     const res = await axiosClient.post(ENDPOINTS.REFRESH, { refreshToken });
     return res.data;

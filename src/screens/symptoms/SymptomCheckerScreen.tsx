@@ -42,12 +42,7 @@ export default function SymptomCheckerScreen() {
   const [result, setResult] = useState<SymptomLogDto | null>(null);
 
   const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Cần quyền truy cập', 'Mẹ vui lòng cấp quyền truy cập thư viện ảnh để tải ảnh triệu chứng.');
-      return;
-    }
-
+    // Trình chọn ảnh hệ thống không cần xin quyền thư viện (theo tài liệu expo-image-picker SDK 57).
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
@@ -147,9 +142,9 @@ export default function SymptomCheckerScreen() {
           <View style={styles.headerEyebrowWrap}>
             <Text style={styles.headerEyebrow}>TRỢ LÝ SỨC KHỎE THÔNG MINH</Text>
           </View>
-          <Text style={styles.title}>Hỏi bác sĩ AI</Text>
+          <Text style={styles.title}>Hỏi trợ lý sức khỏe AI</Text>
           <Text style={styles.subtitle}>
-            Chia sẻ cảm giác hoặc biểu hiện lạ mẹ và bé đang gặp phải để nhận tư vấn y khoa tham khảo kịp thời 🌸
+            Chia sẻ cảm giác hoặc biểu hiện lạ mẹ và bé đang gặp phải để nhận gợi ý chăm sóc tham khảo 🌸
           </Text>
         </View>
 
@@ -240,7 +235,7 @@ export default function SymptomCheckerScreen() {
               <Text style={styles.resultTitle}>Đánh giá sơ bộ</Text>
               <View style={styles.aiTag}>
                 <Sparkles size={12} color={MOM_THEME.white} />
-                <Text style={styles.aiTagText}>Mom Ơi AI Medical</Text>
+                <Text style={styles.aiTagText}>Mom Ơi AI</Text>
               </View>
             </View>
 

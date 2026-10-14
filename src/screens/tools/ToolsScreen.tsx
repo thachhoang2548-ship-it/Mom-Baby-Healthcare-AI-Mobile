@@ -77,7 +77,7 @@ export default function ToolsScreen() {
     { label: 'Nhật ký hằng ngày', icon: ClipboardList, color: MOM_THEME.sageDark, go: () => navigation.navigate('DailyMonitoring') },
     { label: 'Lịch uống thuốc', icon: Pill, color: '#8E6BB8', go: () => navigation.navigate('Medications') },
     { label: 'Thông báo', icon: Bell, color: MOM_THEME.amberDark, go: () => navigation.navigate('Notifications') },
-    { label: 'Lịch sử Bác sĩ AI', icon: HeartPulse, color: MOM_THEME.roseDark, go: () => navigation.navigate('SymptomHistory') },
+    { label: 'Lịch sử Trợ lý AI', icon: HeartPulse, color: MOM_THEME.roseDark, go: () => navigation.navigate('SymptomHistory') },
     { label: 'Món ăn AI', icon: Utensils, color: MOM_THEME.amberDark, go: () => navigation.navigate('Recipes') },
   ];
 
