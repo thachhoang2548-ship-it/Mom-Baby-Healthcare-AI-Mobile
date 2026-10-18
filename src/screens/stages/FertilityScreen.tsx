@@ -10,6 +10,7 @@ import {
   ErrorState,
   Field,
   LoadingView,
+  LockIcon,
   PrimaryButton,
   Screen,
   SecondaryButton,
@@ -17,6 +18,7 @@ import {
   uiStyles,
 } from '../../components/ui';
 import DateField from '../../components/DateField';
+import { useIsFreeTier } from '../../stores/authStore';
 import featureService, { FertilityCalendar, OvulationToday } from '../../services/featureService';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { addDays, formatDate, fromUtcDateIso, startOfToday, toUtcDateIso } from '../../utils/date';
@@ -111,6 +113,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 
 export default function FertilityScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const isFree = useIsFreeTier();
   const [month, setMonth] = useState(() => {
     const t = startOfToday();
     return new Date(t.getFullYear(), t.getMonth(), 1);
@@ -232,7 +235,9 @@ export default function FertilityScreen() {
 
       <SecondaryButton
         label="Lịch trình IVF"
-        icon={<CalendarRange size={16} color={MOM_THEME.roseDeep} />}
+        icon={
+          isFree ? <LockIcon color={MOM_THEME.roseDeep} /> : <CalendarRange size={16} color={MOM_THEME.roseDeep} />
+        }
         onPress={() => navigation.navigate('IvfTimeline')}
         style={styles.ivf}
       />

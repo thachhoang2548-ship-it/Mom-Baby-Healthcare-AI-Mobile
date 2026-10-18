@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService, { UserDto } from '../services/authService';
+import featureService from '../services/featureService';
 import { STORAGE_KEYS } from '../api/axiosClient';
 
 export type TierType = 'Free' | 'MomHienDai' | 'SuperMomVip';
@@ -42,6 +43,10 @@ interface AuthState {
   /** Xóa phiên trong bộ nhớ khi refresh token hết hạn (storage đã được axiosClient xóa). */
   clearSession: () => void;
   clearError: () => void;
+  /** Cập nhật gói theo server (gói được nâng cấp trên web, app không bán gói). */
+  setTier: (tier: TierType) => Promise<void>;
+  /** Hỏi lại server gói hiện tại; lỗi mạng thì giữ gói đang có. */
+  refreshTier: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -54,6 +59,23 @@ export const useAuthStore = create<AuthState>((set) => ({
   error: null,
 
   clearError: () => set({ error: null }),
+
+  setTier: async (tier) => {
+    set({ tier });
+    await AsyncStorage.setItem(STORAGE_KEYS.TIER, tier).catch(() => undefined);
+  },
+
+  refreshTier: async () => {
+    try {
+      const data = await featureService.getPaymentHistory();
+      if (!data?.currentTier) return;
+      const tier = mapTier(data.currentTier);
+      set({ tier });
+      await AsyncStorage.setItem(STORAGE_KEYS.TIER, tier);
+    } catch {
+      // Giữ gói đang có; server vẫn tự chặn chức năng nếu gói không đủ.
+    }
+  },
 
   clearSession: () =>
     set({
@@ -188,3 +210,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
+
+/** Chỉ báo hiển thị (dấu khóa); quyền thật luôn do server kiểm tra (403). */
+export const useIsFreeTier = () => useAuthStore((s) => s.tier === 'Free');

@@ -296,6 +296,11 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   );
 }
 
+/** Dấu khóa trên lối vào chức năng cần gói Mẹ Hiện Đại (chỉ để báo, không dẫn tới mua gói). */
+export function LockIcon({ color = MOM_THEME.amberDark, size = 16 }: { color?: string; size?: number }) {
+  return <Lock size={size} color={color} accessibilityLabel="Cần gói Mẹ Hiện Đại" />;
+}
+
 /** Backend trả 403 khi tài khoản chưa có gói đủ quyền; hiển thị rõ thay vì số liệu mẫu. */
 export function TierLockedCard({
   feature,
@@ -311,7 +316,8 @@ export function TierLockedCard({
       </View>
       <Text style={styles.stateTitle}>{feature} dành cho gói {tierName}</Text>
       <Text style={styles.stateText}>
-        Tài khoản của mẹ đang dùng gói miễn phí. Mẹ có thể xem các gói tại Menu → Gói dịch vụ.
+        Tài khoản của mẹ đang dùng gói miễn phí. Chức năng sẽ tự mở khi tài khoản có gói {tierName}; mẹ
+        xem gói hiện tại tại Menu → Gói của mẹ.
       </Text>
     </View>
   );

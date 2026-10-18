@@ -67,11 +67,13 @@ export const ENDPOINTS = {
   POSTPARTUM_RECOVERY_PLAN: '/api/postpartum/recovery-plan',
   POSTPARTUM_BREASTFEEDING_LOG: '/api/postpartum/breastfeeding-log',
 
-  // Payments and feedback
-  PAYMENT_CREATE: '/api/payment/create',
+  // Wellness
+  WELLNESS_CARE_CALENDAR: '/api/wellness/care-calendar',
+  WELLNESS_EMERGENCY_GUIDE: '/api/wellness/emergency-guide',
+  WELLNESS_RELAX_TRACKS: '/api/wellness/relax-tracks',
+
+  // Payments (chỉ đọc, gói được mua trên web) and feedback
   PAYMENT_HISTORY: '/api/payment/history',
-  PAYMENT_STATUS: (orderCode: string | number) =>
-    `/api/payment/status/${encodeURIComponent(orderCode)}`,
   FEEDBACK: '/api/feedback',
   FEEDBACK_OPTIONS: '/api/feedback/options',
 

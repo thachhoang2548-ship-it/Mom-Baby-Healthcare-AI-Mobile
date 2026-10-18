@@ -18,48 +18,87 @@ async function call<T = any>(request: Promise<AxiosResponse<any>>): Promise<T> {
   return body as T;
 }
 
-export const TIERS_DATA = {
-  MomHienDai: {
-    id: 'MomHienDai',
-    name: 'Mẹ Hiện Đại',
-    monthlyPrice: '99.000d',
-    sixMonthPrice: '499.000d',
-    features: [
-      'IVF timeline thong minh',
-      'Thuc don dinh duong 7 ngay',
-      'Bai tap an toan theo thai ky',
-      'Danh gia EPDS sau sinh',
-    ],
-  },
-  SuperMomVip: {
-    id: 'SuperMomVip',
-    name: 'Super Mom VIP',
-    monthlyPrice: '199.000d',
-    sixMonthPrice: '999.000d',
-    features: [
-      'Toan bo dac quyen Me Hien Dai',
-      'Nhat ky cam xuc AI',
-      'Uu tien ket noi chuyen gia',
-      'Care Staff dong hanh 24/7',
-    ],
-  },
-};
-
-const PLAN_CODES = {
-  MomHienDai: {
-    1: 'HD_1M',
-    6: 'HD_6M',
-  },
-  SuperMomVip: {
-    1: 'VIP_1M',
-    6: 'VIP_6M',
-  },
-};
-
-type TierId = keyof typeof PLAN_CODES;
-type PlanMonths = 1 | 6;
-
 // ── Kiểu dữ liệu theo DTO của backend (Swagger) ──
+
+export type PaymentStatus = 'Pending' | 'Completed' | 'Failed' | 'Refunded';
+
+export interface PaymentTransaction {
+  id: number;
+  orderCode: string;
+  planCode?: string | null;
+  tier: string;
+  durationMonths: number;
+  amount: number;
+  currency?: string | null;
+  paymentMethod?: string | null;
+  status: PaymentStatus | string;
+  createdAt: string;
+  paidAt?: string | null;
+}
+
+/** GET /api/payment/history: gói hiện tại kèm các giao dịch (mua trên web). */
+export interface PaymentHistory {
+  currentTier: string;
+  tierExpiresAt?: string | null;
+  transactions: PaymentTransaction[];
+}
+
+/** Cảnh báo từ luật nghiệp vụ backend (HealthAlert). */
+export interface RuleAlert {
+  ruleId: string;
+  severity: string;
+  titleVi: string;
+  messageVi: string;
+  suggestionVi?: string;
+}
+
+/** POST /api/pregnancy/food-log: cảnh báo BR02 (món cần tránh) và món thay thế an toàn. */
+export interface FoodLogResult {
+  alerts: RuleAlert[];
+  safeAlternatives: string[];
+}
+
+export interface CareCalendarItem {
+  time: string;
+  title: string;
+  description: string;
+  priority: number;
+}
+
+/** GET /api/wellness/care-calendar: việc cần làm theo giai đoạn của mẹ. */
+export interface CareCalendar {
+  stage: string;
+  pregnancyWeek?: number | null;
+  generatedAt?: string;
+  items: CareCalendarItem[];
+}
+
+export interface RelaxTrack {
+  id: string;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  modeLabel: string;
+  color: string;
+  /** Link file nhạc; null khi server chưa có file (web tự tạo âm thanh, mobile không phát được). */
+  audioUrl: string | null;
+}
+
+/** GET /api/wellness/relax-tracks */
+export interface RelaxLibrary {
+  title: string;
+  description: string;
+  tracks: RelaxTrack[];
+}
+
+/** GET /api/wellness/emergency-guide */
+export interface EmergencyGuide {
+  headline: string;
+  notice: string;
+  redFlags: string[];
+  actions: string[];
+  disclaimer: string;
+}
 
 export interface DailyMonitoringPayload {
   date?: string;
@@ -314,6 +353,9 @@ const featureService = {
       })
     ),
 
+  logPregnancyFood: (foods: string[]) =>
+    call<FoodLogResult>(axiosClient.post(ENDPOINTS.PREGNANCY_FOOD_LOG, { foods })),
+
   getPregnancyWeightLogs: () =>
     call<PregnancyWeightLog[]>(axiosClient.get(ENDPOINTS.PREGNANCY_WEIGHT_LOGS)),
 
@@ -337,16 +379,16 @@ const featureService = {
       axiosClient.get(ENDPOINTS.POSTPARTUM_RECOVERY_PLAN, { params: day ? { day } : undefined })
     ),
 
-  // Gói dịch vụ
-  createPayment: (targetTier: TierId, months: PlanMonths) =>
-    call(
-      axiosClient.post(ENDPOINTS.PAYMENT_CREATE, {
-        planCode: PLAN_CODES[targetTier][months],
-        provider: 'BankTransfer',
-      })
-    ),
+  // Gói dịch vụ: chỉ đọc. Việc mua gói làm trên web vì Google Play bắt buộc
+  // Play Billing cho nội dung số bán trong app.
+  getPaymentHistory: () => call<PaymentHistory>(axiosClient.get(ENDPOINTS.PAYMENT_HISTORY)),
 
-  getPaymentHistory: () => call(axiosClient.get(ENDPOINTS.PAYMENT_HISTORY)),
+  // Chăm sóc
+  getCareCalendar: () => call<CareCalendar>(axiosClient.get(ENDPOINTS.WELLNESS_CARE_CALENDAR)),
+
+  getEmergencyGuide: () => call<EmergencyGuide>(axiosClient.get(ENDPOINTS.WELLNESS_EMERGENCY_GUIDE)),
+
+  getRelaxTracks: () => call<RelaxLibrary>(axiosClient.get(ENDPOINTS.WELLNESS_RELAX_TRACKS)),
 
   // Món ăn
   generateRecipes: (preferences: {

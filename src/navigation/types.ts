@@ -37,4 +37,9 @@ export type RootStackParamList = {
   ExercisePlan: undefined;
   IvfTimeline: undefined;
   Recipes: undefined;
+
+  // Chăm sóc
+  CareCalendar: undefined;
+  Emergency: undefined;
+  Relax: undefined;
 };

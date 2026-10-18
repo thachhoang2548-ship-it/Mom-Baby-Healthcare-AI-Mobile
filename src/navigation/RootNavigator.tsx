@@ -24,6 +24,9 @@ import PregnancyMealPlanScreen from '../screens/stages/PregnancyMealPlanScreen';
 import ExercisePlanScreen from '../screens/stages/ExercisePlanScreen';
 import IvfTimelineScreen from '../screens/stages/IvfTimelineScreen';
 import RecipesScreen from '../screens/recipes/RecipesScreen';
+import CareCalendarScreen from '../screens/wellness/CareCalendarScreen';
+import EmergencyScreen from '../screens/wellness/EmergencyScreen';
+import RelaxScreen from '../screens/wellness/RelaxScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -61,6 +64,9 @@ export default function RootNavigator() {
         <Stack.Screen name="ExercisePlan" component={ExercisePlanScreen} />
         <Stack.Screen name="IvfTimeline" component={IvfTimelineScreen} />
         <Stack.Screen name="Recipes" component={RecipesScreen} />
+        <Stack.Screen name="CareCalendar" component={CareCalendarScreen} />
+        <Stack.Screen name="Emergency" component={EmergencyScreen} />
+        <Stack.Screen name="Relax" component={RelaxScreen} />
       </Stack.Group>
     </Stack.Navigator>
   );

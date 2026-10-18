@@ -8,6 +8,7 @@ import {
   EmptyState,
   ErrorState,
   LoadingView,
+  LockIcon,
   PrimaryButton,
   Screen,
   SecondaryButton,
@@ -15,6 +16,7 @@ import {
   TierLockedCard,
   uiStyles,
 } from '../../components/ui';
+import { useIsFreeTier } from '../../stores/authStore';
 import profileService, { getStageIndex, MomProfileDto } from '../../services/profileService';
 import featureService, { LatestEpds, RecoveryPlan } from '../../services/featureService';
 import { RootStackParamList } from '../../navigation/types';
@@ -42,6 +44,7 @@ async function gated<T>(task: () => Promise<T>): Promise<Gated<T>> {
 
 export default function PostpartumScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const isFree = useIsFreeTier();
   const [profile, setProfile] = useState<MomProfileDto | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +61,8 @@ export default function PostpartumScreen() {
         const delivery = fromUtcDateIso(p.deliveryDate);
         const days = delivery ? Math.max(0, daysBetween(delivery, startOfToday())) : undefined;
         const [planRes, epdsRes] = await Promise.all([
-          gated(() => featureService.getRecoveryPlan(days || 1)),
+          // Ngày 0 (sinh hôm nay) tính là ngày 1; chưa có ngày sinh thì để server báo cần cập nhật hồ sơ.
+          gated(() => featureService.getRecoveryPlan(days === undefined ? undefined : Math.max(1, days))),
           gated(() => featureService.getLatestEpds()),
         ]);
         setPlan(planRes);
@@ -189,7 +193,7 @@ export default function PostpartumScreen() {
       <SectionTitle title="Chăm sóc hằng ngày" />
       <SecondaryButton
         label="Hồ sơ & thực đơn của bé"
-        icon={<Baby size={16} color={MOM_THEME.roseDeep} />}
+        icon={isFree ? <LockIcon color={MOM_THEME.roseDeep} /> : <Baby size={16} color={MOM_THEME.roseDeep} />}
         onPress={() => navigation.navigate('MainTabs', { screen: 'Nutrition' })}
       />
       <SecondaryButton

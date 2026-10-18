@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Linking,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -18,31 +17,53 @@ import {
   Baby,
   Bell,
   Calendar,
+  CalendarHeart,
   ClipboardList,
   Headphones,
   Heart,
   HeartPulse,
   LifeBuoy,
   MessageSquare,
-  PhoneCall,
   Pill,
-  ReceiptText,
   Sparkles,
   User,
   Utensils,
 } from 'lucide-react-native';
-import featureService, { FeedbackCategory, TIERS_DATA } from '../../services/featureService';
-import { getTierDisplayName, useAuthStore } from '../../stores/authStore';
+import featureService, {
+  FeedbackCategory,
+  PaymentHistory,
+  PaymentTransaction,
+} from '../../services/featureService';
+import { getTierDisplayName, mapTier, useAuthStore } from '../../stores/authStore';
 import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage } from '../../utils/apiError';
+import { LockIcon } from '../../components/ui';
+import { formatDate } from '../../utils/date';
 import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 
-type PanelKey = 'upgrade' | 'subscription' | 'feedback' | 'emergency' | 'relax';
+type PanelKey = 'plan' | 'feedback';
 
 const formatResult = (value: unknown) => {
   if (value === null || value === undefined || value === '') return 'Chưa có dữ liệu.';
   if (typeof value === 'string') return value;
   return JSON.stringify(value, null, 2);
+};
+
+// Chỉ hiện giao dịch đã có tiền thật. Đơn Pending phần lớn là đơn bỏ dở trên web
+// (backend không tự hủy), Failed chỉ gây nhiễu; cả hai vẫn xem được trên web.
+const PAYMENT_STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  Completed: { label: 'Thành công', color: MOM_THEME.sageDark },
+  Refunded: { label: 'Đã hoàn tiền', color: MOM_THEME.muted },
+};
+
+const formatVnd = (amount: number) =>
+  `${Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}đ`;
+
+/** Mốc thời gian thật từ server -> dd/MM/yyyy theo giờ máy. */
+const formatTimestamp = (value?: string | null) => {
+  if (!value) return '';
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : formatDate(d);
 };
 
 const FALLBACK_FEEDBACK: FeedbackCategory[] = [
@@ -54,10 +75,16 @@ const FALLBACK_FEEDBACK: FeedbackCategory[] = [
 
 export default function ToolsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { tier } = useAuthStore();
+  const tier = useAuthStore((s) => s.tier);
+  const isFree = tier === 'Free';
+  const setTier = useAuthStore((s) => s.setTier);
   const [active, setActive] = useState<PanelKey | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+
+  const [plan, setPlan] = useState<PaymentHistory | null>(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
 
   const [feedback, setFeedback] = useState('');
   const [feedbackCategories, setFeedbackCategories] = useState<FeedbackCategory[]>(FALLBACK_FEEDBACK);
@@ -75,6 +102,7 @@ export default function ToolsScreen() {
   const healthItems = [
     { label: 'Hồ sơ mẹ', icon: User, color: MOM_THEME.roseDark, go: () => navigation.navigate('Profile') },
     { label: 'Nhật ký hằng ngày', icon: ClipboardList, color: MOM_THEME.sageDark, go: () => navigation.navigate('DailyMonitoring') },
+    { label: 'Lịch chăm sóc', icon: CalendarHeart, color: MOM_THEME.sageDark, go: () => navigation.navigate('CareCalendar') },
     { label: 'Lịch uống thuốc', icon: Pill, color: '#8E6BB8', go: () => navigation.navigate('Medications') },
     { label: 'Thông báo', icon: Bell, color: MOM_THEME.amberDark, go: () => navigation.navigate('Notifications') },
     { label: 'Lịch sử Trợ lý AI', icon: HeartPulse, color: MOM_THEME.roseDark, go: () => navigation.navigate('SymptomHistory') },
@@ -85,20 +113,41 @@ export default function ToolsScreen() {
     { label: 'Rụng trứng', icon: Calendar, color: MOM_THEME.roseDark, go: () => navigation.navigate('Fertility') },
     { label: 'Thai kỳ', icon: Heart, color: MOM_THEME.roseDark, go: () => navigation.navigate('Pregnancy') },
     { label: 'Hậu sản', icon: Activity, color: MOM_THEME.sageDark, go: () => navigation.navigate('Postpartum') },
-    { label: 'Bé yêu', icon: Baby, color: MOM_THEME.sageDark, go: () => navigation.navigate('MainTabs', { screen: 'Nutrition' }) },
+    {
+      label: 'Bé yêu',
+      icon: Baby,
+      color: MOM_THEME.sageDark,
+      tierLocked: true,
+      go: () => navigation.navigate('MainTabs', { screen: 'Nutrition' }),
+    },
   ];
 
   const panelItems: { key: PanelKey; label: string; icon: typeof User; color: string }[] = [
-    { key: 'upgrade', label: 'Gói dịch vụ', icon: Sparkles, color: MOM_THEME.amberDark },
-    { key: 'subscription', label: 'Lịch sử gói', icon: ReceiptText, color: MOM_THEME.sageDark },
+    { key: 'plan', label: 'Gói của mẹ', icon: Sparkles, color: MOM_THEME.amberDark },
     { key: 'feedback', label: 'Góp ý', icon: MessageSquare, color: '#4A88C7' },
-    { key: 'emergency', label: 'Khẩn cấp', icon: LifeBuoy, color: '#D95368' },
-    { key: 'relax', label: 'Thư giãn', icon: Headphones, color: '#8E6BB8' },
   ];
 
+  // Gói lấy lại từ server mỗi lần mở: mẹ có thể vừa nâng cấp trên web,
+  // còn gói trong store chỉ được cập nhật lúc đăng nhập.
+  const loadPlan = async () => {
+    setPlanLoading(true);
+    setPlanError(null);
+    try {
+      const data = await featureService.getPaymentHistory();
+      setPlan(data);
+      if (data?.currentTier) await setTier(mapTier(data.currentTier));
+    } catch (err) {
+      setPlanError(getApiErrorMessage(err, 'Không tải được thông tin gói. Mẹ thử lại sau nhé.'));
+    } finally {
+      setPlanLoading(false);
+    }
+  };
+
   const openPanel = (key: PanelKey) => {
-    setActive((current) => (current === key ? null : key));
+    const opening = active !== key;
+    setActive(opening ? key : null);
     setResult(null);
+    if (opening && key === 'plan') loadPlan();
   };
 
   const run = async (task: () => Promise<unknown>, success?: string) => {
@@ -130,38 +179,42 @@ export default function ToolsScreen() {
     }, 'Cảm ơn mẹ! Góp ý đã được gửi tới đội ngũ Mom Ơi.');
   };
 
-  const confirmPayment = () => {
-    Alert.alert(
-      'Tạo yêu cầu thanh toán',
-      `Mom Ơi sẽ tạo đơn chuyển khoản cho gói ${TIERS_DATA.SuperMomVip.name} (${TIERS_DATA.SuperMomVip.monthlyPrice}/tháng). Mẹ có muốn tiếp tục?`,
-      [
-        { text: 'Hủy', style: 'cancel' },
-        { text: 'Tạo đơn', onPress: () => run(() => featureService.createPayment('SuperMomVip', 1)) },
-      ]
+  const renderPlanPanel = () => {
+    const expiresAt = tier !== 'Free' ? formatTimestamp(plan?.tierExpiresAt) : '';
+    const transactions = (plan?.transactions ?? []).filter((t) => t.status in PAYMENT_STATUS_LABELS);
+
+    return (
+      <Panel title="Gói của mẹ" subtitle="Quyền lợi của gói tự áp dụng khi mẹ đăng nhập Mom Ơi.">
+        <View style={styles.currentPlan}>
+          <Text style={styles.currentPlanLabel}>Gói hiện tại</Text>
+          <Text style={styles.currentPlanName}>{getTierDisplayName(tier)}</Text>
+          {expiresAt ? <Text style={styles.currentPlanMeta}>Hiệu lực đến {expiresAt}</Text> : null}
+        </View>
+
+        <Text style={styles.sectionLabel}>Lịch sử giao dịch</Text>
+        {planLoading ? (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator color={MOM_THEME.roseDark} size="small" />
+            <Text style={styles.loadingText}>Đang tải thông tin gói...</Text>
+          </View>
+        ) : planError ? (
+          <>
+            <Text style={styles.emptyText}>{planError}</Text>
+            <SecondaryButton label="Thử lại" onPress={loadPlan} />
+          </>
+        ) : transactions.length ? (
+          transactions.map((t) => <TransactionRow key={t.id} transaction={t} />)
+        ) : (
+          <Text style={styles.emptyText}>Mẹ chưa có giao dịch nào.</Text>
+        )}
+      </Panel>
     );
   };
 
   const renderPanel = () => {
     switch (active) {
-      case 'upgrade':
-        return (
-          <Panel title="Gói dịch vụ" subtitle={`Gói hiện tại: ${getTierDisplayName(tier)}`}>
-            <Plan name={TIERS_DATA.MomHienDai.name} price={TIERS_DATA.MomHienDai.monthlyPrice} />
-            <Plan name={TIERS_DATA.SuperMomVip.name} price={TIERS_DATA.SuperMomVip.monthlyPrice} />
-            <PrimaryButton label="Tạo thanh toán Super Mom VIP" onPress={confirmPayment} />
-          </Panel>
-        );
-      case 'emergency':
-        return (
-          <Panel title="Khẩn cấp" subtitle="Khi có dấu hiệu nguy hiểm, đừng chờ theo dõi tại nhà.">
-            <Warning text="Nếu đau nhiều, ra máu, sốt cao, khó thở hoặc thai máy giảm rõ rệt, hãy đến cơ sở y tế ngay." />
-            <Warning text="Với bé: bỏ bú, tím tái, co giật, sốt cao kéo dài hoặc li bì là dấu hiệu cần khám ngay." />
-            <TouchableOpacity style={styles.callButton} onPress={() => Linking.openURL('tel:115')}>
-              <PhoneCall size={16} color={MOM_THEME.white} />
-              <Text style={styles.primaryButtonText}>Gọi cấp cứu 115</Text>
-            </TouchableOpacity>
-          </Panel>
-        );
+      case 'plan':
+        return renderPlanPanel();
       case 'feedback':
         return (
           <Panel title="Góp ý" subtitle="Mẹ gặp lỗi hoặc có ý tưởng? Đội ngũ Mom Ơi luôn lắng nghe.">
@@ -188,18 +241,6 @@ export default function ToolsScreen() {
               onChangeText={setFeedback}
             />
             <PrimaryButton label="Gửi góp ý" onPress={submitFeedback} />
-          </Panel>
-        );
-      case 'relax':
-        return (
-          <Panel title="Thư giãn" subtitle="Một phút cho riêng mẹ.">
-            <InfoRow label="Bài tập 1 phút" value="Hít vào 4 giây, giữ 2 giây, thở ra 6 giây. Lặp lại 5 lần." />
-          </Panel>
-        );
-      case 'subscription':
-        return (
-          <Panel title="Lịch sử gói" subtitle="Các giao dịch nâng cấp gói của mẹ.">
-            <PrimaryButton label="Tải lịch sử thanh toán" onPress={() => run(() => featureService.getPaymentHistory())} />
           </Panel>
         );
       default:
@@ -236,12 +277,31 @@ export default function ToolsScreen() {
         <Text style={styles.groupTitle}>Theo giai đoạn</Text>
         <View style={styles.menuGrid}>
           {stageItems.map((item) => (
-            <MenuTile key={item.label} label={item.label} icon={item.icon} color={item.color} onPress={item.go} />
+            <MenuTile
+              key={item.label}
+              label={item.label}
+              icon={item.icon}
+              color={item.color}
+              locked={item.tierLocked && isFree}
+              onPress={item.go}
+            />
           ))}
         </View>
 
         <Text style={styles.groupTitle}>Tiện ích khác</Text>
         <View style={styles.menuGrid}>
+          <MenuTile
+            label="Khẩn cấp"
+            icon={LifeBuoy}
+            color="#D95368"
+            onPress={() => navigation.navigate('Emergency')}
+          />
+          <MenuTile
+            label="Thư giãn"
+            icon={Headphones}
+            color="#8E6BB8"
+            onPress={() => navigation.navigate('Relax')}
+          />
           {panelItems.map((item) => (
             <MenuTile
               key={item.key}
@@ -281,12 +341,14 @@ function MenuTile({
   icon: Icon,
   color,
   selected,
+  locked,
   onPress,
 }: {
   label: string;
   icon: typeof User;
   color: string;
   selected?: boolean;
+  locked?: boolean;
   onPress: () => void;
 }) {
   return (
@@ -299,6 +361,7 @@ function MenuTile({
         <Icon size={18} color={selected ? MOM_THEME.white : color} />
       </View>
       <Text style={[styles.menuText, selected && styles.menuTextActive]}>{label}</Text>
+      {locked ? <LockIcon size={14} color={selected ? MOM_THEME.white : MOM_THEME.mutedLight} /> : null}
     </TouchableOpacity>
   );
 }
@@ -321,32 +384,34 @@ function PrimaryButton({ label, onPress }: { label: string; onPress: () => void 
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+
+function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
-    <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+    <TouchableOpacity style={styles.secondaryButton} onPress={onPress} activeOpacity={0.86}>
+      <Text style={styles.secondaryButtonText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function TransactionRow({ transaction: t }: { transaction: PaymentTransaction }) {
+  const status = PAYMENT_STATUS_LABELS[t.status];
+  const date = formatTimestamp(t.paidAt || t.createdAt);
+  return (
+    <View style={styles.transaction}>
+      <View style={styles.transactionTop}>
+        <Text style={styles.transactionName}>
+          {getTierDisplayName(mapTier(t.tier))} · {t.durationMonths} tháng
+        </Text>
+        <Text style={[styles.transactionStatus, { color: status.color }]}>{status.label}</Text>
+      </View>
+      <Text style={styles.transactionMeta}>
+        {formatVnd(t.amount)}
+        {date ? ` · ${date}` : ''}
+      </Text>
     </View>
   );
 }
 
-function Plan({ name, price }: { name: string; price: string }) {
-  return (
-    <View style={styles.plan}>
-      <Text style={styles.planName}>{name}</Text>
-      <Text style={styles.planPrice}>{price} / tháng</Text>
-    </View>
-  );
-}
-
-function Warning({ text }: { text: string }) {
-  return (
-    <View style={styles.warning}>
-      <LifeBuoy size={17} color="#D95368" />
-      <Text style={styles.warningText}>{text}</Text>
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   root: {
@@ -422,16 +487,6 @@ const styles = StyleSheet.create({
   },
   chipTextActive: {
     color: MOM_THEME.white,
-  },
-  callButton: {
-    minHeight: 48,
-    borderRadius: 14,
-    backgroundColor: '#D92D20',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 6,
   },
   menuItem: {
     width: '48.6%',
@@ -545,62 +600,69 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  infoRow: {
-    borderRadius: 14,
+  currentPlan: {
+    borderRadius: 16,
+    backgroundColor: MOM_THEME.cream,
     borderWidth: 1,
     borderColor: MOM_THEME.border,
-    backgroundColor: MOM_THEME.cream,
-    padding: 12,
-    marginBottom: 8,
+    padding: 14,
+    marginBottom: 16,
   },
-  infoLabel: {
+  currentPlanLabel: {
     color: MOM_THEME.muted,
     fontSize: 11,
     fontWeight: '700',
-    marginBottom: 3,
   },
-  infoValue: {
+  currentPlanName: {
+    color: MOM_THEME.roseDark,
+    fontSize: 18,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  currentPlanMeta: {
+    color: MOM_THEME.charcoalMid,
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  sectionLabel: {
     color: MOM_THEME.charcoal,
     fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
+    fontWeight: '800',
+    marginBottom: 8,
   },
-  plan: {
-    borderRadius: 16,
+  emptyText: {
+    color: MOM_THEME.muted,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  transaction: {
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: MOM_THEME.border,
-    backgroundColor: MOM_THEME.cream,
-    padding: 14,
-    marginBottom: 10,
-  },
-  planName: {
-    color: MOM_THEME.charcoal,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  planPrice: {
-    color: MOM_THEME.roseDark,
-    fontSize: 13,
-    fontWeight: '800',
-    marginTop: 3,
-  },
-  warning: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    borderRadius: 14,
-    backgroundColor: '#FDECEF',
-    borderWidth: 1,
-    borderColor: '#FECACA',
     padding: 12,
     marginBottom: 8,
   },
-  warningText: {
+  transactionTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  transactionName: {
     flex: 1,
-    color: '#D95368',
+    color: MOM_THEME.charcoal,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  transactionStatus: {
     fontSize: 12,
-    lineHeight: 18,
     fontWeight: '700',
+  },
+  transactionMeta: {
+    color: MOM_THEME.muted,
+    fontSize: 12,
+    marginTop: 3,
   },
   resultCard: {
     backgroundColor: MOM_THEME.white,

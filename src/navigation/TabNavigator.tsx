@@ -1,5 +1,5 @@
-import React from 'react';
-import { Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { AppState, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Activity, Baby, Grid3X3, HeartPulse, Home } from 'lucide-react-native';
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
@@ -7,12 +7,24 @@ import JourneyScreen from '../screens/journey/JourneyScreen';
 import BabyNutritionScreen from '../screens/nutrition/BabyNutritionScreen';
 import SymptomCheckerScreen from '../screens/symptoms/SymptomCheckerScreen';
 import ToolsScreen from '../screens/tools/ToolsScreen';
+import { useAuthStore } from '../stores/authStore';
 import { COLORS, MOM_THEME } from '../theme/colors';
 import { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function TabNavigator() {
+  const refreshTier = useAuthStore((s) => s.refreshTier);
+
+  // Gói được nâng cấp trên web: hỏi lại khi vào app và mỗi lần app quay lại từ nền.
+  useEffect(() => {
+    refreshTier();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refreshTier();
+    });
+    return () => sub.remove();
+  }, [refreshTier]);
+
   return (
     <Tab.Navigator
       screenOptions={{

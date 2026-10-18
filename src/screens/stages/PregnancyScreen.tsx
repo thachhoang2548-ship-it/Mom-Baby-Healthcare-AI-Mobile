@@ -3,12 +3,15 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Baby, Dumbbell, HeartPulse, Pill, Salad, Scale } from 'lucide-react-native';
+import FoodLogCard from '../../components/FoodLogCard';
+import { useIsFreeTier } from '../../stores/authStore';
 import {
   Card,
   EmptyState,
   ErrorState,
   Field,
   LoadingView,
+  LockIcon,
   PrimaryButton,
   Screen,
   SecondaryButton,
@@ -24,8 +27,11 @@ import { MOM_THEME, RADII } from '../../theme/colors';
 
 const trimesterOf = (week: number) => (week <= 13 ? 1 : week <= 27 ? 2 : 3);
 
+const lockIcon = <LockIcon color={MOM_THEME.roseDeep} />;
+
 export default function PregnancyScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const isFree = useIsFreeTier();
   const [profile, setProfile] = useState<MomProfileDto | null>(null);
   const [weekInfo, setWeekInfo] = useState<PregnancyWeekInfo | null>(null);
   const [weekError, setWeekError] = useState<string | null>(null);
@@ -205,6 +211,9 @@ export default function PregnancyScreen() {
         )}
       </Card>
 
+      <SectionTitle title="Bữa ăn hôm nay" subtitle="Mom Ơi nhắc nếu có món cần tránh khi mang thai" />
+      <FoodLogCard />
+
       <SectionTitle title="Chăm sóc hằng ngày" />
       <SecondaryButton
         label="Ghi nhật ký sức khỏe hôm nay"
@@ -218,12 +227,12 @@ export default function PregnancyScreen() {
       />
       <SecondaryButton
         label="Thực đơn thai kỳ 7 ngày"
-        icon={<Salad size={16} color={MOM_THEME.roseDeep} />}
+        icon={isFree ? lockIcon : <Salad size={16} color={MOM_THEME.roseDeep} />}
         onPress={() => navigation.navigate('PregnancyMealPlan')}
       />
       <SecondaryButton
         label="Bài tập an toàn"
-        icon={<Dumbbell size={16} color={MOM_THEME.roseDeep} />}
+        icon={isFree ? lockIcon : <Dumbbell size={16} color={MOM_THEME.roseDeep} />}
         onPress={() => navigation.navigate('ExercisePlan')}
       />
     </Screen>
