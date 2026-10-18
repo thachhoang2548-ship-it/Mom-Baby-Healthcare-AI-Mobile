@@ -12,14 +12,14 @@
     },
     "android": {
       "package": "com.momoi.healthcare",
-      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#FDF2F8",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -56,6 +56,12 @@
         }
       ],
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "80469805-b504-44e2-9ccc-c27e10d1e9ff"
+      }
+    },
+    "owner": "xiaobo12"
   }
 }
