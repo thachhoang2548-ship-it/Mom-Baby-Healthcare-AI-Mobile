@@ -140,11 +140,11 @@ export default function SymptomCheckerScreen() {
             <Stethoscope size={24} color={MOM_THEME.roseDark} />
           </View>
           <View style={styles.headerEyebrowWrap}>
-            <Text style={styles.headerEyebrow}>TRỢ LÝ SỨC KHỎE THÔNG MINH</Text>
+            <Text style={styles.headerEyebrow}>GỢI Ý CHĂM SÓC MẸ & BÉ</Text>
           </View>
-          <Text style={styles.title}>Hỏi trợ lý sức khỏe AI</Text>
+          <Text style={styles.title}>Hỏi Mom Ơi AI</Text>
           <Text style={styles.subtitle}>
-            Chia sẻ cảm giác hoặc biểu hiện lạ mẹ và bé đang gặp phải để nhận gợi ý chăm sóc tham khảo 🌸
+            Chia sẻ cảm giác hoặc biểu hiện lạ mẹ và bé đang gặp phải để nhận gợi ý chăm sóc tham khảo 🌸 Gợi ý không phải chẩn đoán và không thay thế bác sĩ.
           </Text>
         </View>
 
@@ -217,12 +217,12 @@ export default function SymptomCheckerScreen() {
             {isAnalyzing ? (
               <View style={styles.analyzingRow}>
                 <ActivityIndicator color={MOM_THEME.white} size="small" />
-                <Text style={styles.primaryText}>AI đang phân tích triệu chứng...</Text>
+                <Text style={styles.primaryText}>AI đang soạn gợi ý...</Text>
               </View>
             ) : (
               <>
                 <Sparkles size={18} color={MOM_THEME.white} />
-                <Text style={styles.primaryText}>Tư vấn cùng AI ngay</Text>
+                <Text style={styles.primaryText}>Nhận gợi ý chăm sóc</Text>
               </>
             )}
           </TouchableOpacity>

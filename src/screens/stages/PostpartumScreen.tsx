@@ -24,6 +24,7 @@ import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
 import { daysBetween, formatDate, formatDateTime, fromUtcDateIso, startOfToday } from '../../utils/date';
 import { epdsRisk } from '../../utils/epds';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
 
 // Cùng mốc với backend (PostpartumService.SetupPostpartumAsync).
 function phaseOf(days: number) {
@@ -63,7 +64,7 @@ export default function PostpartumScreen() {
         const [planRes, epdsRes] = await Promise.all([
           // Ngày 0 (sinh hôm nay) tính là ngày 1; chưa có ngày sinh thì để server báo cần cập nhật hồ sơ.
           gated(() => featureService.getRecoveryPlan(days === undefined ? undefined : Math.max(1, days))),
-          gated(() => featureService.getLatestEpds()),
+          MEDICAL_FEATURES_ENABLED ? gated(() => featureService.getLatestEpds()) : Promise.resolve(null),
         ]);
         setPlan(planRes);
         setEpds(epdsRes);
@@ -162,7 +163,7 @@ export default function PostpartumScreen() {
         <ErrorState message={plan.error} onRetry={load} />
       ) : null}
 
-      {!epds?.locked ? (
+      {MEDICAL_FEATURES_ENABLED && !epds?.locked ? (
         <>
           <SectionTitle title="Sức khỏe tinh thần" subtitle="Khảo sát EPDS nên làm 2 tuần một lần" />
           <Card>

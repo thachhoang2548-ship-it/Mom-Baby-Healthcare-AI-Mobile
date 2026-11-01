@@ -52,6 +52,76 @@ const toNumber = (value: string): number | null => {
 const toText = (value: unknown) =>
   value === null || value === undefined || value === '' ? '' : String(value);
 
+const MAX_NAME_LENGTH = 100; // Cùng giới hạn với backend (UpdateNameDto).
+
+/** Dòng họ tên trong thẻ tài khoản: xem, bấm "Đổi" để sửa và lưu lên server. */
+function NameEditor({ fullName }: { fullName?: string }) {
+  const updateFullName = useAuthStore((s) => s.updateFullName);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  if (!editing) {
+    return (
+      <View style={styles.nameRow}>
+        <View style={styles.flex}>
+          <Text style={styles.nameLabel}>Họ và tên</Text>
+          <Text style={styles.nameValue}>{fullName || 'Chưa cập nhật'}</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => {
+            setDraft(fullName ?? '');
+            setEditing(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Đổi họ và tên"
+          hitSlop={8}
+        >
+          <Text style={styles.nameAction}>Đổi</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const trimmed = draft.trim();
+  const save = async () => {
+    setSaving(true);
+    try {
+      await updateFullName(trimmed);
+      setEditing(false);
+    } catch (err) {
+      Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <View style={styles.nameEditor}>
+      <Field
+        label="Họ và tên"
+        value={draft}
+        onChangeText={setDraft}
+        maxLength={MAX_NAME_LENGTH}
+        autoCapitalize="words"
+        autoFocus
+        returnKeyType="done"
+        onSubmitEditing={trimmed ? save : undefined}
+      />
+      <View style={styles.row}>
+        <SecondaryButton label="Hủy" onPress={() => setEditing(false)} disabled={saving} style={styles.flex} />
+        <PrimaryButton
+          label="Lưu tên"
+          onPress={save}
+          loading={saving}
+          disabled={!trimmed || trimmed === fullName}
+          style={styles.flex}
+        />
+      </View>
+    </View>
+  );
+}
+
 export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, tier, logout } = useAuthStore();
@@ -233,7 +303,7 @@ export default function ProfileScreen() {
       subtitle="Thông tin này giúp Mom Ơi cá nhân hóa lộ trình, thực đơn và lời khuyên cho mẹ."
     >
       <Card>
-        <InfoRow label="Họ và tên" value={user?.fullName || 'Chưa cập nhật'} />
+        <NameEditor fullName={user?.fullName} />
         <InfoRow label="Email" value={user?.email || 'Chưa cập nhật'} />
         <InfoRow label="Gói dịch vụ" value={getTierDisplayName(tier)} />
       </Card>
@@ -429,6 +499,35 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: 12,
+  },
+  // Cùng kiểu với InfoRow, thêm nút "Đổi" bên phải.
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: MOM_THEME.borderSoft,
+  },
+  nameLabel: {
+    color: MOM_THEME.muted,
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  nameValue: {
+    color: MOM_THEME.charcoal,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  nameEditor: {
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: MOM_THEME.borderSoft,
+  },
+  nameAction: {
+    color: MOM_THEME.roseDark,
+    fontWeight: '700',
   },
   stageOption: {
     flexDirection: 'row',

@@ -40,6 +40,7 @@ import { getApiErrorMessage } from '../../utils/apiError';
 import { LockIcon } from '../../components/ui';
 import { formatDate } from '../../utils/date';
 import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
 
 type PanelKey = 'plan' | 'feedback';
 
@@ -103,7 +104,7 @@ export default function ToolsScreen() {
     { label: 'Hồ sơ mẹ', icon: User, color: MOM_THEME.roseDark, go: () => navigation.navigate('Profile') },
     { label: 'Nhật ký hằng ngày', icon: ClipboardList, color: MOM_THEME.sageDark, go: () => navigation.navigate('DailyMonitoring') },
     { label: 'Lịch chăm sóc', icon: CalendarHeart, color: MOM_THEME.sageDark, go: () => navigation.navigate('CareCalendar') },
-    { label: 'Lịch uống thuốc', icon: Pill, color: '#8E6BB8', go: () => navigation.navigate('Medications') },
+    { label: 'Lịch uống vitamin', icon: Pill, color: '#8E6BB8', go: () => navigation.navigate('Medications') },
     { label: 'Thông báo', icon: Bell, color: MOM_THEME.amberDark, go: () => navigation.navigate('Notifications') },
     { label: 'Lịch sử Trợ lý AI', icon: HeartPulse, color: MOM_THEME.roseDark, go: () => navigation.navigate('SymptomHistory') },
     { label: 'Món ăn AI', icon: Utensils, color: MOM_THEME.amberDark, go: () => navigation.navigate('Recipes') },
@@ -290,12 +291,14 @@ export default function ToolsScreen() {
 
         <Text style={styles.groupTitle}>Tiện ích khác</Text>
         <View style={styles.menuGrid}>
-          <MenuTile
-            label="Khẩn cấp"
-            icon={LifeBuoy}
-            color="#D95368"
-            onPress={() => navigation.navigate('Emergency')}
-          />
+          {MEDICAL_FEATURES_ENABLED ? (
+            <MenuTile
+              label="Khẩn cấp"
+              icon={LifeBuoy}
+              color="#D95368"
+              onPress={() => navigation.navigate('Emergency')}
+            />
+          ) : null}
           <MenuTile
             label="Thư giãn"
             icon={Headphones}

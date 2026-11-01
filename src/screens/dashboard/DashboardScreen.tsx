@@ -375,7 +375,7 @@ export default function DashboardScreen() {
             <View style={[styles.gridIconWrap, { backgroundColor: '#FFF4EB' }]}>
               <Pill size={22} color={MOM_THEME.amberDark} />
             </View>
-            <Text style={styles.gridCardTitle}>Lịch uống thuốc</Text>
+            <Text style={styles.gridCardTitle}>Lịch uống vitamin</Text>
             <Text style={styles.gridCardSub}>Vitamin, sắt, canxi mỗi ngày</Text>
           </TouchableOpacity>
 

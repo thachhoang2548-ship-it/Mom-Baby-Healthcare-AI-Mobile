@@ -39,3 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Bản build Android tải về để đưa lên Play Console
+*.aab
+*.apk

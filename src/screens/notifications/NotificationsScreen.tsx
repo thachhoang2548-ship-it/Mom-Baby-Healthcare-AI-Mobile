@@ -10,7 +10,7 @@ import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 
 const TYPE_LABELS: Record<string, string> = {
   Symptom: 'Triệu chứng',
-  Medication: 'Uống thuốc',
+  Medication: 'Uống vitamin',
   RoutineCheck: 'Nhắc định kỳ',
 };
 
@@ -95,7 +95,7 @@ export default function NotificationsScreen() {
         <EmptyState
           emoji="🔔"
           title="Chưa có thông báo nào"
-          body="Cảnh báo sức khỏe, nhắc uống thuốc và lời khuyên từ chuyên gia sẽ hiện ở đây."
+          body="Cảnh báo sức khỏe, nhắc uống vitamin và lời khuyên từ chuyên gia sẽ hiện ở đây."
         />
       ) : (
         alerts.map((alert) => {

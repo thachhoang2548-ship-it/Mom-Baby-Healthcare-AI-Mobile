@@ -46,6 +46,12 @@ const authService = {
     return res.data;
   },
 
+  /** Đổi họ tên hiển thị; server trả lại thông tin người dùng đã cập nhật. */
+  updateName: async (fullName: string): Promise<ApiResponse<UserDto>> => {
+    const res = await axiosClient.put(ENDPOINTS.UPDATE_NAME, { fullName });
+    return res.data;
+  },
+
   refresh: async (refreshToken: string): Promise<ApiResponse<AuthResponseDto>> => {
     const res = await axiosClient.post(ENDPOINTS.REFRESH, { refreshToken });
     return res.data;

@@ -99,7 +99,7 @@ export default function MedicationScreen() {
 
   const submit = async () => {
     if (!medName.trim()) {
-      Alert.alert('Thiếu tên thuốc', 'Mẹ nhập tên thuốc hoặc vitamin nhé (VD: Viên sắt, Canxi, Acid folic).');
+      Alert.alert('Thiếu tên vitamin', 'Mẹ nhập tên vitamin hoặc chất bổ sung nhé (VD: Viên sắt, Canxi, Acid folic).');
       return;
     }
     if (!dosage.trim()) {
@@ -143,7 +143,7 @@ export default function MedicationScreen() {
   };
 
   const confirmDelete = (med: MedicationSchedule) => {
-    Alert.alert('Xóa lịch uống thuốc', `Mẹ muốn xóa lịch "${med.medName}"?`, [
+    Alert.alert('Xóa lịch uống vitamin', `Mẹ muốn xóa lịch "${med.medName}"?`, [
       { text: 'Hủy', style: 'cancel' },
       {
         text: 'Xóa',
@@ -166,8 +166,8 @@ export default function MedicationScreen() {
   return (
     <Screen
       eyebrow="Nhắc nhở"
-      title="Lịch uống thuốc"
-      subtitle="Theo dõi vitamin, sắt, canxi và thuốc bác sĩ kê. Đánh dấu mỗi ngày khi mẹ đã uống."
+      title="Lịch uống vitamin"
+      subtitle="Theo dõi vitamin, sắt, canxi và các chất bổ sung. Đánh dấu mỗi ngày khi mẹ đã uống."
       refreshing={refreshing}
       onRefresh={refresh}
     >
@@ -179,7 +179,7 @@ export default function MedicationScreen() {
               <X size={20} color={MOM_THEME.muted} />
             </TouchableOpacity>
           </View>
-          <Field label="Tên thuốc / vitamin" value={medName} onChangeText={setMedName} placeholder="VD: Viên sắt" />
+          <Field label="Tên vitamin / chất bổ sung" value={medName} onChangeText={setMedName} placeholder="VD: Viên sắt" />
           <Field label="Liều mỗi lần" value={dosage} onChangeText={setDosage} placeholder="VD: 1 viên" />
 
           <Text style={uiStyles.label}>Giờ uống trong ngày</Text>
@@ -216,7 +216,7 @@ export default function MedicationScreen() {
         </Card>
       ) : (
         <PrimaryButton
-          label="Thêm thuốc / vitamin"
+          label="Thêm vitamin"
           icon={<Plus size={18} color={MOM_THEME.white} />}
           onPress={() => setShowForm(true)}
           style={styles.addButton}
@@ -231,8 +231,8 @@ export default function MedicationScreen() {
       ) : meds.length === 0 ? (
         <EmptyState
           emoji="💊"
-          title="Chưa có lịch uống thuốc"
-          body="Thêm các loại vitamin hoặc thuốc mẹ cần uống để Mom Ơi nhắc mẹ mỗi ngày."
+          title="Chưa có lịch uống vitamin"
+          body="Thêm các loại vitamin, sắt, canxi mẹ cần uống để Mom Ơi nhắc mẹ mỗi ngày."
         />
       ) : (
         meds.map((med) => {

@@ -47,9 +47,11 @@ interface AuthState {
   setTier: (tier: TierType) => Promise<void>;
   /** Hỏi lại server gói hiện tại; lỗi mạng thì giữ gói đang có. */
   refreshTier: () => Promise<void>;
+  /** Đổi họ tên trên server rồi lưu lại user đã cập nhật. Lỗi được ném ra để màn hình hiển thị. */
+  updateFullName: (fullName: string) => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: null,
   refreshToken: null,
@@ -75,6 +77,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       // Giữ gói đang có; server vẫn tự chặn chức năng nếu gói không đủ.
     }
+  },
+
+  updateFullName: async (fullName) => {
+    const res = await authService.updateName(fullName.trim());
+    if (!(res.isSuccess || res.success) || !res.data) {
+      throw new Error(res.message || 'Chưa cập nhật được họ và tên.');
+    }
+    // Giữ các trường app đang có (role...) nếu server không trả về.
+    const user = { ...get().user, ...res.data };
+    set({ user });
+    await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user)).catch(() => undefined);
   },
 
   clearSession: () =>

@@ -23,6 +23,7 @@ import featureService, { FertilityCalendar, OvulationToday } from '../../service
 import { getApiErrorMessage } from '../../utils/apiError';
 import { addDays, formatDate, fromUtcDateIso, startOfToday, toUtcDateIso } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
 
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const CYCLE_SYMPTOMS = ['Đau bụng kinh', 'Đau lưng', 'Mệt mỏi', 'Đau đầu', 'Căng tức ngực', 'Thay đổi tâm trạng'];
@@ -233,14 +234,16 @@ export default function FertilityScreen() {
         ) : null}
       </Card>
 
-      <SecondaryButton
-        label="Lịch trình IVF"
-        icon={
-          isFree ? <LockIcon color={MOM_THEME.roseDeep} /> : <CalendarRange size={16} color={MOM_THEME.roseDeep} />
-        }
-        onPress={() => navigation.navigate('IvfTimeline')}
-        style={styles.ivf}
-      />
+      {MEDICAL_FEATURES_ENABLED ? (
+        <SecondaryButton
+          label="Lịch trình IVF"
+          icon={
+            isFree ? <LockIcon color={MOM_THEME.roseDeep} /> : <CalendarRange size={16} color={MOM_THEME.roseDeep} />
+          }
+          onPress={() => navigation.navigate('IvfTimeline')}
+          style={styles.ivf}
+        />
+      ) : null}
 
       <SectionTitle title="Ghi kỳ kinh mới" />
       <Card>

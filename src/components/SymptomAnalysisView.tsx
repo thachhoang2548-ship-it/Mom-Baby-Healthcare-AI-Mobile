@@ -3,6 +3,7 @@ import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { AlertCircle, CheckCircle2, PhoneCall, ShieldCheck, Stethoscope, Utensils } from 'lucide-react-native';
 import { SymptomAnalysisResult } from '../services/symptomService';
 import { MOM_THEME, RADII } from '../theme/colors';
+import { MEDICAL_FEATURES_ENABLED } from '../constants/features';
 import { normalizeUrgency, URGENCY_META } from '../utils/urgency';
 
 export function getUrgencyMeta(analysis?: SymptomAnalysisResult) {
@@ -44,7 +45,7 @@ export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAn
         </View>
       ) : null}
 
-      {conditions.length ? (
+      {MEDICAL_FEATURES_ENABLED && conditions.length ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Các khả năng mẹ cần lưu ý</Text>
           {conditions.map((condition, index) => (
