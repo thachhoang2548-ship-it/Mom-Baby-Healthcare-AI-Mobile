@@ -10,11 +10,13 @@ import ToolsScreen from '../screens/tools/ToolsScreen';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS, MOM_THEME } from '../theme/colors';
 import { MainTabParamList } from './types';
+import { useT } from '../i18n';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function TabNavigator() {
   const refreshTier = useAuthStore((s) => s.refreshTier);
+  const t = useT();
 
   // Gói được nâng cấp trên web: hỏi lại khi vào app và mỗi lần app quay lại từ nền.
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function TabNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          tabBarLabel: 'Tổng quan',
+          tabBarLabel: t('Tổng quan', 'Home'),
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
         }}
       />
@@ -64,7 +66,7 @@ export default function TabNavigator() {
         name="Journey"
         component={JourneyScreen}
         options={{
-          tabBarLabel: 'Lộ trình',
+          tabBarLabel: t('Lộ trình', 'Journey'),
           tabBarIcon: ({ color, size }) => <HeartPulse size={size} color={color} />,
         }}
       />
@@ -73,7 +75,7 @@ export default function TabNavigator() {
         name="Nutrition"
         component={BabyNutritionScreen}
         options={{
-          tabBarLabel: 'Bé yêu',
+          tabBarLabel: t('Bé yêu', 'Baby'),
           tabBarIcon: ({ color, size }) => <Baby size={size} color={color} />,
         }}
       />

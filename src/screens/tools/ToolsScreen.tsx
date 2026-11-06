@@ -41,20 +41,22 @@ import { LockIcon } from '../../components/ui';
 import { formatDate } from '../../utils/date';
 import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
+import LanguageToggle from '../../components/LanguageToggle';
+import { tr, useT } from '../../i18n';
 
 type PanelKey = 'plan' | 'feedback';
 
 const formatResult = (value: unknown) => {
-  if (value === null || value === undefined || value === '') return 'Chưa có dữ liệu.';
+  if (value === null || value === undefined || value === '') return tr('Chưa có dữ liệu.', 'No data yet.');
   if (typeof value === 'string') return value;
   return JSON.stringify(value, null, 2);
 };
 
 // Chỉ hiện giao dịch đã có tiền thật. Đơn Pending phần lớn là đơn bỏ dở trên web
 // (backend không tự hủy), Failed chỉ gây nhiễu; cả hai vẫn xem được trên web.
-const PAYMENT_STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  Completed: { label: 'Thành công', color: MOM_THEME.sageDark },
-  Refunded: { label: 'Đã hoàn tiền', color: MOM_THEME.muted },
+const PAYMENT_STATUS_LABELS: Record<string, { label: string; labelEn: string; color: string }> = {
+  Completed: { label: 'Thành công', labelEn: 'Paid', color: MOM_THEME.sageDark },
+  Refunded: { label: 'Đã hoàn tiền', labelEn: 'Refunded', color: MOM_THEME.muted },
 };
 
 const formatVnd = (amount: number) =>
@@ -74,8 +76,17 @@ const FALLBACK_FEEDBACK: FeedbackCategory[] = [
   { value: 'Idea', label: 'Ý tưởng mới' },
 ];
 
+// Nhãn tiếng Anh theo mã loại góp ý; server chỉ trả nhãn tiếng Việt.
+const FEEDBACK_LABEL_EN: Record<string, string> = {
+  Bug: 'Something broken',
+  Payment: 'Plan & payment',
+  Content: 'Care content',
+  Idea: 'New idea',
+};
+
 export default function ToolsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const t = useT();
   const tier = useAuthStore((s) => s.tier);
   const isFree = tier === 'Free';
   const setTier = useAuthStore((s) => s.setTier);
@@ -101,21 +112,22 @@ export default function ToolsScreen() {
   }, []);
 
   const healthItems = [
-    { label: 'Hồ sơ mẹ', icon: User, color: MOM_THEME.roseDark, go: () => navigation.navigate('Profile') },
-    { label: 'Nhật ký hằng ngày', icon: ClipboardList, color: MOM_THEME.sageDark, go: () => navigation.navigate('DailyMonitoring') },
-    { label: 'Lịch chăm sóc', icon: CalendarHeart, color: MOM_THEME.sageDark, go: () => navigation.navigate('CareCalendar') },
-    { label: 'Lịch uống vitamin', icon: Pill, color: '#8E6BB8', go: () => navigation.navigate('Medications') },
-    { label: 'Thông báo', icon: Bell, color: MOM_THEME.amberDark, go: () => navigation.navigate('Notifications') },
-    { label: 'Lịch sử Trợ lý AI', icon: HeartPulse, color: MOM_THEME.roseDark, go: () => navigation.navigate('SymptomHistory') },
-    { label: 'Món ăn AI', icon: Utensils, color: MOM_THEME.amberDark, go: () => navigation.navigate('Recipes') },
+    { key: 'profile', label: t('Hồ sơ mẹ', 'My profile'), icon: User, color: MOM_THEME.roseDark, go: () => navigation.navigate('Profile') },
+    { key: 'log', label: t('Nhật ký hằng ngày', 'Daily log'), icon: ClipboardList, color: MOM_THEME.sageDark, go: () => navigation.navigate('DailyMonitoring') },
+    { key: 'care', label: t('Lịch chăm sóc', 'Care calendar'), icon: CalendarHeart, color: MOM_THEME.sageDark, go: () => navigation.navigate('CareCalendar') },
+    { key: 'vitamins', label: t('Lịch uống vitamin', 'Vitamin schedule'), icon: Pill, color: '#8E6BB8', go: () => navigation.navigate('Medications') },
+    { key: 'alerts', label: t('Thông báo', 'Notifications'), icon: Bell, color: MOM_THEME.amberDark, go: () => navigation.navigate('Notifications') },
+    { key: 'ai', label: t('Lịch sử Trợ lý AI', 'AI history'), icon: HeartPulse, color: MOM_THEME.roseDark, go: () => navigation.navigate('SymptomHistory') },
+    { key: 'recipes', label: t('Món ăn AI', 'AI recipes'), icon: Utensils, color: MOM_THEME.amberDark, go: () => navigation.navigate('Recipes') },
   ];
 
   const stageItems = [
-    { label: 'Rụng trứng', icon: Calendar, color: MOM_THEME.roseDark, go: () => navigation.navigate('Fertility') },
-    { label: 'Thai kỳ', icon: Heart, color: MOM_THEME.roseDark, go: () => navigation.navigate('Pregnancy') },
-    { label: 'Hậu sản', icon: Activity, color: MOM_THEME.sageDark, go: () => navigation.navigate('Postpartum') },
+    { key: 'fertility', label: t('Rụng trứng', 'Ovulation'), icon: Calendar, color: MOM_THEME.roseDark, go: () => navigation.navigate('Fertility') },
+    { key: 'pregnancy', label: t('Thai kỳ', 'Pregnancy'), icon: Heart, color: MOM_THEME.roseDark, go: () => navigation.navigate('Pregnancy') },
+    { key: 'postpartum', label: t('Hậu sản', 'After birth'), icon: Activity, color: MOM_THEME.sageDark, go: () => navigation.navigate('Postpartum') },
     {
-      label: 'Bé yêu',
+      key: 'baby',
+      label: t('Bé yêu', 'Baby'),
       icon: Baby,
       color: MOM_THEME.sageDark,
       tierLocked: true,
@@ -124,8 +136,8 @@ export default function ToolsScreen() {
   ];
 
   const panelItems: { key: PanelKey; label: string; icon: typeof User; color: string }[] = [
-    { key: 'plan', label: 'Gói của mẹ', icon: Sparkles, color: MOM_THEME.amberDark },
-    { key: 'feedback', label: 'Góp ý', icon: MessageSquare, color: '#4A88C7' },
+    { key: 'plan', label: t('Gói của mẹ', 'My plan'), icon: Sparkles, color: MOM_THEME.amberDark },
+    { key: 'feedback', label: t('Góp ý', 'Feedback'), icon: MessageSquare, color: '#4A88C7' },
   ];
 
   // Gói lấy lại từ server mỗi lần mở: mẹ có thể vừa nâng cấp trên web,
@@ -138,7 +150,9 @@ export default function ToolsScreen() {
       setPlan(data);
       if (data?.currentTier) await setTier(mapTier(data.currentTier));
     } catch (err) {
-      setPlanError(getApiErrorMessage(err, 'Không tải được thông tin gói. Mẹ thử lại sau nhé.'));
+      setPlanError(
+        getApiErrorMessage(err, t('Không tải được thông tin gói. Mẹ thử lại sau nhé.', 'Could not load your plan. Please try again later.'))
+      );
     } finally {
       setPlanLoading(false);
     }
@@ -157,9 +171,9 @@ export default function ToolsScreen() {
       const data = await task();
       setResult(success ?? formatResult(data));
     } catch (err) {
-      const message = getApiErrorMessage(err, 'Không thể hoàn tất tác vụ.');
+      const message = getApiErrorMessage(err, t('Không thể hoàn tất tác vụ.', 'Could not finish this.'));
       setResult(message);
-      Alert.alert('Không thành công', message);
+      Alert.alert(t('Không thành công', 'Not done'), message);
     } finally {
       setLoading(false);
     }
@@ -167,7 +181,13 @@ export default function ToolsScreen() {
 
   const submitFeedback = () => {
     if (feedback.trim().length < 10) {
-      Alert.alert('Nội dung quá ngắn', 'Mẹ viết thêm một chút (ít nhất 10 ký tự) để đội ngũ hiểu rõ hơn nhé.');
+      Alert.alert(
+        t('Nội dung quá ngắn', 'Too short'),
+        t(
+          'Mẹ viết thêm một chút (ít nhất 10 ký tự) để đội ngũ hiểu rõ hơn nhé.',
+          'Please write a little more (at least 10 characters) so the team understands.'
+        )
+      );
       return;
     }
     run(async () => {
@@ -177,36 +197,44 @@ export default function ToolsScreen() {
         page: 'mobile/menu',
       });
       setFeedback('');
-    }, 'Cảm ơn mẹ! Góp ý đã được gửi tới đội ngũ Mom Ơi.');
+    }, t('Cảm ơn mẹ! Góp ý đã được gửi tới đội ngũ Mom Ơi.', 'Thank you! Your feedback was sent to the Mom Ơi team.'));
   };
 
   const renderPlanPanel = () => {
     const expiresAt = tier !== 'Free' ? formatTimestamp(plan?.tierExpiresAt) : '';
-    const transactions = (plan?.transactions ?? []).filter((t) => t.status in PAYMENT_STATUS_LABELS);
+    const transactions = (plan?.transactions ?? []).filter((tx) => tx.status in PAYMENT_STATUS_LABELS);
 
     return (
-      <Panel title="Gói của mẹ" subtitle="Quyền lợi của gói tự áp dụng khi mẹ đăng nhập Mom Ơi.">
+      <Panel
+        title={t('Gói của mẹ', 'My plan')}
+        subtitle={t(
+          'Quyền lợi của gói tự áp dụng khi mẹ đăng nhập Mom Ơi.',
+          'Plan benefits apply automatically when you sign in to Mom Ơi.'
+        )}
+      >
         <View style={styles.currentPlan}>
-          <Text style={styles.currentPlanLabel}>Gói hiện tại</Text>
+          <Text style={styles.currentPlanLabel}>{t('Gói hiện tại', 'Current plan')}</Text>
           <Text style={styles.currentPlanName}>{getTierDisplayName(tier)}</Text>
-          {expiresAt ? <Text style={styles.currentPlanMeta}>Hiệu lực đến {expiresAt}</Text> : null}
+          {expiresAt ? (
+            <Text style={styles.currentPlanMeta}>{t(`Hiệu lực đến ${expiresAt}`, `Valid until ${expiresAt}`)}</Text>
+          ) : null}
         </View>
 
-        <Text style={styles.sectionLabel}>Lịch sử giao dịch</Text>
+        <Text style={styles.sectionLabel}>{t('Lịch sử giao dịch', 'Transaction history')}</Text>
         {planLoading ? (
           <View style={styles.loadingRow}>
             <ActivityIndicator color={MOM_THEME.roseDark} size="small" />
-            <Text style={styles.loadingText}>Đang tải thông tin gói...</Text>
+            <Text style={styles.loadingText}>{t('Đang tải thông tin gói...', 'Loading your plan...')}</Text>
           </View>
         ) : planError ? (
           <>
             <Text style={styles.emptyText}>{planError}</Text>
-            <SecondaryButton label="Thử lại" onPress={loadPlan} />
+            <SecondaryButton label={t('Thử lại', 'Try again')} onPress={loadPlan} />
           </>
         ) : transactions.length ? (
-          transactions.map((t) => <TransactionRow key={t.id} transaction={t} />)
+          transactions.map((tx) => <TransactionRow key={tx.id} transaction={tx} />)
         ) : (
-          <Text style={styles.emptyText}>Mẹ chưa có giao dịch nào.</Text>
+          <Text style={styles.emptyText}>{t('Mẹ chưa có giao dịch nào.', 'No transactions yet.')}</Text>
         )}
       </Panel>
     );
@@ -218,7 +246,13 @@ export default function ToolsScreen() {
         return renderPlanPanel();
       case 'feedback':
         return (
-          <Panel title="Góp ý" subtitle="Mẹ gặp lỗi hoặc có ý tưởng? Đội ngũ Mom Ơi luôn lắng nghe.">
+          <Panel
+            title={t('Góp ý', 'Feedback')}
+            subtitle={t(
+              'Mẹ gặp lỗi hoặc có ý tưởng? Đội ngũ Mom Ơi luôn lắng nghe.',
+              'Found a problem or have an idea? The Mom Ơi team reads every message.'
+            )}
+          >
             <View style={styles.chipRow}>
               {feedbackCategories.map((c) => {
                 const selected = feedbackCategory === c.value;
@@ -228,20 +262,22 @@ export default function ToolsScreen() {
                     style={[styles.chip, selected && styles.chipActive]}
                     onPress={() => setFeedbackCategory(c.value)}
                   >
-                    <Text style={[styles.chipText, selected && styles.chipTextActive]}>{c.label}</Text>
+                    <Text style={[styles.chipText, selected && styles.chipTextActive]}>
+                      {t(c.label, FEEDBACK_LABEL_EN[c.value] ?? c.label)}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
             <TextInput
               style={styles.textArea}
-              placeholder="Mẹ muốn góp ý gì cho Mom Ơi?"
+              placeholder={t('Mẹ muốn góp ý gì cho Mom Ơi?', 'What would you like to tell us?')}
               placeholderTextColor={COLORS.textLight}
               multiline
               value={feedback}
               onChangeText={setFeedback}
             />
-            <PrimaryButton label="Gửi góp ý" onPress={submitFeedback} />
+            <PrimaryButton label={t('Gửi góp ý', 'Send feedback')} onPress={submitFeedback} />
           </Panel>
         );
       default:
@@ -260,26 +296,34 @@ export default function ToolsScreen() {
       >
         <View style={styles.header}>
           <View style={styles.eyebrowWrap}>
-            <Text style={styles.eyebrow}>HỆ SINH THÁI TIỆN ÍCH</Text>
+            <Text style={styles.eyebrow}>{t('HỆ SINH THÁI TIỆN ÍCH', 'ALL TOOLS')}</Text>
           </View>
-          <Text style={styles.title}>Chức năng Mom Ơi</Text>
+          <Text style={styles.title}>{t('Chức năng Mom Ơi', 'Mom Ơi features')}</Text>
           <Text style={styles.subtitle}>
-            Trọn bộ công cụ theo dõi chu kỳ, sức khỏe thai kỳ và chăm sóc bé yêu 🌸
+            {t(
+              'Trọn bộ công cụ theo dõi chu kỳ, sức khỏe thai kỳ và chăm sóc bé yêu 🌸',
+              'Tools for your cycle, pregnancy and baby care 🌸'
+            )}
           </Text>
         </View>
 
-        <Text style={styles.groupTitle}>Sức khỏe của mẹ</Text>
+        <View style={styles.languageRow}>
+          <Text style={styles.languageLabel}>{t('Ngôn ngữ', 'Language')}</Text>
+          <LanguageToggle />
+        </View>
+
+        <Text style={styles.groupTitle}>{t('Sức khỏe của mẹ', 'Your health')}</Text>
         <View style={styles.menuGrid}>
           {healthItems.map((item) => (
-            <MenuTile key={item.label} label={item.label} icon={item.icon} color={item.color} onPress={item.go} />
+            <MenuTile key={item.key} label={item.label} icon={item.icon} color={item.color} onPress={item.go} />
           ))}
         </View>
 
-        <Text style={styles.groupTitle}>Theo giai đoạn</Text>
+        <Text style={styles.groupTitle}>{t('Theo giai đoạn', 'By stage')}</Text>
         <View style={styles.menuGrid}>
           {stageItems.map((item) => (
             <MenuTile
-              key={item.label}
+              key={item.key}
               label={item.label}
               icon={item.icon}
               color={item.color}
@@ -289,18 +333,18 @@ export default function ToolsScreen() {
           ))}
         </View>
 
-        <Text style={styles.groupTitle}>Tiện ích khác</Text>
+        <Text style={styles.groupTitle}>{t('Tiện ích khác', 'More')}</Text>
         <View style={styles.menuGrid}>
           {MEDICAL_FEATURES_ENABLED ? (
             <MenuTile
-              label="Khẩn cấp"
+              label={t('Khẩn cấp', 'Emergency')}
               icon={LifeBuoy}
               color="#D95368"
               onPress={() => navigation.navigate('Emergency')}
             />
           ) : null}
           <MenuTile
-            label="Thư giãn"
+            label={t('Thư giãn', 'Relax')}
             icon={Headphones}
             color="#8E6BB8"
             onPress={() => navigation.navigate('Relax')}
@@ -322,12 +366,12 @@ export default function ToolsScreen() {
         {active && (loading || result) ? (
           <View style={[styles.resultCard, SHADOWS.card]}>
             <View style={styles.resultHeader}>
-              <Text style={styles.resultTitle}>Kết quả</Text>
+              <Text style={styles.resultTitle}>{t('Kết quả', 'Result')}</Text>
             </View>
             {loading ? (
               <View style={styles.loadingRow}>
                 <ActivityIndicator color={MOM_THEME.roseDark} size="small" />
-                <Text style={styles.loadingText}>Đang xử lý dữ liệu cùng server...</Text>
+                <Text style={styles.loadingText}>{t('Đang gửi...', 'Sending...')}</Text>
               </View>
             ) : (
               <Text style={styles.resultText}>{result}</Text>
@@ -396,19 +440,20 @@ function SecondaryButton({ label, onPress }: { label: string; onPress: () => voi
   );
 }
 
-function TransactionRow({ transaction: t }: { transaction: PaymentTransaction }) {
-  const status = PAYMENT_STATUS_LABELS[t.status];
-  const date = formatTimestamp(t.paidAt || t.createdAt);
+function TransactionRow({ transaction: tx }: { transaction: PaymentTransaction }) {
+  const t = useT();
+  const status = PAYMENT_STATUS_LABELS[tx.status];
+  const date = formatTimestamp(tx.paidAt || tx.createdAt);
   return (
     <View style={styles.transaction}>
       <View style={styles.transactionTop}>
         <Text style={styles.transactionName}>
-          {getTierDisplayName(mapTier(t.tier))} · {t.durationMonths} tháng
+          {getTierDisplayName(mapTier(tx.tier))} · {tx.durationMonths} {t('tháng', 'months')}
         </Text>
-        <Text style={[styles.transactionStatus, { color: status.color }]}>{status.label}</Text>
+        <Text style={[styles.transactionStatus, { color: status.color }]}>{t(status.label, status.labelEn)}</Text>
       </View>
       <Text style={styles.transactionMeta}>
-        {formatVnd(t.amount)}
+        {formatVnd(tx.amount)}
         {date ? ` · ${date}` : ''}
       </Text>
     </View>
@@ -458,6 +503,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     marginBottom: 10,
+  },
+  languageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 18,
+  },
+  languageLabel: {
+    color: MOM_THEME.charcoal,
+    fontSize: 15,
+    fontWeight: '800',
   },
   menuGrid: {
     flexDirection: 'row',

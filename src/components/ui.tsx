@@ -16,8 +16,9 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Lock, RefreshCw } from 'lucide-react-native';
+import { AlertTriangle, ArrowLeft, Lock, RefreshCw, WifiOff } from 'lucide-react-native';
 import { MOM_THEME, RADII, SHADOWS } from '../theme/colors';
+import { useT } from '../i18n';
 
 type ScreenProps = React.PropsWithChildren<{
   title: string;
@@ -42,6 +43,7 @@ export function Screen({
 }: ScreenProps) {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const t = useT();
 
   return (
     <View style={styles.root}>
@@ -67,7 +69,7 @@ export function Screen({
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => navigation.goBack()}
-              accessibilityLabel="Quay lại"
+              accessibilityLabel={t('Quay lại', 'Back')}
               activeOpacity={0.8}
             >
               <ArrowLeft size={20} color={MOM_THEME.charcoal} />
@@ -244,11 +246,12 @@ export function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function LoadingView({ text = 'Đang tải dữ liệu...' }: { text?: string }) {
+export function LoadingView({ text }: { text?: string }) {
+  const t = useT();
   return (
     <View style={styles.stateBox}>
       <ActivityIndicator color={MOM_THEME.roseDark} />
-      <Text style={styles.stateText}>{text}</Text>
+      <Text style={styles.stateText}>{text ?? t('Đang tải dữ liệu...', 'Loading...')}</Text>
     </View>
   );
 }
@@ -278,15 +281,36 @@ export function EmptyState({
   );
 }
 
-export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+/**
+ * Lỗi khi tải dữ liệu. `offline` (không tới được server) có tiêu đề và biểu tượng riêng
+ * để mẹ biết cần kiểm tra mạng chứ không phải app hỏng.
+ */
+export function ErrorState({
+  message,
+  onRetry,
+  offline,
+}: {
+  message: string;
+  onRetry?: () => void;
+  offline?: boolean;
+}) {
+  const t = useT();
   return (
     <View style={[styles.stateBox, styles.stateCard]}>
-      <Text style={styles.stateEmoji}>⚠️</Text>
-      <Text style={styles.stateTitle}>Chưa tải được dữ liệu</Text>
+      <View style={styles.errorIcon}>
+        {offline ? (
+          <WifiOff size={22} color={MOM_THEME.roseDark} />
+        ) : (
+          <AlertTriangle size={22} color={MOM_THEME.roseDark} />
+        )}
+      </View>
+      <Text style={styles.stateTitle}>
+        {offline ? t('Mất kết nối mạng', 'No connection') : t('Chưa tải được dữ liệu', 'Could not load this')}
+      </Text>
       <Text style={styles.stateText}>{message}</Text>
       {onRetry ? (
         <SecondaryButton
-          label="Thử lại"
+          label={t('Thử lại', 'Try again')}
           onPress={onRetry}
           icon={<RefreshCw size={15} color={MOM_THEME.roseDark} />}
           style={styles.stateAction}
@@ -298,7 +322,10 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 
 /** Dấu khóa trên lối vào chức năng cần gói Mẹ Hiện Đại (chỉ để báo, không dẫn tới mua gói). */
 export function LockIcon({ color = MOM_THEME.amberDark, size = 16 }: { color?: string; size?: number }) {
-  return <Lock size={size} color={color} accessibilityLabel="Cần gói Mẹ Hiện Đại" />;
+  const t = useT();
+  return (
+    <Lock size={size} color={color} accessibilityLabel={t('Cần gói Mẹ Hiện Đại', 'Needs the Mẹ Hiện Đại plan')} />
+  );
 }
 
 /** Backend trả 403 khi tài khoản chưa có gói đủ quyền; hiển thị rõ thay vì số liệu mẫu. */
@@ -309,15 +336,20 @@ export function TierLockedCard({
   feature: string;
   tierName?: string;
 }) {
+  const t = useT();
   return (
     <View style={[styles.stateBox, styles.stateCard, styles.lockedCard]}>
       <View style={styles.lockIcon}>
         <Lock size={20} color={MOM_THEME.amberDark} />
       </View>
-      <Text style={styles.stateTitle}>{feature} dành cho gói {tierName}</Text>
+      <Text style={styles.stateTitle}>
+        {t(`${feature} dành cho gói ${tierName}`, `${feature} is part of the ${tierName} plan`)}
+      </Text>
       <Text style={styles.stateText}>
-        Tài khoản của mẹ đang dùng gói miễn phí. Chức năng sẽ tự mở khi tài khoản có gói {tierName}; mẹ
-        xem gói hiện tại tại Menu → Gói của mẹ.
+        {t(
+          `Tài khoản của mẹ đang dùng gói miễn phí. Chức năng sẽ tự mở khi tài khoản có gói ${tierName}; mẹ xem gói hiện tại tại Menu → Gói của mẹ.`,
+          `Your account is on the free plan. This opens automatically when your account has the ${tierName} plan. See your current plan in Menu → My plan.`
+        )}
       </Text>
     </View>
   );
@@ -567,6 +599,15 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     backgroundColor: MOM_THEME.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  errorIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: MOM_THEME.pinkLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,

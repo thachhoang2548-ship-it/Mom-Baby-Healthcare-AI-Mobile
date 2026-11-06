@@ -19,10 +19,12 @@ import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../theme/colors';
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, Check } from 'lucide-react-native';
 import { PRIVACY_POLICY_URL } from '../../constants/links';
+import { useT } from '../../i18n';
 
 export default function RegisterScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { register, isLoading, error, clearError } = useAuthStore();
+  const t = useT();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -37,25 +39,31 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!fullName.trim() || !email.trim() || !password) {
-      Alert.alert('Thông báo', 'Vui lòng điền đầy đủ các thông tin.');
+      Alert.alert(t('Thông báo', 'Missing details'), t('Vui lòng điền đầy đủ các thông tin.', 'Please fill in every field.'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp.');
+      Alert.alert(t('Lỗi', 'Check your password'), t('Mật khẩu xác nhận không khớp.', 'The two passwords do not match.'));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Lỗi', 'Mật khẩu phải có độ dài tối thiểu 6 ký tự.');
+      Alert.alert(
+        t('Lỗi', 'Check your password'),
+        t('Mật khẩu phải có độ dài tối thiểu 6 ký tự.', 'Use at least 6 characters for your password.')
+      );
       return;
     }
 
     // Dữ liệu sức khỏe là dữ liệu nhạy cảm (Nghị định 13/2023): cần mẹ đồng ý trước khi tạo tài khoản.
     if (!agreed) {
       Alert.alert(
-        'Cần mẹ đồng ý',
-        'Mẹ vui lòng đọc và đồng ý với Điều khoản & Chính sách quyền riêng tư để tiếp tục.'
+        t('Cần mẹ đồng ý', 'Consent needed'),
+        t(
+          'Mẹ vui lòng đọc và đồng ý với Điều khoản & Chính sách quyền riêng tư để tiếp tục.',
+          'Please read and accept the Terms & Privacy Policy to continue.'
+        )
       );
       return;
     }
@@ -63,11 +71,13 @@ export default function RegisterScreen() {
     clearError();
     const result = await register(email, password, fullName);
     if (result.success) {
-      Alert.alert('Chúc mừng!', 'Đăng ký tài khoản thành công! Hãy đăng nhập.', [
-        { text: 'OK', onPress: () => navigation.navigate('Login') },
-      ]);
+      Alert.alert(
+        t('Chúc mừng!', 'Account created'),
+        t('Đăng ký tài khoản thành công! Hãy đăng nhập.', 'Your account is ready. Please sign in.'),
+        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+      );
     } else {
-      Alert.alert('Đăng ký thất bại', result.message || 'Không thể tạo tài khoản.');
+      Alert.alert(t('Đăng ký thất bại', 'Sign-up failed'), result.message || t('Không thể tạo tài khoản.', 'Could not create the account.'));
     }
   };
 
@@ -88,9 +98,12 @@ export default function RegisterScreen() {
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Text style={styles.welcomeText}>Tạo tài khoản mới 🌸</Text>
+          <Text style={styles.welcomeText}>{t('Tạo tài khoản mới 🌸', 'Create your account 🌸')}</Text>
           <Text style={styles.subText}>
-            Đồng hành cùng Mom Ơi chăm sóc sức khỏe gia đình trọn vẹn
+            {t(
+              'Đồng hành cùng Mom Ơi chăm sóc sức khỏe gia đình trọn vẹn',
+              'Care for your family’s health together with Mom Ơi'
+            )}
           </Text>
         </View>
 
@@ -101,12 +114,12 @@ export default function RegisterScreen() {
         ) : null}
 
         <View style={styles.form}>
-          <Text style={styles.inputLabel}>Họ và tên của mẹ</Text>
+          <Text style={styles.inputLabel}>{t('Họ và tên của mẹ', 'Your full name')}</Text>
           <View style={styles.inputWrapper}>
             <User size={18} color={COLORS.textMuted} style={styles.inputIcon} />
             <TextInput
               style={styles.textInput}
-              placeholder="Nguyễn Thị Mai"
+              placeholder={t('Nguyễn Thị Mai', 'Jane Smith')}
               placeholderTextColor={COLORS.textLight}
               value={fullName}
               onChangeText={(text) => {
@@ -121,7 +134,7 @@ export default function RegisterScreen() {
             <Mail size={18} color={COLORS.textMuted} style={styles.inputIcon} />
             <TextInput
               style={styles.textInput}
-              placeholder="mai.nguyen@example.com"
+              placeholder={t('mai.nguyen@example.com', 'jane.smith@example.com')}
               placeholderTextColor={COLORS.textLight}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -133,12 +146,12 @@ export default function RegisterScreen() {
             />
           </View>
 
-          <Text style={styles.inputLabel}>Mật khẩu</Text>
+          <Text style={styles.inputLabel}>{t('Mật khẩu', 'Password')}</Text>
           <View style={styles.inputWrapper}>
             <Lock size={18} color={COLORS.textMuted} style={styles.inputIcon} />
             <TextInput
               style={[styles.textInput, { paddingRight: 40 }]}
-              placeholder="Tối thiểu 6 ký tự"
+              placeholder={t('Tối thiểu 6 ký tự', 'At least 6 characters')}
               placeholderTextColor={COLORS.textLight}
               secureTextEntry={!showPassword}
               value={password}
@@ -159,12 +172,12 @@ export default function RegisterScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.inputLabel}>Xác nhận mật khẩu</Text>
+          <Text style={styles.inputLabel}>{t('Xác nhận mật khẩu', 'Confirm password')}</Text>
           <View style={styles.inputWrapper}>
             <Lock size={18} color={COLORS.textMuted} style={styles.inputIcon} />
             <TextInput
               style={styles.textInput}
-              placeholder="Nhập lại mật khẩu"
+              placeholder={t('Nhập lại mật khẩu', 'Type it again')}
               placeholderTextColor={COLORS.textLight}
               secureTextEntry={!showPassword}
               value={confirmPassword}
@@ -178,16 +191,22 @@ export default function RegisterScreen() {
               onPress={() => setAgreed((v) => !v)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: agreed }}
-              accessibilityLabel="Đồng ý điều khoản và chính sách quyền riêng tư"
+              accessibilityLabel={t(
+                'Đồng ý điều khoản và chính sách quyền riêng tư',
+                'Accept the terms and privacy policy'
+              )}
             >
               {agreed ? <Check size={14} color={COLORS.white} /> : null}
             </TouchableOpacity>
             <Text style={styles.consentText}>
-              Tôi đã đọc và đồng ý với{' '}
+              {t('Tôi đã đọc và đồng ý với ', 'I have read and accept the ')}
               <Text style={styles.consentLink} onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}>
-                Điều khoản & Chính sách quyền riêng tư
+                {t('Điều khoản & Chính sách quyền riêng tư', 'Terms & Privacy Policy (Vietnamese)')}
               </Text>
-              , đồng ý để Mom Ơi xử lý dữ liệu sức khỏe của tôi và bé nhằm cá nhân hóa gợi ý chăm sóc.
+              {t(
+                ', đồng ý để Mom Ơi xử lý dữ liệu sức khỏe của tôi và bé nhằm cá nhân hóa gợi ý chăm sóc.',
+                ', and allow Mom Ơi to process my and my baby’s health data to personalize care suggestions.'
+              )}
             </Text>
           </View>
 
@@ -200,15 +219,15 @@ export default function RegisterScreen() {
             {isLoading ? (
               <ActivityIndicator color={COLORS.white} />
             ) : (
-              <Text style={styles.registerBtnText}>Hoàn tất đăng ký</Text>
+              <Text style={styles.registerBtnText}>{t('Hoàn tất đăng ký', 'Create account')}</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Đã có tài khoản? </Text>
+          <Text style={styles.footerText}>{t('Đã có tài khoản? ', 'Already have an account? ')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.loginLink}>Đăng nhập</Text>
+            <Text style={styles.loginLink}>{t('Đăng nhập', 'Sign in')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

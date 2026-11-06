@@ -22,7 +22,7 @@ import profileService, { getStageIndex, MomProfileDto, StageIndex } from '../../
 import featureService from '../../services/featureService';
 import { getTierDisplayName, useAuthStore } from '../../stores/authStore';
 import { RootStackParamList } from '../../navigation/types';
-import { getApiErrorMessage } from '../../utils/apiError';
+import { getApiErrorMessage, isNetworkError } from '../../utils/apiError';
 import {
   addDays,
   dueDateFromLmp,
@@ -34,14 +34,44 @@ import {
 } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
 import { PRIVACY_POLICY_URL } from '../../constants/links';
+import { tr, useT } from '../../i18n';
 
 // Cùng danh sách với web (ProfilePage.jsx); sửa lỗi chính tả "Dị ứng ứng thuốc".
+// Giá trị tiếng Việt được lưu lên server; tiếng Anh chỉ để hiển thị.
 const COMMON_CONDITIONS = ['Cao huyết áp', 'Thiếu máu', 'Suy nhược', 'Dị ứng thuốc', 'Hen suyễn'];
+const CONDITION_EN: Record<string, string> = {
+  'Cao huyết áp': 'High blood pressure',
+  'Thiếu máu': 'Anemia',
+  'Suy nhược': 'Fatigue / weakness',
+  'Dị ứng thuốc': 'Drug allergy',
+  'Hen suyễn': 'Asthma',
+};
 
-const STAGE_OPTIONS: { id: StageIndex; label: string; desc: string; icon: typeof Heart }[] = [
-  { id: 0, label: 'Chuẩn bị mang thai', desc: 'Theo dõi chu kỳ & ngày rụng trứng', icon: CalendarHeart },
-  { id: 1, label: 'Đang mang thai', desc: 'Theo dõi tuần thai & sự phát triển của bé', icon: Heart },
-  { id: 2, label: 'Sau sinh & nuôi con', desc: 'Hồi phục sức khỏe mẹ & chăm bé', icon: Baby },
+const STAGE_OPTIONS: { id: StageIndex; label: string; labelEn: string; desc: string; descEn: string; icon: typeof Heart }[] = [
+  {
+    id: 0,
+    label: 'Chuẩn bị mang thai',
+    labelEn: 'Trying to conceive',
+    desc: 'Theo dõi chu kỳ & ngày rụng trứng',
+    descEn: 'Track your cycle & ovulation',
+    icon: CalendarHeart,
+  },
+  {
+    id: 1,
+    label: 'Đang mang thai',
+    labelEn: 'Pregnant',
+    desc: 'Theo dõi tuần thai & sự phát triển của bé',
+    descEn: 'Follow your pregnancy week & baby’s growth',
+    icon: Heart,
+  },
+  {
+    id: 2,
+    label: 'Sau sinh & nuôi con',
+    labelEn: 'After birth & parenting',
+    desc: 'Hồi phục sức khỏe mẹ & chăm bé',
+    descEn: 'Your recovery & baby care',
+    icon: Baby,
+  },
 ];
 
 const toNumber = (value: string): number | null => {
@@ -57,6 +87,7 @@ const MAX_NAME_LENGTH = 100; // Cùng giới hạn với backend (UpdateNameDto)
 /** Dòng họ tên trong thẻ tài khoản: xem, bấm "Đổi" để sửa và lưu lên server. */
 function NameEditor({ fullName }: { fullName?: string }) {
   const updateFullName = useAuthStore((s) => s.updateFullName);
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [saving, setSaving] = useState(false);
@@ -65,8 +96,8 @@ function NameEditor({ fullName }: { fullName?: string }) {
     return (
       <View style={styles.nameRow}>
         <View style={styles.flex}>
-          <Text style={styles.nameLabel}>Họ và tên</Text>
-          <Text style={styles.nameValue}>{fullName || 'Chưa cập nhật'}</Text>
+          <Text style={styles.nameLabel}>{t('Họ và tên', 'Full name')}</Text>
+          <Text style={styles.nameValue}>{fullName || t('Chưa cập nhật', 'Not set')}</Text>
         </View>
         <TouchableOpacity
           onPress={() => {
@@ -74,10 +105,10 @@ function NameEditor({ fullName }: { fullName?: string }) {
             setEditing(true);
           }}
           accessibilityRole="button"
-          accessibilityLabel="Đổi họ và tên"
+          accessibilityLabel={t('Đổi họ và tên', 'Change your name')}
           hitSlop={8}
         >
-          <Text style={styles.nameAction}>Đổi</Text>
+          <Text style={styles.nameAction}>{t('Đổi', 'Change')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -90,7 +121,7 @@ function NameEditor({ fullName }: { fullName?: string }) {
       await updateFullName(trimmed);
       setEditing(false);
     } catch (err) {
-      Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+      Alert.alert(t('Chưa lưu được', 'Not saved'), getApiErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -99,7 +130,7 @@ function NameEditor({ fullName }: { fullName?: string }) {
   return (
     <View style={styles.nameEditor}>
       <Field
-        label="Họ và tên"
+        label={t('Họ và tên', 'Full name')}
         value={draft}
         onChangeText={setDraft}
         maxLength={MAX_NAME_LENGTH}
@@ -109,9 +140,9 @@ function NameEditor({ fullName }: { fullName?: string }) {
         onSubmitEditing={trimmed ? save : undefined}
       />
       <View style={styles.row}>
-        <SecondaryButton label="Hủy" onPress={() => setEditing(false)} disabled={saving} style={styles.flex} />
+        <SecondaryButton label={t('Hủy', 'Cancel')} onPress={() => setEditing(false)} disabled={saving} style={styles.flex} />
         <PrimaryButton
-          label="Lưu tên"
+          label={t('Lưu tên', 'Save name')}
           onPress={save}
           loading={saving}
           disabled={!trimmed || trimmed === fullName}
@@ -125,9 +156,11 @@ function NameEditor({ fullName }: { fullName?: string }) {
 export default function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, tier, logout } = useAuthStore();
+  const t = useT();
 
   const [profile, setProfile] = useState<MomProfileDto | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [stage, setStage] = useState<StageIndex>(0);
@@ -163,9 +196,11 @@ export default function ProfileScreen() {
         applyProfile(res.data);
         setLoadError(null);
       } else {
-        setLoadError(res.message || 'Không tải được hồ sơ.');
+        setOffline(false);
+        setLoadError(res.message || tr('Không tải được hồ sơ.', 'Could not load your profile.'));
       }
     } catch (err) {
+      setOffline(isNetworkError(err));
       setLoadError(getApiErrorMessage(err));
     }
   }, []);
@@ -202,22 +237,27 @@ export default function ProfileScreen() {
   const validate = (): string | null => {
     const h = toNumber(height);
     const w = toNumber(weight);
-    if (height && (h === null || h < 50 || h > 250)) return 'Chiều cao cần nằm trong khoảng 50 - 250 cm.';
-    if (weight && (w === null || w < 20 || w > 300)) return 'Cân nặng cần nằm trong khoảng 20 - 300 kg.';
+    if (height && (h === null || h < 50 || h > 250))
+      return t('Chiều cao cần nằm trong khoảng 50 - 250 cm.', 'Height should be between 50 and 250 cm.');
+    if (weight && (w === null || w < 20 || w > 300))
+      return t('Cân nặng cần nằm trong khoảng 20 - 300 kg.', 'Weight should be between 20 and 300 kg.');
     if (stage === 0) {
       const c = parseInt(cycleLength, 10);
-      if (!Number.isFinite(c) || c < 20 || c > 45) return 'Độ dài chu kỳ thường từ 20 đến 45 ngày.';
+      if (!Number.isFinite(c) || c < 20 || c > 45)
+        return t('Độ dài chu kỳ thường từ 20 đến 45 ngày.', 'A cycle is usually 20 to 45 days long.');
     }
-    if (stage === 1 && !lastPeriodDate) return 'Mẹ chọn ngày đầu kỳ kinh cuối để tính tuần thai nhé.';
-    if (stage === 2 && !deliveryDate) return 'Mẹ chọn ngày sinh em bé nhé.';
-    if (stage === 2 && deliveryDate && deliveryDate > today) return 'Ngày sinh em bé không thể sau hôm nay.';
+    if (stage === 1 && !lastPeriodDate)
+      return t('Mẹ chọn ngày đầu kỳ kinh cuối để tính tuần thai nhé.', 'Pick the first day of your last period to work out your pregnancy week.');
+    if (stage === 2 && !deliveryDate) return t('Mẹ chọn ngày sinh em bé nhé.', 'Pick your baby’s birth date.');
+    if (stage === 2 && deliveryDate && deliveryDate > today)
+      return t('Ngày sinh em bé không thể sau hôm nay.', 'The birth date cannot be after today.');
     return null;
   };
 
   const save = async () => {
     const problem = validate();
     if (problem) {
-      Alert.alert('Kiểm tra lại thông tin', problem);
+      Alert.alert(t('Kiểm tra lại thông tin', 'Check your details'), problem);
       return;
     }
 
@@ -248,7 +288,7 @@ export default function ProfileScreen() {
     try {
       const res = await profileService.updateProfile(payload);
       if (!(res.isSuccess || res.success)) {
-        throw new Error(res.message || 'Không thể cập nhật hồ sơ.');
+        throw new Error(res.message || t('Không thể cập nhật hồ sơ.', 'Could not update your profile.'));
       }
       const newWeight = toNumber(weight);
       if (stage === 1 && newWeight && newWeight !== toNumber(toText(profile?.weight))) {
@@ -256,21 +296,21 @@ export default function ProfileScreen() {
         await featureService.logPregnancyWeight(newWeight).catch(() => undefined);
       }
       if (res.data) applyProfile(res.data);
-      Alert.alert('Đã lưu', 'Hồ sơ sức khỏe của mẹ đã được cập nhật.', [
+      Alert.alert(t('Đã lưu', 'Saved'), t('Hồ sơ sức khỏe của mẹ đã được cập nhật.', 'Your health profile is updated.'), [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (err) {
-      Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+      Alert.alert(t('Chưa lưu được', 'Not saved'), getApiErrorMessage(err));
     } finally {
       setSaving(false);
     }
   };
 
   const confirmLogout = () => {
-    Alert.alert('Đăng xuất', 'Mẹ có chắc muốn đăng xuất khỏi Mom Ơi không?', [
-      { text: 'Hủy', style: 'cancel' },
+    Alert.alert(t('Đăng xuất', 'Sign out'), t('Mẹ có chắc muốn đăng xuất khỏi Mom Ơi không?', 'Do you want to sign out of Mom Ơi?'), [
+      { text: t('Hủy', 'Cancel'), style: 'cancel' },
       {
-        text: 'Đăng xuất',
+        text: t('Đăng xuất', 'Sign out'),
         style: 'destructive',
         onPress: async () => {
           await logout();
@@ -280,17 +320,20 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const eyebrow = t('Hồ sơ sức khỏe', 'Health profile');
+  const screenTitle = t('Hồ sơ của mẹ', 'Your profile');
+
   if (loadError) {
     return (
-      <Screen eyebrow="Hồ sơ sức khỏe" title="Hồ sơ của mẹ">
-        <ErrorState message={loadError} onRetry={load} />
+      <Screen eyebrow={eyebrow} title={screenTitle}>
+        <ErrorState message={loadError} onRetry={load} offline={offline} />
       </Screen>
     );
   }
 
   if (!profile) {
     return (
-      <Screen eyebrow="Hồ sơ sức khỏe" title="Hồ sơ của mẹ">
+      <Screen eyebrow={eyebrow} title={screenTitle}>
         <LoadingView />
       </Screen>
     );
@@ -298,17 +341,23 @@ export default function ProfileScreen() {
 
   return (
     <Screen
-      eyebrow="Hồ sơ sức khỏe"
-      title="Hồ sơ của mẹ"
-      subtitle="Thông tin này giúp Mom Ơi cá nhân hóa lộ trình, thực đơn và lời khuyên cho mẹ."
+      eyebrow={eyebrow}
+      title={screenTitle}
+      subtitle={t(
+        'Thông tin này giúp Mom Ơi cá nhân hóa lộ trình, thực đơn và lời khuyên cho mẹ.',
+        'This helps Mom Ơi personalize your journey, menus and tips.'
+      )}
     >
       <Card>
         <NameEditor fullName={user?.fullName} />
-        <InfoRow label="Email" value={user?.email || 'Chưa cập nhật'} />
-        <InfoRow label="Gói dịch vụ" value={getTierDisplayName(tier)} />
+        <InfoRow label="Email" value={user?.email || t('Chưa cập nhật', 'Not set')} />
+        <InfoRow label={t('Gói dịch vụ', 'Plan')} value={getTierDisplayName(tier)} />
       </Card>
 
-      <SectionTitle title="Giai đoạn hiện tại" subtitle="Chọn đúng giai đoạn để nhận nội dung phù hợp" />
+      <SectionTitle
+        title={t('Giai đoạn hiện tại', 'Current stage')}
+        subtitle={t('Chọn đúng giai đoạn để nhận nội dung phù hợp', 'Pick your stage to get the right content')}
+      />
       {STAGE_OPTIONS.map((opt) => {
         const Icon = opt.icon;
         const active = stage === opt.id;
@@ -328,8 +377,8 @@ export default function ProfileScreen() {
               <Icon size={18} color={active ? MOM_THEME.white : MOM_THEME.roseDark} />
             </View>
             <View style={styles.flex}>
-              <Text style={[styles.stageLabel, active && styles.stageLabelActive]}>{opt.label}</Text>
-              <Text style={styles.stageDesc}>{opt.desc}</Text>
+              <Text style={[styles.stageLabel, active && styles.stageLabelActive]}>{t(opt.label, opt.labelEn)}</Text>
+              <Text style={styles.stageDesc}>{t(opt.desc, opt.descEn)}</Text>
             </View>
             <View style={[styles.radio, active && styles.radioActive]} />
           </TouchableOpacity>
@@ -340,24 +389,24 @@ export default function ProfileScreen() {
         {stage === 0 ? (
           <>
             <DateField
-              label="Ngày đầu kỳ kinh gần nhất"
+              label={t('Ngày đầu kỳ kinh gần nhất', 'First day of your last period')}
               value={lastPeriodDate}
               onChange={setLastPeriodDate}
               maximumDate={today}
               minimumDate={addDays(today, -120)}
             />
             <Field
-              label="Độ dài chu kỳ trung bình (ngày)"
+              label={t('Độ dài chu kỳ trung bình (ngày)', 'Average cycle length (days)')}
               value={cycleLength}
               onChangeText={setCycleLength}
               keyboardType="number-pad"
-              hint="Thường từ 21 đến 35 ngày"
+              hint={t('Thường từ 21 đến 35 ngày', 'Usually 21 to 35 days')}
             />
           </>
         ) : stage === 1 ? (
           <>
             <DateField
-              label="Ngày đầu kỳ kinh cuối (LMP)"
+              label={t('Ngày đầu kỳ kinh cuối (LMP)', 'First day of last period (LMP)')}
               value={lastPeriodDate}
               onChange={setLastPeriodDate}
               maximumDate={today}
@@ -366,26 +415,30 @@ export default function ProfileScreen() {
             {pregnancyWeek && dueDate ? (
               <View style={styles.computedBox}>
                 <Text style={styles.computedText}>
-                  Tuần thai hiện tại: <Text style={styles.computedStrong}>tuần {pregnancyWeek}</Text>
+                  {t('Tuần thai hiện tại: ', 'Pregnancy week: ')}
+                  <Text style={styles.computedStrong}>{t(`tuần ${pregnancyWeek}`, `week ${pregnancyWeek}`)}</Text>
                 </Text>
                 <Text style={styles.computedText}>
-                  Ngày dự sinh: <Text style={styles.computedStrong}>{formatDate(dueDate)}</Text>
+                  {t('Ngày dự sinh: ', 'Due date: ')}
+                  <Text style={styles.computedStrong}>{formatDate(dueDate)}</Text>
                 </Text>
-                <Text style={styles.computedHint}>Tự tính: ngày kinh cuối + 280 ngày</Text>
+                <Text style={styles.computedHint}>
+                  {t('Tự tính: ngày kinh cuối + 280 ngày', 'Worked out as last period + 280 days')}
+                </Text>
               </View>
             ) : null}
           </>
         ) : (
           <>
             <DateField
-              label="Ngày sinh em bé"
+              label={t('Ngày sinh em bé', 'Baby’s birth date')}
               value={deliveryDate}
               onChange={setDeliveryDate}
               maximumDate={today}
               minimumDate={addDays(today, -365 * 3)}
             />
             <ToggleRow
-              label="Mẹ đang nuôi con bằng sữa mẹ"
+              label={t('Mẹ đang nuôi con bằng sữa mẹ', 'I am breastfeeding')}
               value={isBreastfeeding}
               onValueChange={setIsBreastfeeding}
             />
@@ -393,25 +446,25 @@ export default function ProfileScreen() {
         )}
       </Card>
 
-      <SectionTitle title="Chỉ số cơ thể" />
+      <SectionTitle title={t('Chỉ số cơ thể', 'Body measurements')} />
       <Card>
         <View style={styles.row}>
           <View style={styles.flex}>
             <Field
-              label="Chiều cao (cm)"
+              label={t('Chiều cao (cm)', 'Height (cm)')}
               value={height}
               onChangeText={setHeight}
               keyboardType="decimal-pad"
-              placeholder="VD: 158"
+              placeholder={t('VD: 158', 'e.g. 158')}
             />
           </View>
           <View style={styles.flex}>
             <Field
-              label="Cân nặng (kg)"
+              label={t('Cân nặng (kg)', 'Weight (kg)')}
               value={weight}
               onChangeText={setWeight}
               keyboardType="decimal-pad"
-              placeholder="VD: 52.5"
+              placeholder={t('VD: 52.5', 'e.g. 52.5')}
             />
           </View>
         </View>
@@ -420,27 +473,30 @@ export default function ProfileScreen() {
         </Text>
         <View style={styles.spacer} />
         <Field
-          label="Đường huyết lúc đói (mmol/L)"
+          label={t('Đường huyết lúc đói (mmol/L)', 'Fasting blood sugar (mmol/L)')}
           value={bloodSugar}
           onChangeText={setBloodSugar}
           keyboardType="decimal-pad"
-          placeholder="VD: 5.1"
+          placeholder={t('VD: 5.1', 'e.g. 5.1')}
         />
         <ToggleRow
-          label="Mẹ được chẩn đoán tiểu đường thai kỳ"
+          label={t('Mẹ được chẩn đoán tiểu đường thai kỳ', 'I have been diagnosed with gestational diabetes')}
           value={hasGestDiabetes}
           onValueChange={setHasGestDiabetes}
         />
       </Card>
 
-      <SectionTitle title="Tiền sử bệnh" subtitle="Chọn các bệnh lý mẹ đang có (nếu có)" />
+      <SectionTitle
+        title={t('Tiền sử bệnh', 'Health history')}
+        subtitle={t('Chọn các bệnh lý mẹ đang có (nếu có)', 'Pick any conditions you have')}
+      />
       <Card>
         <View style={uiStyles.rowWrap}>
           {[...COMMON_CONDITIONS, ...conditions.filter((c) => !COMMON_CONDITIONS.includes(c))].map(
             (cond) => (
               <Chip
                 key={cond}
-                label={cond}
+                label={t(cond, CONDITION_EN[cond] ?? cond)}
                 selected={conditions.includes(cond)}
                 onPress={() => toggleCondition(cond)}
               />
@@ -450,23 +506,28 @@ export default function ProfileScreen() {
         <View style={[styles.row, styles.customRow]}>
           <View style={styles.flex}>
             <Field
-              label="Bệnh lý khác"
+              label={t('Bệnh lý khác', 'Other condition')}
               value={customCondition}
               onChangeText={setCustomCondition}
-              placeholder="Nhập rồi bấm Thêm"
+              placeholder={t('Nhập rồi bấm Thêm', 'Type it, then tap +')}
               onSubmitEditing={addCustomCondition}
               returnKeyType="done"
             />
           </View>
-          <TouchableOpacity style={styles.addButton} onPress={addCustomCondition}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={addCustomCondition}
+            accessibilityRole="button"
+            accessibilityLabel={t('Thêm bệnh lý', 'Add condition')}
+          >
             <Plus size={18} color={MOM_THEME.white} />
           </TouchableOpacity>
         </View>
       </Card>
 
-      <PrimaryButton label="Lưu hồ sơ" onPress={save} loading={saving} />
+      <PrimaryButton label={t('Lưu hồ sơ', 'Save profile')} onPress={save} loading={saving} />
       <SecondaryButton
-        label="Đăng xuất"
+        label={t('Đăng xuất', 'Sign out')}
         onPress={confirmLogout}
         icon={<LogOut size={16} color={MOM_THEME.roseDeep} />}
         style={styles.logout}
@@ -476,14 +537,16 @@ export default function ProfileScreen() {
         onPress={() => navigation.navigate('DeleteAccount')}
         accessibilityRole="button"
       >
-        <Text style={styles.deleteAccountText}>Xóa tài khoản</Text>
+        <Text style={styles.deleteAccountText}>{t('Xóa tài khoản', 'Delete account')}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.policyLink}
         onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
         accessibilityRole="link"
       >
-        <Text style={styles.policyText}>Điều khoản & Chính sách quyền riêng tư</Text>
+        <Text style={styles.policyText}>
+          {t('Điều khoản & Chính sách quyền riêng tư', 'Terms & Privacy Policy (Vietnamese)')}
+        </Text>
       </TouchableOpacity>
     </Screen>
   );

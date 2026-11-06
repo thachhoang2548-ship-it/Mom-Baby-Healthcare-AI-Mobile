@@ -41,18 +41,17 @@ import {
   MOOD_OPTIONS,
 } from '../../utils/monitoring';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
+import { useT } from '../../i18n';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-const STAGE_SHORTCUT = {
-  0: { title: 'Chu kỳ & rụng trứng', sub: 'Dự đoán ngày dễ thụ thai', route: 'Fertility' },
-  1: { title: 'Theo dõi thai kỳ', sub: 'Tuần thai & cân nặng mẹ', route: 'Pregnancy' },
-  2: { title: 'Phục hồi sau sinh', sub: 'Vận động & khảo sát EPDS', route: 'Postpartum' },
-} as const;
+const STAGE_ROUTE = { 0: 'Fertility', 1: 'Pregnancy', 2: 'Postpartum' } as const;
 
 export default function DashboardScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, logout } = useAuthStore();
+  const t = useT();
   const [profile, setProfile] = useState<MomProfileDto | null>(null);
   const [weekInfo, setWeekInfo] = useState<PregnancyWeekInfo | null>(null);
   const [waterCups, setWaterCups] = useState(0);
@@ -65,12 +64,12 @@ export default function DashboardScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Đăng xuất',
-      'Mẹ có chắc muốn đăng xuất khỏi Mom Ơi không?',
+      t('Đăng xuất', 'Sign out'),
+      t('Mẹ có chắc muốn đăng xuất khỏi Mom Ơi không?', 'Do you want to sign out of Mom Ơi?'),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('Hủy', 'Cancel'), style: 'cancel' },
         {
-          text: 'Đăng xuất',
+          text: t('Đăng xuất', 'Sign out'),
           style: 'destructive',
           onPress: async () => {
             await logout();
@@ -127,7 +126,7 @@ export default function DashboardScreen() {
 
   const addWater = async () => {
     if (waterCups >= 20) {
-      Alert.alert('Tuyệt vời!', 'Mẹ đã uống rất nhiều nước hôm nay rồi.');
+      Alert.alert(t('Tuyệt vời!', 'Great job!'), t('Mẹ đã uống rất nhiều nước hôm nay rồi.', 'You have had plenty of water today.'));
       return;
     }
     const next = waterCups + 1;
@@ -136,7 +135,7 @@ export default function DashboardScreen() {
       await featureService.saveDailyMonitoring({ waterLiters: next * LITERS_PER_CUP });
     } catch (err) {
       setWaterCups(next - 1);
-      Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+      Alert.alert(t('Chưa lưu được', 'Not saved'), getApiErrorMessage(err));
     }
   };
 
@@ -150,7 +149,7 @@ export default function DashboardScreen() {
       });
     } catch (err) {
       setMoodScore(previous);
-      Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+      Alert.alert(t('Chưa lưu được', 'Not saved'), getApiErrorMessage(err));
     }
   };
 
@@ -161,29 +160,54 @@ export default function DashboardScreen() {
   const needsSetup =
     !!profile && !profile.lastPeriodDate && !profile.deliveryDate && !profile.height && !profile.weight;
   const mood = MOOD_OPTIONS.find((m) => m.score === moodScore);
-  const shortcut = STAGE_SHORTCUT[stage];
+  const moodLabel = (m: (typeof MOOD_OPTIONS)[number]) => t(m.label, m.labelEn);
+  const shortcut = {
+    route: STAGE_ROUTE[stage],
+    title: [
+      t('Chu kỳ & rụng trứng', 'Cycle & ovulation'),
+      t('Theo dõi thai kỳ', 'Pregnancy tracker'),
+      t('Phục hồi sau sinh', 'Postpartum recovery'),
+    ][stage],
+    sub: [
+      t('Dự đoán ngày dễ thụ thai', 'Predict your fertile days'),
+      t('Tuần thai & cân nặng mẹ', 'Pregnancy week & your weight'),
+      MEDICAL_FEATURES_ENABLED
+        ? t('Vận động & khảo sát EPDS', 'Exercise & EPDS check-in')
+        : t('Vận động nhẹ & nghỉ ngơi', 'Gentle movement & rest'),
+    ][stage],
+  };
 
   const stageTitle = isPregnant
-    ? 'Thai kỳ hạnh phúc'
+    ? t('Thai kỳ hạnh phúc', 'Happy pregnancy')
     : isPostpartum
-      ? 'Chăm sóc hậu sản'
-      : 'Chuẩn bị làm mẹ';
+      ? t('Chăm sóc hậu sản', 'Postpartum care')
+      : t('Chuẩn bị làm mẹ', 'Getting ready');
 
   const stageValue = isPregnant
     ? week
-      ? `Tuần thứ ${week}`
-      : 'Cập nhật tuần thai'
+      ? t(`Tuần thứ ${week}`, `Week ${week}`)
+      : t('Cập nhật tuần thai', 'Add your pregnancy week')
     : isPostpartum
-      ? 'Phục hồi & chăm bé'
-      : 'Theo dõi chu kỳ';
+      ? t('Phục hồi & chăm bé', 'Recovery & baby care')
+      : t('Theo dõi chu kỳ', 'Track your cycle');
 
+  // babySize / development do server trả về bằng tiếng Việt.
   const stageNote = isPregnant
     ? weekInfo?.babySize
       ? `Bé đang ${weekInfo.babySize}. ${weekInfo.development || ''}`
-      : 'Mẹ nhập ngày kinh cuối trong hồ sơ để Mom Ơi tính tuần thai nhé.'
+      : t(
+          'Mẹ nhập ngày kinh cuối trong hồ sơ để Mom Ơi tính tuần thai nhé.',
+          'Add your last period date in your profile so Mom Ơi can work out your pregnancy week.'
+        )
     : isPostpartum
-      ? 'Mẹ nhớ dành thời gian nghỉ ngơi, uống canh ấm và ôm ấp bé yêu nhé.'
-      : 'Thời điểm vàng để bổ sung acid folic và giữ tinh thần luôn thư thái.';
+      ? t(
+          'Mẹ nhớ dành thời gian nghỉ ngơi, uống canh ấm và ôm ấp bé yêu nhé.',
+          'Take time to rest, have warm soups and enjoy cuddles with your baby.'
+        )
+      : t(
+          'Thời điểm vàng để bổ sung acid folic và giữ tinh thần luôn thư thái.',
+          'A great time to take folic acid and keep your mind at ease.'
+        );
 
   return (
     <View style={styles.root}>
@@ -205,15 +229,15 @@ export default function DashboardScreen() {
               <Text style={styles.avatarText}>🌸</Text>
             </View>
             <View>
-              <Text style={styles.greeting}>Xin chào mẹ,</Text>
-              <Text style={styles.userName}>{user?.fullName || 'Mẹ yêu'}</Text>
+              <Text style={styles.greeting}>{t('Xin chào mẹ,', 'Hello,')}</Text>
+              <Text style={styles.userName}>{user?.fullName || t('Mẹ yêu', 'Mom')}</Text>
             </View>
           </TouchableOpacity>
           <View style={styles.topBarActions}>
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => navigation.navigate('Notifications')}
-              accessibilityLabel="Thông báo"
+              accessibilityLabel={t('Thông báo', 'Notifications')}
               activeOpacity={0.8}
             >
               <Bell size={19} color={MOM_THEME.charcoalMid} />
@@ -222,7 +246,7 @@ export default function DashboardScreen() {
             <TouchableOpacity
               style={[styles.actionBtn, styles.logoutBtn]}
               onPress={handleLogout}
-              accessibilityLabel="Đăng xuất"
+              accessibilityLabel={t('Đăng xuất', 'Sign out')}
               activeOpacity={0.8}
             >
               <LogOut size={17} color={MOM_THEME.roseDark} />
@@ -241,9 +265,12 @@ export default function DashboardScreen() {
               <UserRound size={20} color={MOM_THEME.roseDark} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.setupTitle}>Hoàn thiện hồ sơ của mẹ</Text>
+              <Text style={styles.setupTitle}>{t('Hoàn thiện hồ sơ của mẹ', 'Complete your profile')}</Text>
               <Text style={styles.setupBody}>
-                Chọn giai đoạn (chuẩn bị / mang thai / sau sinh) để Mom Ơi cá nhân hóa lộ trình.
+                {t(
+                  'Chọn giai đoạn (chuẩn bị / mang thai / sau sinh) để Mom Ơi cá nhân hóa lộ trình.',
+                  'Pick your stage (trying / pregnant / after birth) so Mom Ơi can personalize your journey.'
+                )}
               </Text>
             </View>
             <ChevronRight size={18} color={MOM_THEME.roseDark} />
@@ -275,7 +302,7 @@ export default function DashboardScreen() {
             </Text>
 
             <View style={styles.heroFooter}>
-              <Text style={styles.heroFooterText}>Xem lộ trình của mẹ</Text>
+              <Text style={styles.heroFooterText}>{t('Xem lộ trình của mẹ', 'See your journey')}</Text>
               <View style={styles.heroFooterArrow}>
                 <ChevronRight size={14} color={MOM_THEME.roseDark} />
               </View>
@@ -285,8 +312,8 @@ export default function DashboardScreen() {
 
         {/* ── Section: Ưu tiên hôm nay ── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Chăm sóc hôm nay</Text>
-          <Text style={styles.sectionSubtitle}>Mẹ nhớ lắng nghe cơ thể mình nhé</Text>
+          <Text style={styles.sectionTitle}>{t('Chăm sóc hôm nay', 'Today’s care')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('Mẹ nhớ lắng nghe cơ thể mình nhé', 'Listen to your body')}</Text>
         </View>
 
         <View style={styles.priorityRow}>
@@ -296,12 +323,12 @@ export default function DashboardScreen() {
               <Droplet size={18} color="#4A88C7" />
             </View>
             <Text style={styles.priorityVal}>
-              {waterCups}/{DAILY_CUP_GOAL} ly
+              {waterCups}/{DAILY_CUP_GOAL} {t('ly', 'cups')}
             </Text>
-            <Text style={styles.priorityLbl}>Uống nước</Text>
+            <Text style={styles.priorityLbl}>{t('Uống nước', 'Water')}</Text>
             <TouchableOpacity style={styles.quickAddWater} onPress={addWater}>
               <Plus size={13} color="#4A88C7" />
-              <Text style={styles.quickAddWaterText}>+1 ly</Text>
+              <Text style={styles.quickAddWaterText}>{t('+1 ly', '+1 cup')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -314,10 +341,14 @@ export default function DashboardScreen() {
             <View style={[styles.priorityIconCircle, { backgroundColor: '#EADFF8' }]}>
               <Moon size={18} color="#8E6BB8" />
             </View>
-            <Text style={styles.priorityVal}>{sleepHours !== null ? `${sleepHours} giờ` : '—'}</Text>
-            <Text style={styles.priorityLbl}>Giấc ngủ</Text>
+            <Text style={styles.priorityVal}>
+              {sleepHours !== null ? t(`${sleepHours} giờ`, `${sleepHours} h`) : '—'}
+            </Text>
+            <Text style={styles.priorityLbl}>{t('Giấc ngủ', 'Sleep')}</Text>
             <View style={styles.priorityStatusPill}>
-              <Text style={styles.priorityStatusText}>{sleepHours !== null ? 'Đã ghi' : 'Ghi nhận'}</Text>
+              <Text style={styles.priorityStatusText}>
+                {sleepHours !== null ? t('Đã ghi', 'Logged') : t('Ghi nhận', 'Log it')}
+              </Text>
             </View>
           </TouchableOpacity>
 
@@ -327,10 +358,10 @@ export default function DashboardScreen() {
               <HeartPulse size={18} color={MOM_THEME.roseDark} />
             </View>
             <Text style={styles.priorityVal}>{mood ? mood.emoji : '—'}</Text>
-            <Text style={styles.priorityLbl}>Tâm trạng</Text>
+            <Text style={styles.priorityLbl}>{t('Tâm trạng', 'Mood')}</Text>
             <View style={[styles.priorityStatusPill, { backgroundColor: '#F9DCE3' }]}>
               <Text style={[styles.priorityStatusText, { color: MOM_THEME.roseDark }]}>
-                {mood ? mood.label : 'Chưa chọn'}
+                {mood ? moodLabel(mood) : t('Chưa chọn', 'Not set')}
               </Text>
             </View>
           </View>
@@ -338,8 +369,8 @@ export default function DashboardScreen() {
 
         {/* ── Quick Tools Grid ── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Tiện ích cùng mẹ</Text>
-          <Text style={styles.sectionSubtitle}>Trợ lý sức khỏe thông minh</Text>
+          <Text style={styles.sectionTitle}>{t('Tiện ích cùng mẹ', 'Quick tools')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('Lối tắt mẹ hay dùng', 'Shortcuts you use most')}</Text>
         </View>
 
         <View style={styles.gridContainer}>
@@ -351,8 +382,8 @@ export default function DashboardScreen() {
             <View style={[styles.gridIconWrap, { backgroundColor: '#FDECEF' }]}>
               <Activity size={22} color={MOM_THEME.roseDark} />
             </View>
-            <Text style={styles.gridCardTitle}>Trợ lý sức khỏe AI</Text>
-            <Text style={styles.gridCardSub}>Hỏi an tâm mọi biểu hiện lạ</Text>
+            <Text style={styles.gridCardTitle}>{t('Hỏi Mom Ơi AI', 'Ask Mom Ơi AI')}</Text>
+            <Text style={styles.gridCardSub}>{t('Gợi ý chăm sóc mẹ và bé', 'Care tips for mom and baby')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -363,8 +394,8 @@ export default function DashboardScreen() {
             <View style={[styles.gridIconWrap, { backgroundColor: '#E8F2EC' }]}>
               <Baby size={22} color={MOM_THEME.sageDark} />
             </View>
-            <Text style={styles.gridCardTitle}>Bé yêu</Text>
-            <Text style={styles.gridCardSub}>Hồ sơ bé & thực đơn ăn dặm</Text>
+            <Text style={styles.gridCardTitle}>{t('Bé yêu', 'Baby')}</Text>
+            <Text style={styles.gridCardSub}>{t('Hồ sơ bé & thực đơn ăn dặm', 'Baby profile & weaning menu')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -375,8 +406,8 @@ export default function DashboardScreen() {
             <View style={[styles.gridIconWrap, { backgroundColor: '#FFF4EB' }]}>
               <Pill size={22} color={MOM_THEME.amberDark} />
             </View>
-            <Text style={styles.gridCardTitle}>Lịch uống vitamin</Text>
-            <Text style={styles.gridCardSub}>Vitamin, sắt, canxi mỗi ngày</Text>
+            <Text style={styles.gridCardTitle}>{t('Lịch uống vitamin', 'Vitamin schedule')}</Text>
+            <Text style={styles.gridCardSub}>{t('Vitamin, sắt, canxi mỗi ngày', 'Daily vitamins, iron, calcium')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -396,8 +427,10 @@ export default function DashboardScreen() {
         <View style={[styles.checkInCard, SHADOWS.card]}>
           <View style={styles.checkInHeader}>
             <View>
-              <Text style={styles.checkInTitle}>Ghi nhận trong ngày</Text>
-              <Text style={styles.checkInSub}>Tín hiệu nhỏ giúp Mom Ơi hiểu mẹ hơn mỗi ngày</Text>
+              <Text style={styles.checkInTitle}>{t('Ghi nhận trong ngày', 'Daily check-in')}</Text>
+              <Text style={styles.checkInSub}>
+                {t('Tín hiệu nhỏ giúp Mom Ơi hiểu mẹ hơn mỗi ngày', 'Small signals help Mom Ơi understand you better')}
+              </Text>
             </View>
             <View style={styles.checkInHeart}>
               <Heart size={18} color={MOM_THEME.roseDark} fill={MOM_THEME.roseDark} />
@@ -407,11 +440,11 @@ export default function DashboardScreen() {
           {/* Water progress */}
           <View style={styles.waterHeader}>
             <Text style={styles.waterLabel}>
-              Mục tiêu nước: {waterCups}/{DAILY_CUP_GOAL} ly
+              {t('Mục tiêu nước', 'Water goal')}: {waterCups}/{DAILY_CUP_GOAL} {t('ly', 'cups')}
             </Text>
             <TouchableOpacity style={styles.waterAddBtn} onPress={addWater}>
               <Plus size={14} color={MOM_THEME.white} />
-              <Text style={styles.waterAddBtnText}>Thêm ly</Text>
+              <Text style={styles.waterAddBtnText}>{t('Thêm ly', 'Add a cup')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -428,7 +461,7 @@ export default function DashboardScreen() {
           </View>
 
           {/* Mood Selector */}
-          <Text style={styles.moodSectionTitle}>Mẹ đang cảm thấy thế nào?</Text>
+          <Text style={styles.moodSectionTitle}>{t('Mẹ đang cảm thấy thế nào?', 'How are you feeling?')}</Text>
           <View style={styles.moodRow}>
             {MOOD_OPTIONS.map((item) => {
               const active = moodScore === item.score;
@@ -441,7 +474,7 @@ export default function DashboardScreen() {
                 >
                   <Text style={styles.moodEmoji}>{item.emoji}</Text>
                   <Text style={[styles.moodText, active && styles.moodTextActive]}>
-                    {item.label}
+                    {moodLabel(item)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -454,7 +487,9 @@ export default function DashboardScreen() {
             activeOpacity={0.8}
           >
             <ClipboardList size={15} color={MOM_THEME.roseDark} />
-            <Text style={styles.fullLogText}>Ghi nhật ký đầy đủ (giấc ngủ, bữa ăn, huyết áp...)</Text>
+            <Text style={styles.fullLogText}>
+              {t('Ghi nhật ký đầy đủ (giấc ngủ, bữa ăn, huyết áp...)', 'Full daily log (sleep, meals, blood pressure...)')}
+            </Text>
             <ChevronRight size={15} color={MOM_THEME.roseDark} />
           </TouchableOpacity>
         </View>
@@ -465,9 +500,12 @@ export default function DashboardScreen() {
             <Sparkles size={20} color={MOM_THEME.amberDark} />
           </View>
           <View style={styles.warmNoteContent}>
-            <Text style={styles.warmNoteTitle}>Lời nhắn gửi mẹ yêu 💛</Text>
+            <Text style={styles.warmNoteTitle}>{t('Lời nhắn gửi mẹ yêu 💛', 'A note for you 💛')}</Text>
             <Text style={styles.warmNoteBody}>
-              Hôm nay hãy dành cho bản thân ít phút thở sâu và nghe một bản nhạc êm dịu nhé. Nếu thấy bất kỳ cơn đau bất thường, ra máu hay thai máy giảm, mẹ hãy liên hệ bác sĩ ngay.
+              {t(
+                'Hôm nay hãy dành cho bản thân ít phút thở sâu và nghe một bản nhạc êm dịu nhé. Nếu thấy bất kỳ cơn đau bất thường, ra máu hay thai máy giảm, mẹ hãy liên hệ bác sĩ ngay.',
+                'Take a few minutes today to breathe deeply and listen to calm music. If you notice unusual pain, bleeding or fewer baby movements, contact your doctor right away.'
+              )}
             </Text>
           </View>
         </View>

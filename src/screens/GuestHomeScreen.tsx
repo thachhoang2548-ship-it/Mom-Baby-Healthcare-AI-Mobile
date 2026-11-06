@@ -14,6 +14,9 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { RADII, SHADOWS } from '../theme/colors';
+import { MEDICAL_FEATURES_ENABLED } from '../constants/features';
+import LanguageToggle from '../components/LanguageToggle';
+import { useT } from '../i18n';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -39,6 +42,7 @@ const G = {
 
 export default function GuestHomeScreen() {
   const navigation = useNavigation<Nav>();
+  const t = useT();
 
   return (
     <View style={styles.root}>
@@ -52,13 +56,16 @@ export default function GuestHomeScreen() {
           </View>
           <Text style={styles.logoText}>Mom Ơi</Text>
         </View>
-        <TouchableOpacity
-          style={styles.loginBtn}
-          onPress={() => navigation.navigate('Login')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.loginBtnText}>Đăng nhập</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <LanguageToggle />
+          <TouchableOpacity
+            style={styles.loginBtn}
+            onPress={() => navigation.navigate('Login')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.loginBtnText}>{t('Đăng nhập', 'Sign in')}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -84,18 +91,21 @@ export default function GuestHomeScreen() {
             {/* Floating trust badge */}
             <View style={styles.heroBadge}>
               <Text style={styles.heroBadgeEmoji}>💛</Text>
-              <Text style={styles.heroBadgeText}>Đồng hành cùng mẹ mỗi ngày</Text>
+              <Text style={styles.heroBadgeText}>{t('Đồng hành cùng mẹ mỗi ngày', 'With you every day')}</Text>
             </View>
           </View>
 
           {/* Hero Text */}
           <View style={styles.heroTextBlock}>
-            <Text style={styles.heroLabel}>ĐỒNG HÀNH CÙNG MẸ</Text>
+            <Text style={styles.heroLabel}>{t('ĐỒNG HÀNH CÙNG MẸ', 'FOR MOMS')}</Text>
             <Text style={styles.heroTitle}>
-              Chăm mẹ khỏe,{'\n'}Chăm bé vui.
+              {t('Chăm mẹ khỏe,\nChăm bé vui.', 'Healthy mom,\nHappy baby.')}
             </Text>
             <Text style={styles.heroSubtitle}>
-              Một nơi nhẹ nhàng để mẹ theo dõi thai kỳ, chăm sóc bé và tìm những thông tin hữu ích mỗi ngày.
+              {t(
+                'Một nơi nhẹ nhàng để mẹ theo dõi thai kỳ, chăm sóc bé và tìm những thông tin hữu ích mỗi ngày.',
+                'A calm place to follow your pregnancy, care for your baby and find helpful tips every day.'
+              )}
             </Text>
 
             {/* CTA Buttons */}
@@ -104,7 +114,7 @@ export default function GuestHomeScreen() {
               onPress={() => navigation.navigate('Register')}
               activeOpacity={0.85}
             >
-              <Text style={styles.primaryCtaText}>Bắt đầu cùng Mom Ơi</Text>
+              <Text style={styles.primaryCtaText}>{t('Bắt đầu cùng Mom Ơi', 'Get started')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -112,7 +122,7 @@ export default function GuestHomeScreen() {
               onPress={() => navigation.navigate('Login')}
               activeOpacity={0.8}
             >
-              <Text style={styles.secondaryCtaText}>Đăng nhập</Text>
+              <Text style={styles.secondaryCtaText}>{t('Đăng nhập', 'Sign in')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -121,10 +131,10 @@ export default function GuestHomeScreen() {
             SECTION: Khám phá Mom Ơi
         ══════════════════════════════════════════ */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>TÍNH NĂNG</Text>
-          <Text style={styles.sectionTitle}>Khám phá Mom Ơi</Text>
+          <Text style={styles.sectionLabel}>{t('TÍNH NĂNG', 'FEATURES')}</Text>
+          <Text style={styles.sectionTitle}>{t('Khám phá Mom Ơi', 'Explore Mom Ơi')}</Text>
           <Text style={styles.sectionSubtitle}>
-            Mọi thứ mẹ cần, trong một ứng dụng
+            {t('Mọi thứ mẹ cần, trong một ứng dụng', 'What you need, in one app')}
           </Text>
         </View>
 
@@ -138,13 +148,16 @@ export default function GuestHomeScreen() {
           <View style={styles.featureCardOverlay} />
           <View style={styles.featureCardContent}>
             <View style={styles.featureTag}>
-              <Text style={styles.featureTagText}>Thai kỳ</Text>
+              <Text style={styles.featureTagText}>{t('Thai kỳ', 'Pregnancy')}</Text>
             </View>
             <Text style={styles.featureCardTitle}>
-              Theo dõi hành trình thai kỳ
+              {t('Theo dõi hành trình thai kỳ', 'Follow your pregnancy')}
             </Text>
             <Text style={styles.featureCardDesc}>
-              Ghi lại từng tuần, cân nặng, siêu âm và cột mốc đặc biệt
+              {t(
+                'Theo dõi từng tuần thai, cân nặng, thực đơn và bài tập phù hợp',
+                'Week by week: weight, meal plans and suitable exercises'
+              )}
             </Text>
           </View>
         </View>
@@ -160,13 +173,13 @@ export default function GuestHomeScreen() {
             <View style={styles.featureCardOverlay} />
             <View style={styles.featureCardContent}>
               <View style={[styles.featureTag, { backgroundColor: 'rgba(212,134,156,0.88)' }]}>
-                <Text style={styles.featureTagText}>Bé yêu</Text>
+                <Text style={styles.featureTagText}>{t('Bé yêu', 'Baby')}</Text>
               </View>
               <Text style={[styles.featureCardTitle, { fontSize: 14 }]}>
-                Cột mốc của bé
+                {t('Bé lớn từng ngày', 'Growing every day')}
               </Text>
               <Text style={[styles.featureCardDesc, { fontSize: 11 }]}>
-                Ghi nhớ mọi khoảnh khắc
+                {t('Biểu đồ tăng trưởng, thực đơn ăn dặm', 'Growth charts, weaning menus')}
               </Text>
             </View>
           </View>
@@ -180,13 +193,13 @@ export default function GuestHomeScreen() {
             <View style={styles.featureCardOverlay} />
             <View style={styles.featureCardContent}>
               <View style={[styles.featureTag, { backgroundColor: 'rgba(95,122,107,0.88)' }]}>
-                <Text style={styles.featureTagText}>Sức khỏe</Text>
+                <Text style={styles.featureTagText}>{t('Sức khỏe', 'Wellbeing')}</Text>
               </View>
               <Text style={[styles.featureCardTitle, { fontSize: 14 }]}>
-                Dinh dưỡng & Wellness
+                {t('Dinh dưỡng & Wellness', 'Nutrition & wellness')}
               </Text>
               <Text style={[styles.featureCardDesc, { fontSize: 11 }]}>
-                Lời khuyên từ chuyên gia
+                {t('Món ăn được chuyên gia duyệt', 'Recipes reviewed by experts')}
               </Text>
             </View>
           </View>
@@ -199,17 +212,20 @@ export default function GuestHomeScreen() {
           <View style={styles.assistantIconBg}>
             <Text style={styles.assistantEmoji}>💬</Text>
           </View>
-          <Text style={styles.assistantLabel}>Trợ lý Mom Ơi</Text>
+          <Text style={styles.assistantLabel}>{t('Trợ lý Mom Ơi', 'Mom Ơi assistant')}</Text>
           <Text style={styles.assistantTitle}>
-            Hỏi mọi điều{'\n'}bạn muốn biết
+            {t('Hỏi mọi điều\nbạn muốn biết', 'Ask anything\nyou want to know')}
           </Text>
           <Text style={styles.assistantDesc}>
-            Từ triệu chứng thai kỳ, dinh dưỡng, đến cách chăm sóc bé – Mom Ơi luôn sẵn sàng giải đáp.
+            {t(
+              'Từ chuyện thai kỳ, dinh dưỡng đến cách chăm sóc bé, Mom Ơi gợi ý cho mẹ tham khảo.',
+              'From pregnancy and nutrition to baby care, Mom Ơi gives you suggestions to consider.'
+            )}
           </Text>
           <View style={styles.assistantPills}>
-            <View style={styles.pill}><Text style={styles.pillText}>Triệu chứng thai kỳ</Text></View>
-            <View style={styles.pill}><Text style={styles.pillText}>Dinh dưỡng cho mẹ</Text></View>
-            <View style={styles.pill}><Text style={styles.pillText}>Chăm sóc sơ sinh</Text></View>
+            <View style={styles.pill}><Text style={styles.pillText}>{t('Chuyện thai kỳ', 'Pregnancy')}</Text></View>
+            <View style={styles.pill}><Text style={styles.pillText}>{t('Dinh dưỡng cho mẹ', 'Nutrition for mom')}</Text></View>
+            <View style={styles.pill}><Text style={styles.pillText}>{t('Chăm sóc sơ sinh', 'Newborn care')}</Text></View>
           </View>
         </View>
 
@@ -218,9 +234,12 @@ export default function GuestHomeScreen() {
         ══════════════════════════════════════════ */}
         <View style={styles.lifestyleSection}>
           <Text style={styles.sectionLabel}>LIFESTYLE</Text>
-          <Text style={styles.sectionTitle}>Mỗi ngày cùng Mom Ơi</Text>
+          <Text style={styles.sectionTitle}>{t('Mỗi ngày cùng Mom Ơi', 'Every day with Mom Ơi')}</Text>
           <Text style={styles.sectionSubtitle}>
-            Đồng hành từ những buổi sáng bình yên đến khoảnh khắc ngọt ngào nhất
+            {t(
+              'Đồng hành từ những buổi sáng bình yên đến khoảnh khắc ngọt ngào nhất',
+              'From quiet mornings to the sweetest moments'
+            )}
           </Text>
 
           <View style={styles.lifestyleImageCard}>
@@ -232,7 +251,10 @@ export default function GuestHomeScreen() {
             <View style={styles.lifestyleOverlay} />
             <View style={styles.lifestyleQuote}>
               <Text style={styles.lifestyleQuoteText}>
-                “Mỗi ngày của mẹ đều quan trọng.{'\n'}Mỗi khoảnh khắc bên bé đều quý giá.”
+                {t(
+                  '“Mỗi ngày của mẹ đều quan trọng.\nMỗi khoảnh khắc bên bé đều quý giá.”',
+                  '“Every day of yours matters.\nEvery moment with your baby is precious.”'
+                )}
               </Text>
             </View>
           </View>
@@ -245,18 +267,31 @@ export default function GuestHomeScreen() {
           {/* Chỉ nêu điều app thực sự có; không dùng số người dùng / đánh giá chưa kiểm chứng. */}
           <View style={styles.trustCard}>
             <Text style={styles.trustNumber}>3</Text>
-            <Text style={styles.trustLabel}>Giai đoạn làm mẹ</Text>
+            <Text style={styles.trustLabel}>{t('Giai đoạn làm mẹ', 'Stages of motherhood')}</Text>
           </View>
           <View style={styles.trustDivider} />
           <View style={styles.trustCard}>
             <Text style={styles.trustNumber}>WHO</Text>
-            <Text style={styles.trustLabel}>Chuẩn tăng trưởng của bé</Text>
+            <Text style={styles.trustLabel}>{t('Chuẩn tăng trưởng của bé', 'Baby growth standards')}</Text>
           </View>
-          <View style={styles.trustDivider} />
-          <View style={styles.trustCard}>
-            <Text style={styles.trustNumber}>EPDS</Text>
-            <Text style={styles.trustLabel}>Sàng lọc tâm lý sau sinh</Text>
-          </View>
+          {/* EPDS thuộc nhóm tính năng y tế, chỉ giới thiệu khi được bật. */}
+          {MEDICAL_FEATURES_ENABLED ? (
+            <>
+              <View style={styles.trustDivider} />
+              <View style={styles.trustCard}>
+                <Text style={styles.trustNumber}>EPDS</Text>
+                <Text style={styles.trustLabel}>{t('Sàng lọc tâm lý sau sinh', 'Postnatal mood screening')}</Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.trustDivider} />
+              <View style={styles.trustCard}>
+                <Text style={styles.trustNumber}>AI</Text>
+                <Text style={styles.trustLabel}>{t('Gợi ý chăm sóc mẹ & bé', 'Care tips for mom & baby')}</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* ══════════════════════════════════════════
@@ -266,31 +301,37 @@ export default function GuestHomeScreen() {
           <View style={styles.finalCtaBg} />
           <Text style={styles.finalCtaLabel}>🌸 MOM ƠI</Text>
           <Text style={styles.finalCtaTitle}>
-            Sẵn sàng bắt đầu hành trình cùng bé yêu?
+            {t('Sẵn sàng bắt đầu hành trình cùng bé yêu?', 'Ready to start the journey with your baby?')}
           </Text>
+          {/* Không dùng số người dùng chưa kiểm chứng. */}
           <Text style={styles.finalCtaDesc}>
-            Tham gia cùng hàng nghìn bà mẹ đang sử dụng Mom Ơi để theo dõi thai kỳ và chăm sóc bé.
+            {t(
+              'Tạo tài khoản miễn phí để theo dõi thai kỳ và chăm sóc bé cùng Mom Ơi.',
+              'Create a free account to follow your pregnancy and care for your baby with Mom Ơi.'
+            )}
           </Text>
           <TouchableOpacity
             style={styles.finalCtaButton}
             onPress={() => navigation.navigate('Register')}
             activeOpacity={0.85}
           >
-            <Text style={styles.finalCtaButtonText}>Bắt đầu cùng Mom Ơi</Text>
+            <Text style={styles.finalCtaButtonText}>{t('Bắt đầu cùng Mom Ơi', 'Get started')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.finalCtaSecondary}
             onPress={() => navigation.navigate('Login')}
             activeOpacity={0.8}
           >
-            <Text style={styles.finalCtaSecondaryText}>Đã có tài khoản? Đăng nhập</Text>
+            <Text style={styles.finalCtaSecondaryText}>
+              {t('Đã có tài khoản? Đăng nhập', 'Already have an account? Sign in')}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* ── Footer ── */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Mom Ơi · Chăm mẹ khỏe, chăm bé vui 🌸
+            {t('Mom Ơi · Chăm mẹ khỏe, chăm bé vui 🌸', 'Mom Ơi · Healthy mom, happy baby 🌸')}
           </Text>
         </View>
       </ScrollView>
@@ -335,6 +376,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: G.charcoal,
     letterSpacing: -0.3,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   loginBtn: {
     paddingHorizontal: 18,

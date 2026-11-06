@@ -7,13 +7,14 @@ export function cupsFromLiters(liters?: number | null): number {
   return Math.round(liters / LITERS_PER_CUP);
 }
 
-// Thang 1-5 giống web (MoodForm / SleepForm).
+// Thang 1-5 giống web (MoodForm / SleepForm). `label` tiếng Việt được lưu làm moodNote lên server;
+// `labelEn` chỉ để hiển thị khi app dùng tiếng Anh.
 export const MOOD_OPTIONS = [
-  { score: 1, emoji: '😣', label: 'Rất mệt' },
-  { score: 2, emoji: '😕', label: 'Không vui' },
-  { score: 3, emoji: '🙂', label: 'Bình thường' },
-  { score: 4, emoji: '😄', label: 'Vui vẻ' },
-  { score: 5, emoji: '🤩', label: 'Tuyệt vời' },
+  { score: 1, emoji: '😣', label: 'Rất mệt', labelEn: 'Exhausted' },
+  { score: 2, emoji: '😕', label: 'Không vui', labelEn: 'Low' },
+  { score: 3, emoji: '🙂', label: 'Bình thường', labelEn: 'Okay' },
+  { score: 4, emoji: '😄', label: 'Vui vẻ', labelEn: 'Happy' },
+  { score: 5, emoji: '🤩', label: 'Tuyệt vời', labelEn: 'Great' },
 ];
 
 export const SLEEP_QUALITY_OPTIONS = [

@@ -1,6 +1,11 @@
 import { isAxiosError } from 'axios';
+import { tr } from '../i18n';
 
-const NETWORK_MESSAGE = 'Không kết nối được máy chủ. Mẹ kiểm tra mạng và thử lại nhé.';
+const networkMessage = () =>
+  tr(
+    'Không kết nối được máy chủ. Mẹ kiểm tra mạng và thử lại nhé.',
+    'Could not reach the server. Check your connection and try again.'
+  );
 
 const firstString = (value: unknown): string | undefined => {
   if (typeof value === 'string' && value.trim()) return value;
@@ -25,10 +30,10 @@ const firstString = (value: unknown): string | undefined => {
  */
 export function getApiErrorMessage(
   err: unknown,
-  fallback = 'Đã có lỗi xảy ra. Mẹ thử lại sau nhé.'
+  fallback = tr('Đã có lỗi xảy ra. Mẹ thử lại sau nhé.', 'Something went wrong. Please try again later.')
 ): string {
   if (isAxiosError(err)) {
-    if (!err.response) return NETWORK_MESSAGE;
+    if (!err.response) return networkMessage();
     const data: any = err.response.data;
     if (data && typeof data === 'object') {
       const message = firstString(data.message ?? data.Message);
@@ -41,6 +46,11 @@ export function getApiErrorMessage(
   }
   if (err instanceof Error && err.message) return err.message;
   return fallback;
+}
+
+/** Không nhận được phản hồi nào từ server (mất mạng, server tắt, hết thời gian chờ). */
+export function isNetworkError(err: unknown): boolean {
+  return isAxiosError(err) && !err.response;
 }
 
 /** 403 = tài khoản chưa có gói dịch vụ đủ quyền (SubscriptionTierMiddleware). */

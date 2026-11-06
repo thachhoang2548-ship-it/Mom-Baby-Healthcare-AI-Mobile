@@ -20,18 +20,21 @@ import SymptomAnalysisView from '../../components/SymptomAnalysisView';
 import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+import { useLanguageStore, useT } from '../../i18n';
 
 const quickSymptoms = [
-  'Ốm nghén mệt mỏi',
-  'Đau thắt lưng dưới',
-  'Bé sốt nhẹ 37.8°C',
-  'Bé nổi mẩn đỏ ở má',
-  'Thai máy ít hơn',
-  'Ợ chua, khó tiêu',
+  { vi: 'Ốm nghén mệt mỏi', en: 'Morning sickness, tired' },
+  { vi: 'Đau thắt lưng dưới', en: 'Lower back pain' },
+  { vi: 'Bé sốt nhẹ 37.8°C', en: 'Baby has a mild fever, 37.8°C' },
+  { vi: 'Bé nổi mẩn đỏ ở má', en: 'Red rash on baby’s cheeks' },
+  { vi: 'Thai máy ít hơn', en: 'Baby moving less' },
+  { vi: 'Ợ chua, khó tiêu', en: 'Heartburn, indigestion' },
 ];
 
 export default function SymptomCheckerScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const t = useT();
+  const isEnglish = useLanguageStore((s) => s.lang === 'en');
   const [description, setDescription] = useState('');
   const [selectedImage, setSelectedImage] = useState<{
     uri: string;
@@ -63,7 +66,10 @@ export default function SymptomCheckerScreen() {
   const takePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Cần quyền camera', 'Mẹ vui lòng cấp quyền máy ảnh để chụp ảnh triệu chứng nhé.');
+      Alert.alert(
+        t('Cần quyền camera', 'Camera access needed'),
+        t('Mẹ vui lòng cấp quyền máy ảnh để chụp ảnh triệu chứng nhé.', 'Please allow camera access to take a photo.')
+      );
       return;
     }
 
@@ -85,7 +91,13 @@ export default function SymptomCheckerScreen() {
 
   const submit = async () => {
     if (description.trim().length < 8) {
-      Alert.alert('Mô tả thêm một chút', 'Mẹ nhập rõ hơn về biểu hiện (khoảng 8 ký tự trở lên) để AI hiểu đúng ngữ cảnh nhé.');
+      Alert.alert(
+        t('Mô tả thêm một chút', 'Add a bit more detail'),
+        t(
+          'Mẹ nhập rõ hơn về biểu hiện (khoảng 8 ký tự trở lên) để AI hiểu đúng ngữ cảnh nhé.',
+          'Describe what is happening in a little more detail (8 characters or more) so the AI understands.'
+        )
+      );
       return;
     }
 
@@ -105,12 +117,18 @@ export default function SymptomCheckerScreen() {
       if ((res.isSuccess || res.success) && res.data) {
         setResult(res.data);
       } else {
-        Alert.alert('Chưa phân tích được', res.message || 'Hệ thống AI đang phản hồi chậm, mẹ thử lại một lát nữa nhé.');
+        Alert.alert(
+          t('Chưa phân tích được', 'No suggestion yet'),
+          res.message || t('Hệ thống AI đang phản hồi chậm, mẹ thử lại một lát nữa nhé.', 'The AI is slow right now. Please try again shortly.')
+        );
       }
     } catch (err) {
       Alert.alert(
-        'Thông báo',
-        getApiErrorMessage(err, 'Máy chủ AI đang bận. Mẹ kiểm tra kết nối mạng và thử lại nhé.')
+        t('Chưa gửi được', 'Could not send'),
+        getApiErrorMessage(
+          err,
+          t('Máy chủ AI đang bận. Mẹ kiểm tra kết nối mạng và thử lại nhé.', 'The AI server is busy. Check your connection and try again.')
+        )
       );
     } finally {
       setIsAnalyzing(false);
@@ -134,47 +152,62 @@ export default function SymptomCheckerScreen() {
             activeOpacity={0.8}
           >
             <History size={15} color={MOM_THEME.roseDark} />
-            <Text style={styles.historyButtonText}>Lịch sử</Text>
+            <Text style={styles.historyButtonText}>{t('Lịch sử', 'History')}</Text>
           </TouchableOpacity>
           <View style={styles.headerIconWrap}>
             <Stethoscope size={24} color={MOM_THEME.roseDark} />
           </View>
           <View style={styles.headerEyebrowWrap}>
-            <Text style={styles.headerEyebrow}>GỢI Ý CHĂM SÓC MẸ & BÉ</Text>
+            <Text style={styles.headerEyebrow}>{t('GỢI Ý CHĂM SÓC MẸ & BÉ', 'CARE TIPS FOR MOM & BABY')}</Text>
           </View>
-          <Text style={styles.title}>Hỏi Mom Ơi AI</Text>
+          <Text style={styles.title}>{t('Hỏi Mom Ơi AI', 'Ask Mom Ơi AI')}</Text>
           <Text style={styles.subtitle}>
-            Chia sẻ cảm giác hoặc biểu hiện lạ mẹ và bé đang gặp phải để nhận gợi ý chăm sóc tham khảo 🌸 Gợi ý không phải chẩn đoán và không thay thế bác sĩ.
+            {t(
+              'Chia sẻ cảm giác hoặc biểu hiện lạ mẹ và bé đang gặp phải để nhận gợi ý chăm sóc tham khảo 🌸 Gợi ý không phải chẩn đoán và không thay thế bác sĩ.',
+              'Describe how you or your baby feel to get care suggestions 🌸 Suggestions are not a diagnosis and do not replace a doctor.'
+            )}
           </Text>
+          {/* Server và AI hiện trả lời bằng tiếng Việt: nói trước để người dùng nước ngoài không bất ngờ. */}
+          {isEnglish ? (
+            <Text style={styles.languageNote}>Replies are currently written in Vietnamese.</Text>
+          ) : null}
         </View>
 
         {/* ── Quick Symptom Suggestions ── */}
         <View style={styles.quickWrap}>
-          <Text style={styles.quickTitle}>Gợi ý nhanh:</Text>
+          <Text style={styles.quickTitle}>{t('Gợi ý nhanh:', 'Quick picks:')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickScroll}>
-            {quickSymptoms.map((sym, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={styles.quickChip}
-                onPress={() => setDescription((prev) => (prev ? `${prev}, ${sym}` : sym))}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.quickChipText}>{sym}</Text>
-              </TouchableOpacity>
-            ))}
+            {quickSymptoms.map((sym) => {
+              const text = t(sym.vi, sym.en);
+              return (
+                <TouchableOpacity
+                  key={sym.vi}
+                  style={styles.quickChip}
+                  onPress={() => setDescription((prev) => (prev ? `${prev}, ${text}` : text))}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.quickChipText}>{text}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
         {/* ── Main Input Card ── */}
         <View style={[styles.card, SHADOWS.card]}>
           <View style={styles.cardHeader}>
-            <Text style={styles.label}>Mẹ hoặc bé đang gặp vấn đề gì?</Text>
-            <Text style={styles.charCount}>{description.length} ký tự</Text>
+            <Text style={styles.label}>{t('Mẹ hoặc bé đang gặp vấn đề gì?', 'What is happening with you or your baby?')}</Text>
+            <Text style={styles.charCount}>
+              {description.length} {t('ký tự', 'chars')}
+            </Text>
           </View>
 
           <TextInput
             style={styles.textArea}
-            placeholder="Ví dụ: Em bé bị nổi nốt đỏ li ti quanh cổ, sốt 38 độ từ chiều nay, bú ít hơn mọi ngày..."
+            placeholder={t(
+              'Ví dụ: Em bé bị nổi nốt đỏ li ti quanh cổ, sốt 38 độ từ chiều nay, bú ít hơn mọi ngày...',
+              'Example: small red spots around the neck, 38°C fever since this afternoon, feeding less than usual...'
+            )}
             placeholderTextColor={MOM_THEME.mutedLight}
             multiline
             value={description}
@@ -190,7 +223,7 @@ export default function SymptomCheckerScreen() {
                 <X size={13} color={MOM_THEME.white} />
               </TouchableOpacity>
               <View style={styles.previewBadge}>
-                <Text style={styles.previewBadgeText}>Đã đính kèm ảnh</Text>
+                <Text style={styles.previewBadgeText}>{t('Đã đính kèm ảnh', 'Photo attached')}</Text>
               </View>
             </View>
           ) : null}
@@ -199,11 +232,11 @@ export default function SymptomCheckerScreen() {
           <View style={styles.mediaRow}>
             <TouchableOpacity style={styles.mediaButton} onPress={pickImage} activeOpacity={0.8}>
               <ImageIcon size={17} color={MOM_THEME.sageDark} />
-              <Text style={styles.mediaText}>Chọn từ thư viện</Text>
+              <Text style={styles.mediaText}>{t('Chọn từ thư viện', 'Choose a photo')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.mediaButton} onPress={takePhoto} activeOpacity={0.8}>
               <Camera size={17} color={MOM_THEME.sageDark} />
-              <Text style={styles.mediaText}>Chụp ảnh triệu chứng</Text>
+              <Text style={styles.mediaText}>{t('Chụp ảnh triệu chứng', 'Take a photo')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -217,12 +250,12 @@ export default function SymptomCheckerScreen() {
             {isAnalyzing ? (
               <View style={styles.analyzingRow}>
                 <ActivityIndicator color={MOM_THEME.white} size="small" />
-                <Text style={styles.primaryText}>AI đang soạn gợi ý...</Text>
+                <Text style={styles.primaryText}>{t('AI đang soạn gợi ý...', 'Writing suggestions...')}</Text>
               </View>
             ) : (
               <>
                 <Sparkles size={18} color={MOM_THEME.white} />
-                <Text style={styles.primaryText}>Nhận gợi ý chăm sóc</Text>
+                <Text style={styles.primaryText}>{t('Nhận gợi ý chăm sóc', 'Get care suggestions')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -232,7 +265,7 @@ export default function SymptomCheckerScreen() {
         {result ? (
           <View style={[styles.resultCard, SHADOWS.card]}>
             <View style={styles.resultHeader}>
-              <Text style={styles.resultTitle}>Đánh giá sơ bộ</Text>
+              <Text style={styles.resultTitle}>{t('Gợi ý cho mẹ', 'Suggestions for you')}</Text>
               <View style={styles.aiTag}>
                 <Sparkles size={12} color={MOM_THEME.white} />
                 <Text style={styles.aiTagText}>Mom Ơi AI</Text>
@@ -317,6 +350,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     paddingHorizontal: 10,
+  },
+  languageNote: {
+    color: MOM_THEME.amberDark,
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 6,
   },
   quickWrap: {
     marginBottom: 16,

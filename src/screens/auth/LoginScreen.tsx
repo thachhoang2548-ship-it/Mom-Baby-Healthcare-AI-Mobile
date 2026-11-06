@@ -17,10 +17,13 @@ import { RootStackParamList } from '../../navigation/types';
 import { useAuthStore } from '../../stores/authStore';
 import { COLORS } from '../../theme/colors';
 import { Mail, Lock, Eye, EyeOff, Sparkles, HeartHandshake } from 'lucide-react-native';
+import LanguageToggle from '../../components/LanguageToggle';
+import { useT } from '../../i18n';
 
 export default function LoginScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { login, isLoading, error, clearError } = useAuthStore();
+  const t = useT();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,7 +36,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      Alert.alert('Thông báo', 'Vui lòng nhập đầy đủ Email và Mật khẩu.');
+      Alert.alert(t('Thông báo', 'Missing details'), t('Vui lòng nhập đầy đủ Email và Mật khẩu.', 'Please enter your email and password.'));
       return;
     }
 
@@ -42,7 +45,10 @@ export default function LoginScreen() {
     if (result.success) {
       navigation.replace('MainTabs');
     } else {
-      Alert.alert('Đăng nhập thất bại', result.message || 'Sai tài khoản hoặc mật khẩu.');
+      Alert.alert(
+        t('Đăng nhập thất bại', 'Sign-in failed'),
+        result.message || t('Sai tài khoản hoặc mật khẩu.', 'Incorrect email or password.')
+      );
     }
   };
 
@@ -55,6 +61,10 @@ export default function LoginScreen() {
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
       >
+        <View style={styles.langRow}>
+          <LanguageToggle />
+        </View>
+
         {/* Header Branding */}
         <View style={styles.header}>
           <View style={styles.badgeRow}>
@@ -62,9 +72,12 @@ export default function LoginScreen() {
               <HeartHandshake size={28} color={COLORS.primary} />
             </View>
           </View>
-          <Text style={styles.welcomeText}>Chào mừng trở lại! 🌸</Text>
+          <Text style={styles.welcomeText}>{t('Chào mừng trở lại! 🌸', 'Welcome back! 🌸')}</Text>
           <Text style={styles.subText}>
-            Đăng nhập vào Mom Ơi để tiếp tục theo dõi sức khỏe và dinh dưỡng
+            {t(
+              'Đăng nhập vào Mom Ơi để tiếp tục theo dõi sức khỏe và dinh dưỡng',
+              'Sign in to Mom Ơi to keep tracking your health and nutrition'
+            )}
           </Text>
         </View>
 
@@ -82,7 +95,7 @@ export default function LoginScreen() {
             <Mail size={18} color={COLORS.textMuted} style={styles.inputIcon} />
             <TextInput
               style={styles.textInput}
-              placeholder="nhap.email@example.com"
+              placeholder={t('nhap.email@example.com', 'your.email@example.com')}
               placeholderTextColor={COLORS.textLight}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -94,7 +107,7 @@ export default function LoginScreen() {
             />
           </View>
 
-          <Text style={styles.inputLabel}>Mật khẩu</Text>
+          <Text style={styles.inputLabel}>{t('Mật khẩu', 'Password')}</Text>
           <View style={styles.inputWrapper}>
             <Lock size={18} color={COLORS.textMuted} style={styles.inputIcon} />
             <TextInput
@@ -129,23 +142,26 @@ export default function LoginScreen() {
             {isLoading ? (
               <ActivityIndicator color={COLORS.white} />
             ) : (
-              <Text style={styles.loginBtnText}>Đăng nhập</Text>
+              <Text style={styles.loginBtnText}>{t('Đăng nhập', 'Sign in')}</Text>
             )}
           </TouchableOpacity>
         </View>
 
         {/* Switch to Register */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Chưa có tài khoản? </Text>
+          <Text style={styles.footerText}>{t('Chưa có tài khoản? ', 'No account yet? ')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.registerLink}>Đăng ký ngay</Text>
+            <Text style={styles.registerLink}>{t('Đăng ký ngay', 'Create one')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.demoCard}>
           <Sparkles size={14} color={COLORS.secondary} style={{ marginRight: 6 }} />
           <Text style={styles.demoText}>
-            Thông tin trong Mom Ơi chỉ mang tính tham khảo, không thay thế bác sĩ.
+            {t(
+              'Thông tin trong Mom Ơi chỉ mang tính tham khảo, không thay thế bác sĩ.',
+              'Information in Mom Ơi is for reference only and does not replace a doctor.'
+            )}
           </Text>
         </View>
       </ScrollView>
@@ -163,6 +179,10 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 40,
     justifyContent: 'center',
+  },
+  langRow: {
+    alignItems: 'flex-end',
+    marginBottom: 8,
   },
   header: {
     alignItems: 'center',

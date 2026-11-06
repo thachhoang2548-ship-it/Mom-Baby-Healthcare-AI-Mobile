@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService, { UserDto } from '../services/authService';
 import featureService from '../services/featureService';
 import { STORAGE_KEYS } from '../api/axiosClient';
+import { tr } from '../i18n';
+import { getApiErrorMessage } from '../utils/apiError';
 
 export type TierType = 'Free' | 'MomHienDai' | 'SuperMomVip';
 
@@ -19,7 +21,7 @@ export const getTierDisplayName = (tier: TierType): string => {
     case 'SuperMomVip':
       return 'Super Mom VIP';
     default:
-      return 'Hội viên miễn phí';
+      return tr('Hội viên miễn phí', 'Free plan');
   }
 };
 
@@ -82,7 +84,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateFullName: async (fullName) => {
     const res = await authService.updateName(fullName.trim());
     if (!(res.isSuccess || res.success) || !res.data) {
-      throw new Error(res.message || 'Chưa cập nhật được họ và tên.');
+      throw new Error(res.message || tr('Chưa cập nhật được họ và tên.', 'Could not update your name.'));
     }
     // Giữ các trường app đang có (role...) nếu server không trả về.
     const user = { ...get().user, ...res.data };
@@ -159,14 +161,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return { success: true };
       }
 
-      const msg = res.message || 'Đăng nhập không thành công.';
+      const msg = res.message || tr('Đăng nhập không thành công.', 'Sign-in failed.');
       set({ isLoading: false, error: msg });
       return { success: false, message: msg };
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        'Không thể kết nối đến máy chủ. Vui lòng thử lại.';
+    } catch (err) {
+      // Mất mạng thì báo đúng là mất mạng thay vì "Network Error" của axios.
+      const msg = getApiErrorMessage(
+        err,
+        tr('Không thể kết nối đến máy chủ. Vui lòng thử lại.', 'Could not reach the server. Please try again.')
+      );
       set({ isLoading: false, error: msg });
       return { success: false, message: msg };
     }
@@ -182,18 +185,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ isLoading: false, error: null });
         return {
           success: true,
-          message: res.message || 'Đăng ký thành công. Hãy đăng nhập.',
+          message: res.message || tr('Đăng ký thành công. Hãy đăng nhập.', 'Account created. Please sign in.'),
         };
       }
 
-      const msg = res.message || 'Đăng ký thất bại.';
+      const msg = res.message || tr('Đăng ký thất bại.', 'Sign-up failed.');
       set({ isLoading: false, error: msg });
       return { success: false, message: msg };
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        'Không thể hoàn tất đăng ký.';
+    } catch (err) {
+      const msg = getApiErrorMessage(err, tr('Không thể hoàn tất đăng ký.', 'Could not finish signing up.'));
       set({ isLoading: false, error: msg });
       return { success: false, message: msg };
     }

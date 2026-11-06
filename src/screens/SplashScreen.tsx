@@ -6,17 +6,22 @@ import { RootStackParamList } from '../navigation/types';
 import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../theme/colors';
 import { Sparkles, Heart } from 'lucide-react-native';
+import { useLanguageStore, useT } from '../i18n';
 
 export default function SplashScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { initAuth, isAuthenticated, isLoading } = useAuthStore();
+  const initLang = useLanguageStore((s) => s.initLang);
+  const t = useT();
 
   useEffect(() => {
     const checkSession = async () => {
+      // Đọc ngôn ngữ trước: initAuth xong là chuyển màn ngay.
+      await initLang();
       await initAuth();
     };
     checkSession();
-  }, [initAuth]);
+  }, [initAuth, initLang]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -38,11 +43,13 @@ export default function SplashScreen() {
       </View>
 
       <Text style={styles.title}>Mom Ơi</Text>
-      <Text style={styles.subtitle}>Trợ lý Y tế & Dinh dưỡng AI cho Mẹ & Bé</Text>
+      <Text style={styles.subtitle}>
+        {t('Đồng hành sức khỏe & dinh dưỡng cho mẹ và bé', 'Health and nutrition companion for mom and baby')}
+      </Text>
 
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="small" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Đang khởi động...</Text>
+        <Text style={styles.loadingText}>{t('Đang khởi động...', 'Starting...')}</Text>
       </View>
     </View>
   );

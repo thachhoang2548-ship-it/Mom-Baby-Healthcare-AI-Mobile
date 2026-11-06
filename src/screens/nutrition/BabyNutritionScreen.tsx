@@ -27,22 +27,25 @@ import {
 import babyService, { BabyProfileDto, DailyMenuDto, MealItem } from '../../services/babyService';
 import { EmptyState, ErrorState, LoadingView, SecondaryButton, TierLockedCard } from '../../components/ui';
 import { RootStackParamList } from '../../navigation/types';
-import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
+import { getApiErrorMessage, isNetworkError, isTierLocked } from '../../utils/apiError';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+import { tr, useT } from '../../i18n';
 
 const MEAL_SLOTS = [
-  { key: 'breakfast', label: 'Bữa sáng', time: '07:30', icon: '🥣' },
-  { key: 'lunch', label: 'Bữa trưa', time: '11:30', icon: '🍲' },
-  { key: 'snack', label: 'Bữa xế', time: '15:30', icon: '🥑' },
-  { key: 'dinner', label: 'Bữa tối', time: '18:30', icon: '🥣' },
-  { key: 'supplementary_snack', label: 'Cữ phụ', time: '20:00', icon: '🍼' },
+  { key: 'breakfast', label: 'Bữa sáng', labelEn: 'Breakfast', time: '07:30', icon: '🥣' },
+  { key: 'lunch', label: 'Bữa trưa', labelEn: 'Lunch', time: '11:30', icon: '🍲' },
+  { key: 'snack', label: 'Bữa xế', labelEn: 'Afternoon snack', time: '15:30', icon: '🥑' },
+  { key: 'dinner', label: 'Bữa tối', labelEn: 'Dinner', time: '18:30', icon: '🥣' },
+  { key: 'supplementary_snack', label: 'Cữ phụ', labelEn: 'Extra feed', time: '20:00', icon: '🍼' },
 ];
 
 const formatMeasure = (value: number | undefined, unit: string) =>
-  value ? `${value} ${unit}` : 'Chưa có';
+  value ? `${value} ${unit}` : tr('Chưa có', 'Not yet');
 
 export default function BabyNutritionScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const t = useT();
+  const [offline, setOffline] = useState(false);
   const [babies, setBabies] = useState<BabyProfileDto[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedIdRef = useRef<string | null>(null);
@@ -63,12 +66,18 @@ export default function BabyNutritionScreen() {
         return true;
       }
       setDailyMenu(null);
-      setMenuMessage(res.message || 'Chưa thể tạo thực đơn cho bé.');
+      setMenuMessage(res.message || tr('Chưa thể tạo thực đơn cho bé.', 'Could not create a menu for your baby.'));
       return false;
     } catch (err) {
       setDailyMenu(null);
       setMenuMessage(
-        getApiErrorMessage(err, 'Chưa tạo được thực đơn cho bé. Mẹ thử làm mới sau ít phút nhé.')
+        getApiErrorMessage(
+          err,
+          tr(
+            'Chưa tạo được thực đơn cho bé. Mẹ thử làm mới sau ít phút nhé.',
+            'Could not create a menu yet. Try refreshing in a few minutes.'
+          )
+        )
       );
       return false;
     } finally {
@@ -87,6 +96,7 @@ export default function BabyNutritionScreen() {
 
   const loadBabies = useCallback(async () => {
     setLoadError(null);
+    setOffline(false);
     try {
       const res = await babyService.getProfiles();
       const list = (res.isSuccess || res.success) && Array.isArray(res.data) ? res.data : [];
@@ -99,6 +109,7 @@ export default function BabyNutritionScreen() {
         setLocked(true);
         setBabies([]);
       } else {
+        setOffline(isNetworkError(err));
         setLoadError(getApiErrorMessage(err));
       }
     }
@@ -120,7 +131,7 @@ export default function BabyNutritionScreen() {
 
   const selectedBaby = babies?.find((b) => b.id === selectedId) ?? null;
   const ageMonths = selectedBaby?.ageMonths ?? 0;
-  const tip = getNutritionTip(ageMonths);
+  const tip = getNutritionTip(ageMonths, t);
   const totals = dailyMenu?.nutrition_totals || {};
   const goals = dailyMenu?.goals || {};
   // Backend trả null cho bữa không còn món an toàn với dị ứng của bé. Bữa chính vẫn hiện
@@ -134,16 +145,19 @@ export default function BabyNutritionScreen() {
   const hasAnyMeal = meals.some((item) => item.meal);
 
   const renderBody = () => {
-    if (loadError) return <ErrorState message={loadError} onRetry={loadBabies} />;
+    if (loadError) return <ErrorState message={loadError} onRetry={loadBabies} offline={offline} />;
     if (babies === null) return <LoadingView />;
-    if (locked) return <TierLockedCard feature="Hồ sơ & thực đơn cho bé" />;
+    if (locked) return <TierLockedCard feature={t('Hồ sơ & thực đơn cho bé', 'Baby profile & menus')} />;
     if (!selectedBaby) {
       return (
         <EmptyState
           emoji="👶"
-          title="Chưa có hồ sơ bé yêu"
-          body="Thêm ngày sinh, cân nặng và dị ứng của bé để nhận thực đơn theo đúng độ tuổi."
-          actionLabel="Thêm hồ sơ bé"
+          title={t('Chưa có hồ sơ bé yêu', 'No baby profile yet')}
+          body={t(
+            'Thêm ngày sinh, cân nặng và dị ứng của bé để nhận thực đơn theo đúng độ tuổi.',
+            'Add your baby’s birth date, weight and allergies to get menus for their age.'
+          )}
+          actionLabel={t('Thêm bé đầu tiên', 'Add your first baby')}
           onAction={() => navigation.navigate('BabyProfileForm')}
         />
       );
@@ -164,7 +178,7 @@ export default function BabyNutritionScreen() {
               >
                 <Text style={styles.babyChipEmoji}>👶</Text>
                 <Text style={[styles.babyChipText, active && styles.babyChipTextActive]}>
-                  {baby.babyName || 'Bé yêu'} · {baby.ageMonths ?? 0} tháng
+                  {baby.babyName || t('Bé yêu', 'Baby')} · {baby.ageMonths ?? 0} {t('tháng', 'mo')}
                 </Text>
               </TouchableOpacity>
             );
@@ -175,7 +189,7 @@ export default function BabyNutritionScreen() {
             activeOpacity={0.8}
           >
             <Plus size={14} color={MOM_THEME.roseDark} />
-            <Text style={styles.babyChipText}>Thêm bé</Text>
+            <Text style={styles.babyChipText}>{t('Thêm bé', 'Add baby')}</Text>
           </TouchableOpacity>
         </ScrollView>
 
@@ -192,7 +206,9 @@ export default function BabyNutritionScreen() {
             <View style={styles.heroTopRow}>
               <View style={styles.statusBadge}>
                 <Award size={13} color={MOM_THEME.white} />
-                <Text style={styles.statusText}>{selectedBaby.gender === 0 ? 'Bé trai' : 'Bé gái'}</Text>
+                <Text style={styles.statusText}>
+                  {selectedBaby.gender === 0 ? t('Bé trai', 'Boy') : t('Bé gái', 'Girl')}
+                </Text>
               </View>
               <TouchableOpacity
                 style={styles.agePill}
@@ -200,13 +216,13 @@ export default function BabyNutritionScreen() {
                 activeOpacity={0.85}
               >
                 <Pencil size={12} color={MOM_THEME.roseDark} />
-                <Text style={styles.agePillText}>Sửa hồ sơ</Text>
+                <Text style={styles.agePillText}>{t('Sửa hồ sơ', 'Edit profile')}</Text>
               </TouchableOpacity>
             </View>
 
             <View>
-              <Text style={styles.heroBabyName}>{selectedBaby.babyName || 'Bé yêu của mẹ'}</Text>
-              <Text style={styles.heroBabySub}>{ageMonths} tháng tuổi</Text>
+              <Text style={styles.heroBabyName}>{selectedBaby.babyName || t('Bé yêu của mẹ', 'Your baby')}</Text>
+              <Text style={styles.heroBabySub}>{t(`${ageMonths} tháng tuổi`, `${ageMonths} months old`)}</Text>
             </View>
 
             <View style={styles.statsCardRow}>
@@ -214,14 +230,14 @@ export default function BabyNutritionScreen() {
                 <Weight size={15} color={MOM_THEME.roseDark} />
                 <View>
                   <Text style={styles.statMiniVal}>{formatMeasure(selectedBaby.currentWeightKg, 'kg')}</Text>
-                  <Text style={styles.statMiniLbl}>Cân nặng</Text>
+                  <Text style={styles.statMiniLbl}>{t('Cân nặng', 'Weight')}</Text>
                 </View>
               </View>
               <View style={styles.statMiniCard}>
                 <Ruler size={15} color={MOM_THEME.sageDark} />
                 <View>
                   <Text style={styles.statMiniVal}>{formatMeasure(selectedBaby.currentHeightCm, 'cm')}</Text>
-                  <Text style={styles.statMiniLbl}>Chiều cao</Text>
+                  <Text style={styles.statMiniLbl}>{t('Chiều cao', 'Height')}</Text>
                 </View>
               </View>
             </View>
@@ -230,13 +246,13 @@ export default function BabyNutritionScreen() {
 
         <View style={styles.quickLinks}>
           <SecondaryButton
-            label="Tăng trưởng"
+            label={t('Tăng trưởng', 'Growth')}
             icon={<ChartLine size={16} color={MOM_THEME.roseDeep} />}
             onPress={() => navigation.navigate('GrowthChart', { babyId: String(selectedBaby.id) })}
             style={styles.quickLink}
           />
           <SecondaryButton
-            label="Thực đơn 7 ngày"
+            label={t('Thực đơn 7 ngày', '7-day menu')}
             icon={<CalendarDays size={16} color={MOM_THEME.roseDeep} />}
             onPress={() =>
               navigation.navigate('BabyWeeklyMenu', {
@@ -270,35 +286,44 @@ export default function BabyNutritionScreen() {
                 <View>
                   <Text style={styles.calorieValue}>{Math.round(totals.calories || 0)} kcal</Text>
                   {goals.calories ? (
-                    <Text style={styles.calorieLabel}>Mục tiêu hôm nay: {Math.round(goals.calories)} kcal</Text>
+                    <Text style={styles.calorieLabel}>
+                      {t('Mục tiêu hôm nay', 'Today’s goal')}: {Math.round(goals.calories)} kcal
+                    </Text>
                   ) : null}
                 </View>
               </View>
             </View>
 
             <View style={styles.nutrientRow}>
-              <Nutrient label="Đạm (Protein)" value={`${Math.round(totals.protein_g || 0)}g`} color="#4A88C7" bg="#EEF5FA" />
-              <Nutrient label="Chất béo" value={`${Math.round(totals.fat_g || 0)}g`} color={MOM_THEME.amberDark} bg="#FFF5EB" />
-              <Nutrient label="Tinh bột" value={`${Math.round(totals.carbs_g || 0)}g`} color={MOM_THEME.sageDark} bg="#E8F2EC" />
+              <Nutrient label={t('Đạm (Protein)', 'Protein')} value={`${Math.round(totals.protein_g || 0)}g`} color="#4A88C7" bg="#EEF5FA" />
+              <Nutrient label={t('Chất béo', 'Fat')} value={`${Math.round(totals.fat_g || 0)}g`} color={MOM_THEME.amberDark} bg="#FFF5EB" />
+              <Nutrient label={t('Tinh bột', 'Carbs')} value={`${Math.round(totals.carbs_g || 0)}g`} color={MOM_THEME.sageDark} bg="#E8F2EC" />
             </View>
           </View>
         ) : null}
 
         {/* ── Section: Thực đơn theo cữ ── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Thực đơn các cữ hôm nay</Text>
-          <Text style={styles.sectionSub}>Gợi ý định lượng theo độ tuổi của bé</Text>
+          <Text style={styles.sectionTitle}>{t('Thực đơn các cữ hôm nay', 'Today’s meals')}</Text>
+          <Text style={styles.sectionSub}>{t('Gợi ý định lượng theo độ tuổi của bé', 'Portions suggested for your baby’s age')}</Text>
         </View>
 
         {isLoading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator color={MOM_THEME.roseDark} />
-            <Text style={styles.loadingText}>Đang chuẩn bị thực đơn dinh dưỡng...</Text>
+            <Text style={styles.loadingText}>{t('Đang chuẩn bị thực đơn dinh dưỡng...', 'Preparing the menu...')}</Text>
           </View>
         ) : menuMessage || !hasAnyMeal ? (
           <View style={styles.errorBox}>
             <Info size={15} color={MOM_THEME.amberDark} />
-            <Text style={styles.errorText}>{menuMessage || 'Chưa có thực đơn cho hôm nay.'}</Text>
+            <View style={styles.flex}>
+              <Text style={styles.errorText}>
+                {menuMessage || t('Chưa có thực đơn cho hôm nay.', 'No menu for today yet.')}
+              </Text>
+              <TouchableOpacity onPress={refreshMenu} disabled={isRefreshing} hitSlop={8}>
+                <Text style={styles.retryLink}>{t('Tạo lại thực đơn', 'Create the menu again')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ) : (
           meals.map(({ slot, meal }) => (
@@ -308,15 +333,23 @@ export default function BabyNutritionScreen() {
               </View>
               <View style={styles.mealCopy}>
                 <View style={styles.mealHeader}>
-                  <Text style={styles.mealSlot}>{slot.label}</Text>
+                  <Text style={styles.mealSlot}>{t(slot.label, slot.labelEn)}</Text>
                   <Text style={styles.mealTime}>{slot.time}</Text>
                 </View>
                 {meal ? (
-                  <Text style={styles.mealName}>{meal.name_vi || meal.name_en}</Text>
+                  <Text style={styles.mealName}>
+                    {t(meal.name_vi || meal.name_en || '', meal.name_en || meal.name_vi || '')}
+                  </Text>
                 ) : (
                   <Text style={styles.mealMissing}>
-                    Chưa có món phù hợp với dị ứng của bé. Mẹ tự chuẩn bị món quen, tránh{' '}
-                    {selectedBaby.allergies?.length ? selectedBaby.allergies.join(', ').toLowerCase() : 'thực phẩm bé dị ứng'}.
+                    {t(
+                      'Chưa có món phù hợp với dị ứng của bé. Mẹ tự chuẩn bị món quen, tránh ',
+                      'No dish fits your baby’s allergies. Prepare a familiar dish and avoid '
+                    )}
+                    {selectedBaby.allergies?.length
+                      ? selectedBaby.allergies.join(', ').toLowerCase()
+                      : t('thực phẩm bé dị ứng', 'foods your baby is allergic to')}
+                    .
                   </Text>
                 )}
                 {meal?.total_calories ? (
@@ -325,7 +358,9 @@ export default function BabyNutritionScreen() {
                     {meal.protein_g ? (
                       <>
                         <Text style={styles.mealMetaDot}>·</Text>
-                        <Text style={styles.mealMetaSub}>Đạm {Math.round(meal.protein_g)}g</Text>
+                        <Text style={styles.mealMetaSub}>
+                          {t('Đạm', 'Protein')} {Math.round(meal.protein_g)}g
+                        </Text>
                       </>
                     ) : null}
                   </View>
@@ -351,16 +386,16 @@ export default function BabyNutritionScreen() {
         <View style={styles.topBar}>
           <View>
             <View style={styles.eyebrowWrap}>
-              <Text style={styles.eyebrow}>DINH DƯỠNG & PHÁT TRIỂN</Text>
+              <Text style={styles.eyebrow}>{t('DINH DƯỠNG & PHÁT TRIỂN', 'NUTRITION & GROWTH')}</Text>
             </View>
-            <Text style={styles.title}>Bé yêu của mẹ</Text>
+            <Text style={styles.title}>{t('Bé yêu của mẹ', 'Your baby')}</Text>
           </View>
           {selectedBaby ? (
             <TouchableOpacity
               style={styles.refreshButton}
               onPress={refreshMenu}
               disabled={isRefreshing}
-              accessibilityLabel="Tạo lại thực đơn"
+              accessibilityLabel={t('Tạo lại thực đơn', 'Create the menu again')}
               activeOpacity={0.8}
             >
               {isRefreshing ? (
@@ -378,28 +413,40 @@ export default function BabyNutritionScreen() {
   );
 }
 
-function getNutritionTip(ageMonths: number) {
+function getNutritionTip(ageMonths: number, t: (vi: string, en: string) => string) {
   if (ageMonths < 6) {
     return {
-      title: 'Sữa mẹ là nguồn dinh dưỡng vàng',
-      body: 'Bé dưới 6 tháng nên bú mẹ hoàn toàn hoặc sữa công thức phù hợp. Chưa cần ăn dặm nếu bác sĩ không chỉ định.',
+      title: t('Sữa mẹ là nguồn dinh dưỡng vàng', 'Breast milk comes first'),
+      body: t(
+        'Bé dưới 6 tháng nên bú mẹ hoàn toàn hoặc sữa công thức phù hợp. Chưa cần ăn dặm nếu bác sĩ không chỉ định.',
+        'Under 6 months, babies need only breast milk or suitable formula. No solids unless your doctor advises it.'
+      ),
     };
   }
   if (ageMonths <= 8) {
     return {
-      title: 'Giai đoạn bắt đầu ăn dặm',
-      body: 'Ưu tiên bột mịn, cháo rây tỉ lệ 1:10, rau củ ngọt thanh và đạm dễ tiêu. Mỗi món mới mẹ cho thử 2-3 ngày nhé.',
+      title: t('Giai đoạn bắt đầu ăn dặm', 'Starting solids'),
+      body: t(
+        'Ưu tiên bột mịn, cháo rây tỉ lệ 1:10, rau củ ngọt thanh và đạm dễ tiêu. Mỗi món mới mẹ cho thử 2-3 ngày nhé.',
+        'Start with smooth purées, thin rice porridge, mild vegetables and easy proteins. Try each new food for 2–3 days.'
+      ),
     };
   }
   if (ageMonths <= 11) {
     return {
-      title: 'Tăng dần độ thô cho bé',
-      body: 'Mẹ có thể nấu cháo hạt vỡ, rau củ hấp mềm thái nhỏ, đậu hũ, cá hồi và tập cho bé bốc thức ăn an toàn.',
+      title: t('Tăng dần độ thô cho bé', 'Adding texture'),
+      body: t(
+        'Mẹ có thể nấu cháo hạt vỡ, rau củ hấp mềm thái nhỏ, đậu hũ, cá hồi và tập cho bé bốc thức ăn an toàn.',
+        'Try coarser porridge, soft steamed vegetables cut small, tofu, salmon and safe finger foods.'
+      ),
     };
   }
   return {
-    title: 'Đa dạng 4 nhóm chất',
-    body: 'Bé có thể ăn cơm nát hoặc cùng bữa với gia đình. Mẹ nêm nhạt, ít muối đường và giữ không khí ăn vui vẻ.',
+    title: t('Đa dạng 4 nhóm chất', 'A varied diet'),
+    body: t(
+      'Bé có thể ăn cơm nát hoặc cùng bữa với gia đình. Mẹ nêm nhạt, ít muối đường và giữ không khí ăn vui vẻ.',
+      'Your baby can eat soft rice or join family meals. Keep salt and sugar low and make mealtimes relaxed.'
+    ),
   };
 }
 
@@ -737,12 +784,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFE0C2',
   },
-  errorText: {
+  flex: {
     flex: 1,
+  },
+  errorText: {
     color: MOM_THEME.amberDark,
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '600',
+  },
+  retryLink: {
+    color: MOM_THEME.roseDark,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 6,
   },
   loadingBox: {
     alignItems: 'center',

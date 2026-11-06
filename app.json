@@ -55,7 +55,8 @@
           "enableBackgroundPlayback": false
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "expo-localization"
     ],
     "extra": {
       "eas": {

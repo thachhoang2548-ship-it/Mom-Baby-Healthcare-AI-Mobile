@@ -8,6 +8,7 @@ import { navigationRef } from './src/navigation/navigationRef';
 import { setSessionExpiredHandler } from './src/api/axiosClient';
 import { useAuthStore } from './src/stores/authStore';
 import { COLORS } from './src/theme/colors';
+import { tr } from './src/i18n';
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -40,9 +41,12 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren, ErrorBounda
     if (this.state.error) {
       return (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>Mom Ơi gặp sự cố</Text>
+          <Text style={styles.errorTitle}>{tr('Mom Ơi gặp sự cố', 'Mom Ơi ran into a problem')}</Text>
           <Text style={styles.errorMessage}>
-            Mẹ vui lòng đóng hẳn ứng dụng rồi mở lại. Nếu vẫn lỗi, mẹ cập nhật Mom Ơi lên bản mới nhất nhé.
+            {tr(
+              'Mẹ vui lòng đóng hẳn ứng dụng rồi mở lại. Nếu vẫn lỗi, mẹ cập nhật Mom Ơi lên bản mới nhất nhé.',
+              'Please close the app completely and open it again. If it still fails, update Mom Ơi to the latest version.'
+            )}
           </Text>
           {__DEV__ ? <Text style={styles.errorMessage}>{this.state.error.message}</Text> : null}
         </View>
@@ -62,7 +66,10 @@ export default function App() {
       if (navigationRef.isReady()) {
         navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
       }
-      Alert.alert('Phiên đăng nhập đã hết hạn', 'Mẹ vui lòng đăng nhập lại để tiếp tục nhé.');
+      Alert.alert(
+        tr('Phiên đăng nhập đã hết hạn', 'Session expired'),
+        tr('Mẹ vui lòng đăng nhập lại để tiếp tục nhé.', 'Please sign in again to continue.')
+      );
     });
     return () => setSessionExpiredHandler(null);
   }, []);

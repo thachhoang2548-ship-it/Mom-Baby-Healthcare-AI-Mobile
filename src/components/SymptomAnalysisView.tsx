@@ -4,17 +4,21 @@ import { AlertCircle, CheckCircle2, PhoneCall, ShieldCheck, Stethoscope, Utensil
 import { SymptomAnalysisResult } from '../services/symptomService';
 import { MOM_THEME, RADII } from '../theme/colors';
 import { MEDICAL_FEATURES_ENABLED } from '../constants/features';
-import { normalizeUrgency, URGENCY_META } from '../utils/urgency';
+import { normalizeUrgency, getUrgencyMeta as metaForKey } from '../utils/urgency';
+import { useT } from '../i18n';
+
+const urgencyKeyOf = (analysis?: SymptomAnalysisResult) =>
+  analysis?.aiAvailable ? normalizeUrgency(analysis.urgencyLevel) : 'unknown';
 
 export function getUrgencyMeta(analysis?: SymptomAnalysisResult) {
-  if (!analysis?.aiAvailable) return URGENCY_META.unknown;
-  return URGENCY_META[normalizeUrgency(analysis.urgencyLevel)];
+  return metaForKey(urgencyKeyOf(analysis));
 }
 
 /** Hiển thị kết quả phân tích AI, dùng chung cho màn Trợ lý sức khỏe AI và Chi tiết lịch sử. */
 export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAnalysisResult }) {
+  const t = useT();
   const badge = getUrgencyMeta(analysis);
-  const isCritical = badge === URGENCY_META.critical;
+  const isCritical = urgencyKeyOf(analysis) === 'critical';
   const conditions = analysis?.aiAvailable ? analysis.possibleConditions ?? [] : [];
 
   return (
@@ -30,7 +34,7 @@ export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAn
           {isCritical ? (
             <TouchableOpacity style={styles.callButton} onPress={() => Linking.openURL('tel:115')}>
               <PhoneCall size={16} color={MOM_THEME.white} />
-              <Text style={styles.callText}>Gọi cấp cứu 115</Text>
+              <Text style={styles.callText}>{t('Gọi cấp cứu 115', 'Call 115 (Vietnam emergency)')}</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -40,7 +44,8 @@ export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAn
         <View style={styles.doctorRow}>
           <Stethoscope size={16} color="#D95368" />
           <Text style={styles.doctorText}>
-            Nên đi khám{analysis.specialistType ? ` chuyên khoa ${analysis.specialistType}` : ''}.
+            {t('Nên đi khám', 'Consider seeing a doctor')}
+            {analysis.specialistType ? t(` chuyên khoa ${analysis.specialistType}`, ` (${analysis.specialistType})`) : ''}.
           </Text>
         </View>
       ) : null}
@@ -68,7 +73,7 @@ export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAn
 
       {analysis?.aiAvailable && analysis.recommendations?.length ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hướng xử lý đề xuất</Text>
+          <Text style={styles.sectionTitle}>{t('Hướng xử lý đề xuất', 'Suggested care')}</Text>
           {analysis.recommendations.map((item, index) => (
             <View key={index} style={styles.listRow}>
               <CheckCircle2 size={15} color={MOM_THEME.sageDark} />
@@ -80,7 +85,7 @@ export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAn
 
       {analysis?.aiAvailable && analysis.dietarySuggestions?.length ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Gợi ý ăn uống</Text>
+          <Text style={styles.sectionTitle}>{t('Gợi ý ăn uống', 'Food suggestions')}</Text>
           {analysis.dietarySuggestions.map((item, index) => (
             <View key={index} style={styles.listRow}>
               <Utensils size={14} color={MOM_THEME.amberDark} />
@@ -95,7 +100,10 @@ export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAn
         <Text style={styles.disclaimerText}>
           {analysis?.aiAvailable && analysis.disclaimer
             ? analysis.disclaimer
-            : 'Phân tích AI chỉ mang tính tham khảo. Nếu có dấu hiệu sốt cao liên tục, co giật, khó thở, ra máu bất thường hoặc thai máy giảm, mẹ hãy đến cơ sở y tế gần nhất.'}
+            : t(
+                'Phân tích AI chỉ mang tính tham khảo. Nếu có dấu hiệu sốt cao liên tục, co giật, khó thở, ra máu bất thường hoặc thai máy giảm, mẹ hãy đến cơ sở y tế gần nhất.',
+                'AI suggestions are for reference only. With a persistent high fever, seizures, trouble breathing, unusual bleeding or reduced baby movements, go to the nearest medical facility.'
+              )}
         </Text>
       </View>
     </View>
