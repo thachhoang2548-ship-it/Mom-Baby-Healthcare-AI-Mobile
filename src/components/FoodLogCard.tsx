@@ -6,8 +6,8 @@ import featureService, { FoodLogResult } from '../services/featureService';
 import { useIsFreeTier } from '../stores/authStore';
 import { getApiErrorMessage, isTierLocked } from '../utils/apiError';
 import { MOM_THEME, RADII } from '../theme/colors';
+import { useT } from '../i18n';
 
-const FEATURE_NAME = 'Ghi bữa ăn & cảnh báo món cần tránh';
 
 /**
  * Ghi các món mẹ vừa ăn; server kiểm tra món cần tránh khi mang thai (luật BR02)
@@ -15,13 +15,14 @@ const FEATURE_NAME = 'Ghi bữa ăn & cảnh báo món cần tránh';
  */
 export default function FoodLogCard() {
   const isFree = useIsFreeTier();
+  const t = useT();
   const [input, setInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
   const [result, setResult] = useState<FoodLogResult | null>(null);
 
-  if (isFree || locked) return <TierLockedCard feature={FEATURE_NAME} />;
+  if (isFree || locked) return <TierLockedCard feature={t('Ghi bữa ăn & cảnh báo món cần tránh', 'Meal log & foods to avoid')} />;
 
   const submit = async () => {
     const foods = input
@@ -29,7 +30,7 @@ export default function FoodLogCard() {
       .map((f) => f.trim())
       .filter(Boolean);
     if (!foods.length) {
-      setError('Mẹ nhập ít nhất một món, các món cách nhau bằng dấu phẩy.');
+      setError(t('Mẹ nhập ít nhất một món, các món cách nhau bằng dấu phẩy.', 'Enter at least one food, separated by commas.'));
       return;
     }
     setSaving(true);
@@ -40,7 +41,7 @@ export default function FoodLogCard() {
       setInput('');
     } catch (err) {
       if (isTierLocked(err)) setLocked(true);
-      else setError(getApiErrorMessage(err, 'Chưa lưu được bữa ăn. Mẹ thử lại nhé.'));
+      else setError(getApiErrorMessage(err, t('Chưa lưu được bữa ăn. Mẹ thử lại nhé.', 'Could not save your meal. Please try again.')));
     } finally {
       setSaving(false);
     }
@@ -51,20 +52,23 @@ export default function FoodLogCard() {
   return (
     <Card>
       <Field
-        label="Mẹ vừa ăn gì?"
+        label={t('Mẹ vừa ăn gì?', 'What did you eat?')}
         value={input}
         onChangeText={(text) => {
           setInput(text);
           if (error) setError(null);
         }}
-        placeholder="VD: cơm, canh bí, cá kho"
-        hint="Các món cách nhau bằng dấu phẩy."
+        placeholder={t('VD: cơm, canh bí, cá kho', 'e.g. rice, squash soup, braised fish')}
+        hint={t(
+          'Các món cách nhau bằng dấu phẩy.',
+          'Separate foods with commas. Vietnamese names give the most accurate check.'
+        )}
         error={error ?? undefined}
         returnKeyType="done"
         onSubmitEditing={submit}
       />
       <PrimaryButton
-        label="Ghi bữa ăn"
+        label={t('Ghi bữa ăn', 'Log meal')}
         icon={<Utensils size={16} color={MOM_THEME.white} />}
         onPress={submit}
         loading={saving}
@@ -79,7 +83,7 @@ export default function FoodLogCard() {
           {alert.messageVi ? <Text style={uiStyles.body}>{alert.messageVi}</Text> : null}
           {result.safeAlternatives?.length ? (
             <>
-              <Text style={styles.altLabel}>Mẹ có thể thay bằng</Text>
+              <Text style={styles.altLabel}>{t('Mẹ có thể thay bằng', 'You could have instead')}</Text>
               {result.safeAlternatives.map((food) => (
                 <Text key={food} style={styles.alt}>
                   • {food}
@@ -94,9 +98,9 @@ export default function FoodLogCard() {
         <View style={[styles.result, styles.ok]}>
           <View style={styles.resultHead}>
             <CheckCircle2 size={18} color={MOM_THEME.sageDark} />
-            <Text style={[styles.resultTitle, { color: MOM_THEME.sageDark }]}>Đã ghi bữa ăn</Text>
+            <Text style={[styles.resultTitle, { color: MOM_THEME.sageDark }]}>{t('Đã ghi bữa ăn', 'Meal logged')}</Text>
           </View>
-          <Text style={uiStyles.body}>Không thấy món nào cần tránh trong thai kỳ.</Text>
+          <Text style={uiStyles.body}>{t('Không thấy món nào cần tránh trong thai kỳ.', 'Nothing here to avoid during pregnancy.')}</Text>
         </View>
       ) : null}
     </Card>

@@ -18,9 +18,9 @@ export const MOOD_OPTIONS = [
 ];
 
 export const SLEEP_QUALITY_OPTIONS = [
-  { score: 1, emoji: '😞', label: 'Rất tệ' },
-  { score: 2, emoji: '😐', label: 'Chập chờn' },
-  { score: 3, emoji: '🙂', label: 'Tạm ổn' },
-  { score: 4, emoji: '😊', label: 'Ngon giấc' },
-  { score: 5, emoji: '😴', label: 'Rất sâu' },
+  { score: 1, emoji: '😞', label: 'Rất tệ', labelEn: 'Very poor' },
+  { score: 2, emoji: '😐', label: 'Chập chờn', labelEn: 'Restless' },
+  { score: 3, emoji: '🙂', label: 'Tạm ổn', labelEn: 'Okay' },
+  { score: 4, emoji: '😊', label: 'Ngon giấc', labelEn: 'Good' },
+  { score: 5, emoji: '😴', label: 'Rất sâu', labelEn: 'Deep' },
 ];

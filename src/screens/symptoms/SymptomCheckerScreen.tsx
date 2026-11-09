@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -21,6 +22,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 import { useLanguageStore, useT } from '../../i18n';
+import { createThemedStyles, useAccent } from '../../theme/accent';
 
 const quickSymptoms = [
   { vi: 'Ốm nghén mệt mỏi', en: 'Morning sickness, tired' },
@@ -32,6 +34,8 @@ const quickSymptoms = [
 ];
 
 export default function SymptomCheckerScreen() {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const t = useT();
   const isEnglish = useLanguageStore((s) => s.lang === 'en');
@@ -43,6 +47,17 @@ export default function SymptomCheckerScreen() {
   } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<SymptomLogDto | null>(null);
+
+  // Khi bàn phím mở lúc mẹ đang gõ: cuộn để thấy cả ô nhập lẫn nút "Nhận gợi ý" (góp ý #59, #96).
+  const scrollRef = useRef<ScrollView>(null);
+  const cardY = useRef(0);
+  const typing = useRef(false);
+  useEffect(() => {
+    const sub = Keyboard.addListener('keyboardDidShow', () => {
+      if (typing.current) scrollRef.current?.scrollTo({ y: Math.max(0, cardY.current - 12), animated: true });
+    });
+    return () => sub.remove();
+  }, []);
 
   const pickImage = async () => {
     // Trình chọn ảnh hệ thống không cần xin quyền thư viện (theo tài liệu expo-image-picker SDK 57).
@@ -136,10 +151,12 @@ export default function SymptomCheckerScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView behavior="padding" style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={MOM_THEME.cream} />
 
       <ScrollView
+        ref={scrollRef}
+        keyboardShouldPersistTaps="handled"
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -151,11 +168,11 @@ export default function SymptomCheckerScreen() {
             onPress={() => navigation.navigate('SymptomHistory')}
             activeOpacity={0.8}
           >
-            <History size={15} color={MOM_THEME.roseDark} />
+            <History size={15} color={a.primary} />
             <Text style={styles.historyButtonText}>{t('Lịch sử', 'History')}</Text>
           </TouchableOpacity>
           <View style={styles.headerIconWrap}>
-            <Stethoscope size={24} color={MOM_THEME.roseDark} />
+            <Stethoscope size={24} color={a.primary} />
           </View>
           <View style={styles.headerEyebrowWrap}>
             <Text style={styles.headerEyebrow}>{t('GỢI Ý CHĂM SÓC MẸ & BÉ', 'CARE TIPS FOR MOM & BABY')}</Text>
@@ -194,7 +211,12 @@ export default function SymptomCheckerScreen() {
         </View>
 
         {/* ── Main Input Card ── */}
-        <View style={[styles.card, SHADOWS.card]}>
+        <View
+          style={[styles.card, SHADOWS.card]}
+          onLayout={(e) => {
+            cardY.current = e.nativeEvent.layout.y;
+          }}
+        >
           <View style={styles.cardHeader}>
             <Text style={styles.label}>{t('Mẹ hoặc bé đang gặp vấn đề gì?', 'What is happening with you or your baby?')}</Text>
             <Text style={styles.charCount}>
@@ -212,6 +234,12 @@ export default function SymptomCheckerScreen() {
             multiline
             value={description}
             onChangeText={setDescription}
+            onFocus={() => {
+              typing.current = true;
+            }}
+            onBlur={() => {
+              typing.current = false;
+            }}
             textAlignVertical="top"
           />
 
@@ -276,11 +304,11 @@ export default function SymptomCheckerScreen() {
           </View>
         ) : null}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   root: {
     flex: 1,
     backgroundColor: MOM_THEME.cream,
@@ -313,7 +341,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   historyButtonText: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -321,18 +349,18 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: MOM_THEME.pink,
+    borderColor: a.border,
   },
   headerEyebrowWrap: {
     marginBottom: 3,
   },
   headerEyebrow: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -476,7 +504,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     minHeight: 50,
     borderRadius: 16,
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -519,7 +547,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
@@ -606,5 +634,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
   },
-});
+}));
 

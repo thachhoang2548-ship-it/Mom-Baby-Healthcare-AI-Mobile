@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Text, TouchableOpacity, View } from 'react-native';
 import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Baby, CalendarHeart, Heart, LogOut, Plus } from 'lucide-react-native';
@@ -35,6 +35,7 @@ import {
 import { MOM_THEME, RADII } from '../../theme/colors';
 import { PRIVACY_POLICY_URL } from '../../constants/links';
 import { tr, useT } from '../../i18n';
+import { createThemedStyles, useAccent } from '../../theme/accent';
 
 // Cùng danh sách với web (ProfilePage.jsx); sửa lỗi chính tả "Dị ứng ứng thuốc".
 // Giá trị tiếng Việt được lưu lên server; tiếng Anh chỉ để hiển thị.
@@ -86,6 +87,7 @@ const MAX_NAME_LENGTH = 100; // Cùng giới hạn với backend (UpdateNameDto)
 
 /** Dòng họ tên trong thẻ tài khoản: xem, bấm "Đổi" để sửa và lưu lên server. */
 function NameEditor({ fullName }: { fullName?: string }) {
+  const styles = useStyles();
   const updateFullName = useAuthStore((s) => s.updateFullName);
   const t = useT();
   const [editing, setEditing] = useState(false);
@@ -154,6 +156,8 @@ function NameEditor({ fullName }: { fullName?: string }) {
 }
 
 export default function ProfileScreen() {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, tier, logout } = useAuthStore();
   const t = useT();
@@ -374,7 +378,7 @@ export default function ProfileScreen() {
             accessibilityState={{ selected: active }}
           >
             <View style={[styles.stageIcon, active && styles.stageIconActive]}>
-              <Icon size={18} color={active ? MOM_THEME.white : MOM_THEME.roseDark} />
+              <Icon size={18} color={active ? MOM_THEME.white : a.primary} />
             </View>
             <View style={styles.flex}>
               <Text style={[styles.stageLabel, active && styles.stageLabelActive]}>{t(opt.label, opt.labelEn)}</Text>
@@ -529,7 +533,7 @@ export default function ProfileScreen() {
       <SecondaryButton
         label={t('Đăng xuất', 'Sign out')}
         onPress={confirmLogout}
-        icon={<LogOut size={16} color={MOM_THEME.roseDeep} />}
+        icon={<LogOut size={16} color={a.primaryDark} />}
         style={styles.logout}
       />
       <TouchableOpacity
@@ -552,7 +556,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   flex: {
     flex: 1,
   },
@@ -589,7 +593,7 @@ const styles = StyleSheet.create({
     borderBottomColor: MOM_THEME.borderSoft,
   },
   nameAction: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontWeight: '700',
   },
   stageOption: {
@@ -604,19 +608,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   stageOptionActive: {
-    borderColor: MOM_THEME.roseDark,
-    backgroundColor: MOM_THEME.pinkLight,
+    borderColor: a.primary,
+    backgroundColor: a.light,
   },
   stageIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stageIconActive: {
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
   },
   stageLabel: {
     color: MOM_THEME.charcoal,
@@ -624,7 +628,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   stageLabelActive: {
-    color: MOM_THEME.roseDeep,
+    color: a.primaryDark,
   },
   stageDesc: {
     color: MOM_THEME.muted,
@@ -639,14 +643,14 @@ const styles = StyleSheet.create({
     borderColor: MOM_THEME.border,
   },
   radioActive: {
-    borderColor: MOM_THEME.roseDark,
+    borderColor: a.primary,
     borderWidth: 6,
   },
   stageCard: {
     marginTop: 4,
   },
   computedBox: {
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     borderRadius: RADII.control,
     padding: 12,
     gap: 4,
@@ -656,7 +660,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   computedStrong: {
-    color: MOM_THEME.roseDeep,
+    color: a.primaryDark,
     fontWeight: '800',
   },
   computedHint: {
@@ -671,7 +675,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: RADII.control,
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
@@ -701,4 +705,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textDecorationLine: 'underline',
   },
-});
+}));

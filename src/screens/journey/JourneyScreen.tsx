@@ -3,7 +3,6 @@ import {
   Image,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -30,6 +29,7 @@ import { formatDate, fromUtcDateIso } from '../../utils/date';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
 import { useT } from '../../i18n';
+import { createThemedStyles, useAccent } from '../../theme/accent';
 
 const stages = [
   { key: 'fertility', icon: Sprout, color: MOM_THEME.sageDark, bg: MOM_THEME.sageLight },
@@ -42,6 +42,8 @@ const trimesterOf = (week: number) => (week <= 13 ? 1 : week <= 27 ? 2 : 3);
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function JourneyScreen() {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation<Nav>();
   const t = useT();
 
@@ -133,8 +135,8 @@ export default function JourneyScreen() {
     currentIndex === 1
       ? [
           {
-            icon: <Heart size={20} color={MOM_THEME.roseDark} />,
-            bg: MOM_THEME.pinkLight,
+            icon: <Heart size={20} color={a.primary} />,
+            bg: a.light,
             title: t('Theo dõi thai kỳ', 'Pregnancy tracker'),
             body: t(
               'Xem bé phát triển thế nào tuần này và ghi cân nặng của mẹ.',
@@ -154,8 +156,8 @@ export default function JourneyScreen() {
       : currentIndex === 2
         ? [
             {
-              icon: <Heart size={20} color={MOM_THEME.roseDark} />,
-              bg: MOM_THEME.pinkLight,
+              icon: <Heart size={20} color={a.primary} />,
+              bg: a.light,
               title: t('Phục hồi sau sinh', 'Postpartum recovery'),
               body: MEDICAL_FEATURES_ENABLED
                 ? t('Kế hoạch vận động theo ngày và khảo sát tâm lý EPDS.', 'A day-by-day movement plan and the EPDS check-in.')
@@ -176,8 +178,8 @@ export default function JourneyScreen() {
           ]
         : [
             {
-              icon: <CalendarHeart size={20} color={MOM_THEME.roseDark} />,
-              bg: MOM_THEME.pinkLight,
+              icon: <CalendarHeart size={20} color={a.primary} />,
+              bg: a.light,
               title: t('Chu kỳ & rụng trứng', 'Cycle & ovulation'),
               body: t('Ghi kỳ kinh để biết những ngày dễ thụ thai.', 'Log your periods to know your fertile days.'),
               go: () => navigation.navigate('Fertility'),
@@ -215,7 +217,7 @@ export default function JourneyScreen() {
             accessibilityLabel={t('Cập nhật giai đoạn', 'Update your stage')}
             activeOpacity={0.8}
           >
-            <UserRoundPen size={20} color={MOM_THEME.roseDark} />
+            <UserRoundPen size={20} color={a.primary} />
           </TouchableOpacity>
         </View>
 
@@ -288,7 +290,7 @@ export default function JourneyScreen() {
                     <View
                       style={[
                         styles.stageLine,
-                        (active || done) && { backgroundColor: MOM_THEME.roseDark },
+                        (active || done) && { backgroundColor: a.primary },
                       ]}
                     />
                   ) : null}
@@ -297,7 +299,7 @@ export default function JourneyScreen() {
                     style={[
                       styles.stageDot,
                       done && { backgroundColor: MOM_THEME.sageDark, borderColor: MOM_THEME.sageDark },
-                      active && { backgroundColor: MOM_THEME.roseDark, borderColor: MOM_THEME.roseDark },
+                      active && { backgroundColor: a.primary, borderColor: a.primary },
                       !done && !active && { backgroundColor: MOM_THEME.cream, borderColor: MOM_THEME.border },
                     ]}
                   >
@@ -311,7 +313,7 @@ export default function JourneyScreen() {
                   <Text
                     style={[
                       styles.stageText,
-                      active && { color: MOM_THEME.roseDark, fontWeight: '800' },
+                      active && { color: a.primary, fontWeight: '800' },
                       done && { color: MOM_THEME.sageDark },
                     ]}
                   >
@@ -335,7 +337,7 @@ export default function JourneyScreen() {
               onPress={loadWeekInsight}
               disabled={loadingInsight}
             >
-              <RefreshCw size={13} color={MOM_THEME.roseDark} />
+              <RefreshCw size={13} color={a.primary} />
               <Text style={styles.refreshLinkText}>{t('Làm mới', 'Refresh')}</Text>
             </TouchableOpacity>
           ) : null}
@@ -391,6 +393,7 @@ function ActionCard({
   body: string;
   onPress?: () => void;
 }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity
       style={[styles.actionCard, SHADOWS.sm]}
@@ -411,7 +414,7 @@ function ActionCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   root: {
     flex: 1,
     backgroundColor: MOM_THEME.cream,
@@ -434,7 +437,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   eyebrow: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.8,
@@ -603,7 +606,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
@@ -611,7 +614,7 @@ const styles = StyleSheet.create({
   refreshLinkText: {
     fontSize: 11,
     fontWeight: '700',
-    color: MOM_THEME.roseDark,
+    color: a.primary,
   },
   insightCard: {
     backgroundColor: '#FFF8F0',
@@ -685,5 +688,5 @@ const styles = StyleSheet.create({
   actionArrow: {
     marginLeft: 8,
   },
-});
+}));
 

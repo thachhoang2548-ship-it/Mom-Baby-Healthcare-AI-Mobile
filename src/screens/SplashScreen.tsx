@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
@@ -7,21 +7,25 @@ import { useAuthStore } from '../stores/authStore';
 import { COLORS } from '../theme/colors';
 import { Sparkles, Heart } from 'lucide-react-native';
 import { useLanguageStore, useT } from '../i18n';
+import { createThemedStyles, useAccent, useThemeStore } from '../theme/accent';
 
 export default function SplashScreen() {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { initAuth, isAuthenticated, isLoading } = useAuthStore();
   const initLang = useLanguageStore((s) => s.initLang);
+  const initTheme = useThemeStore((s) => s.initTheme);
   const t = useT();
 
   useEffect(() => {
     const checkSession = async () => {
-      // Đọc ngôn ngữ trước: initAuth xong là chuyển màn ngay.
-      await initLang();
+      // Đọc ngôn ngữ và màu trước: initAuth xong là chuyển màn ngay.
+      await Promise.all([initLang(), initTheme()]);
       await initAuth();
     };
     checkSession();
-  }, [initAuth, initLang]);
+  }, [initAuth, initLang, initTheme]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -36,7 +40,7 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.logoCircle}>
-        <Heart size={44} color={COLORS.primary} fill={COLORS.primaryLight} />
+        <Heart size={44} color={a.primary} fill={a.light} />
         <View style={styles.sparkleBadge}>
           <Sparkles size={16} color={COLORS.secondary} />
         </View>
@@ -48,17 +52,17 @@ export default function SplashScreen() {
       </Text>
 
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="small" color={COLORS.primary} />
+        <ActivityIndicator size="small" color={a.primary} />
         <Text style={styles.loadingText}>{t('Đang khởi động...', 'Starting...')}</Text>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   container: {
     flex: 1,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: a.light,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
@@ -70,7 +74,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: COLORS.primary,
+    shadowColor: a.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
@@ -111,4 +115,4 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     fontWeight: '500',
   },
-});
+}));

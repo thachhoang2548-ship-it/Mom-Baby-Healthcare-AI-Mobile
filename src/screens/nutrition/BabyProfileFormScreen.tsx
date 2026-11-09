@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Plus } from 'lucide-react-native';
 import {
@@ -18,8 +18,19 @@ import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
 import { addDays, fromUtcDateIso, startOfToday, toUtcDateIso } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { createThemedStyles } from '../../theme/accent';
+import { useT } from '../../i18n';
 
-const COMMON_ALLERGIES = ['Sữa bò', 'Trứng', 'Hải sản', 'Đậu phộng', 'Đậu nành', 'Lúa mì (gluten)'];
+// Giá trị lưu lên server giữ tiếng Việt (AI dùng để tránh món); tiếng Anh chỉ để hiển thị.
+const ALLERGY_EN: Record<string, string> = {
+  'Sữa bò': "Cow's milk",
+  Trứng: 'Eggs',
+  'Hải sản': 'Seafood',
+  'Đậu phộng': 'Peanuts',
+  'Đậu nành': 'Soy',
+  'Lúa mì (gluten)': 'Wheat (gluten)',
+};
+const COMMON_ALLERGIES = Object.keys(ALLERGY_EN);
 
 const toNumber = (value: string): number | null => {
   const n = parseFloat(value.replace(',', '.'));
@@ -27,6 +38,8 @@ const toNumber = (value: string): number | null => {
 };
 
 export default function BabyProfileFormScreen() {
+  const styles = useStyles();
+  const t = useT();
   const navigation = useNavigation();
   const { params } = useRoute<RouteProp<RootStackParamList, 'BabyProfileForm'>>();
   const baby = params?.baby;
@@ -58,19 +71,19 @@ export default function BabyProfileFormScreen() {
     const w = toNumber(weight);
     const h = toNumber(height);
     if (!babyName.trim()) {
-      Alert.alert('Thiếu thông tin', 'Mẹ nhập tên hoặc tên ở nhà của bé nhé.');
+      Alert.alert(t('Thiếu thông tin', 'Missing details'), t('Mẹ nhập tên hoặc tên ở nhà của bé nhé.', "Please enter your baby's name or nickname."));
       return;
     }
     if (!dateOfBirth) {
-      Alert.alert('Thiếu thông tin', 'Mẹ chọn ngày sinh của bé nhé.');
+      Alert.alert(t('Thiếu thông tin', 'Missing details'), t('Mẹ chọn ngày sinh của bé nhé.', "Please choose your baby's date of birth."));
       return;
     }
     if (weight && (w === null || w < 1 || w > 40)) {
-      Alert.alert('Kiểm tra lại', 'Cân nặng của bé cần nằm trong khoảng 1 - 40 kg.');
+      Alert.alert(t('Kiểm tra lại', 'Please check'), t('Cân nặng của bé cần nằm trong khoảng 1 - 40 kg.', 'Weight should be between 1 and 40 kg.'));
       return;
     }
     if (height && (h === null || h < 30 || h > 130)) {
-      Alert.alert('Kiểm tra lại', 'Chiều cao của bé cần nằm trong khoảng 30 - 130 cm.');
+      Alert.alert(t('Kiểm tra lại', 'Please check'), t('Chiều cao của bé cần nằm trong khoảng 30 - 130 cm.', 'Height should be between 30 and 130 cm.'));
       return;
     }
 
@@ -90,16 +103,16 @@ export default function BabyProfileFormScreen() {
         ? await babyService.updateProfile(baby.id, data)
         : await babyService.createProfile(data);
       if (!(res.isSuccess || res.success)) {
-        throw new Error(res.message || 'Không thể lưu hồ sơ bé.');
+        throw new Error(res.message || t('Không thể lưu hồ sơ bé.', "Could not save your baby's profile."));
       }
-      Alert.alert('Đã lưu', isEdit ? 'Hồ sơ của bé đã được cập nhật.' : 'Đã tạo hồ sơ cho bé.', [
+      Alert.alert(t('Đã lưu', 'Saved'), isEdit ? t('Hồ sơ của bé đã được cập nhật.', "Your baby's profile is updated.") : t('Đã tạo hồ sơ cho bé.', "Your baby's profile is created."), [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (err) {
       if (isTierLocked(err)) {
         setLocked(true);
       } else {
-        Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+        Alert.alert(t('Chưa lưu được', 'Could not save'), getApiErrorMessage(err));
       }
     } finally {
       setSaving(false);
@@ -108,22 +121,36 @@ export default function BabyProfileFormScreen() {
 
   return (
     <Screen
-      eyebrow="Bé yêu"
-      title={isEdit ? 'Sửa hồ sơ bé' : 'Thêm hồ sơ bé'}
-      subtitle="Ngày sinh, cân nặng và dị ứng giúp Mom Ơi gợi ý thực đơn đúng độ tuổi của bé."
+      eyebrow={t('Bé yêu', 'Your baby')}
+      title={isEdit ? t('Sửa hồ sơ bé', 'Edit baby profile') : t('Thêm hồ sơ bé', 'Add a baby')}
+      subtitle={t(
+        'Ngày sinh, cân nặng và dị ứng giúp Mom Ơi gợi ý thực đơn đúng độ tuổi của bé.',
+        "Birth date, weight and allergies help Mom Ơi suggest meals for your baby's age."
+      )}
     >
-      {locked ? <TierLockedCard feature="Hồ sơ & thực đơn cho bé" /> : null}
+      {locked ? <TierLockedCard feature={t('Hồ sơ & thực đơn cho bé', 'Baby profile & menus')} /> : null}
 
       <Card>
-        <Field label="Tên bé" value={babyName} onChangeText={setBabyName} placeholder="VD: Bơ, Na, Minh Anh" />
+        <Field
+          label={t('Tên bé', "Baby's name")}
+          value={babyName}
+          onChangeText={setBabyName}
+          placeholder={t('VD: Bơ, Na, Minh Anh', 'e.g. Bo, Na, Minh Anh')}
+        />
         <View style={styles.field}>
           <View style={uiStyles.rowWrap}>
-            <Chip label="Bé trai" selected={gender === 0} onPress={() => setGender(0)} />
-            <Chip label="Bé gái" selected={gender === 1} onPress={() => setGender(1)} />
+            <Chip label={t('Bé trai', 'Boy')} selected={gender === 0} onPress={() => setGender(0)} />
+            <Chip label={t('Bé gái', 'Girl')} selected={gender === 1} onPress={() => setGender(1)} />
           </View>
+          <Text style={[uiStyles.muted, styles.genderHint]}>
+            {t(
+              'Bé trai thì app chuyển sang màu xanh, bé gái giữ màu hồng.',
+              'The app turns blue for a boy and stays pink for a girl.'
+            )}
+          </Text>
         </View>
         <DateField
-          label="Ngày sinh"
+          label={t('Ngày sinh', 'Date of birth')}
           value={dateOfBirth}
           onChange={setDateOfBirth}
           maximumDate={today}
@@ -132,32 +159,35 @@ export default function BabyProfileFormScreen() {
         <View style={styles.row}>
           <View style={styles.flex}>
             <Field
-              label="Cân nặng (kg)"
+              label={t('Cân nặng (kg)', 'Weight (kg)')}
               value={weight}
               onChangeText={setWeight}
               keyboardType="decimal-pad"
-              placeholder="VD: 7.8"
+              placeholder={t('VD: 7.8', 'e.g. 7.8')}
             />
           </View>
           <View style={styles.flex}>
             <Field
-              label="Chiều cao (cm)"
+              label={t('Chiều cao (cm)', 'Height (cm)')}
               value={height}
               onChangeText={setHeight}
               keyboardType="decimal-pad"
-              placeholder="VD: 68"
+              placeholder={t('VD: 68', 'e.g. 68')}
             />
           </View>
         </View>
       </Card>
 
-      <SectionTitle title="Dị ứng thực phẩm" subtitle="Thực đơn sẽ tránh các thực phẩm này" />
+      <SectionTitle
+        title={t('Dị ứng thực phẩm', 'Food allergies')}
+        subtitle={t('Thực đơn sẽ tránh các thực phẩm này', 'Menus will avoid these foods')}
+      />
       <Card>
         <View style={uiStyles.rowWrap}>
           {[...COMMON_ALLERGIES, ...allergies.filter((a) => !COMMON_ALLERGIES.includes(a))].map((item) => (
             <Chip
               key={item}
-              label={item}
+              label={ALLERGY_EN[item] ? t(item, ALLERGY_EN[item]) : item}
               selected={allergies.includes(item)}
               onPress={() => toggleAllergy(item)}
             />
@@ -166,10 +196,10 @@ export default function BabyProfileFormScreen() {
         <View style={[styles.row, styles.customRow]}>
           <View style={styles.flex}>
             <Field
-              label="Dị ứng khác"
+              label={t('Dị ứng khác', 'Other allergy')}
               value={customAllergy}
               onChangeText={setCustomAllergy}
-              placeholder="Nhập rồi bấm Thêm"
+              placeholder={t('Nhập rồi bấm Thêm', 'Type it, then tap +')}
               onSubmitEditing={addCustomAllergy}
               returnKeyType="done"
             />
@@ -180,12 +210,15 @@ export default function BabyProfileFormScreen() {
         </View>
       </Card>
 
-      <PrimaryButton label={isEdit ? 'Lưu thay đổi' : 'Tạo hồ sơ bé'} onPress={save} loading={saving} />
+      <PrimaryButton label={isEdit ? t('Lưu thay đổi', 'Save changes') : t('Tạo hồ sơ bé', 'Create profile')} onPress={save} loading={saving} />
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
+  genderHint: {
+    marginTop: 8,
+  },
   flex: {
     flex: 1,
   },
@@ -204,9 +237,9 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: RADII.control,
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
   },
-});
+}));

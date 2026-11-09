@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   RefreshControl,
   ScrollView,
   StatusBar,
@@ -19,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AlertTriangle, ArrowLeft, Lock, RefreshCw, WifiOff } from 'lucide-react-native';
 import { MOM_THEME, RADII, SHADOWS } from '../theme/colors';
 import { useT } from '../i18n';
+import { createThemedStyles, useAccent } from '../theme/accent';
 
 type ScreenProps = React.PropsWithChildren<{
   title: string;
@@ -41,16 +43,18 @@ export function Screen({
   onRefresh,
   children,
 }: ScreenProps) {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const t = useT();
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView behavior="padding" style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={MOM_THEME.cream} />
       <ScrollView
         style={styles.flex}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: 48 + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -58,8 +62,8 @@ export function Screen({
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={MOM_THEME.roseDark}
-              colors={[MOM_THEME.roseDark]}
+              tintColor={a.primary}
+              colors={[a.primary]}
             />
           ) : undefined
         }
@@ -84,7 +88,7 @@ export function Screen({
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         {children}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -92,6 +96,7 @@ export function Card({
   children,
   style,
 }: React.PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
+  const styles = useStyles();
   return <View style={[styles.card, SHADOWS.card, style]}>{children}</View>;
 }
 
@@ -104,6 +109,7 @@ export function SectionTitle({
   subtitle?: string;
   right?: React.ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.sectionHeader}>
       <View style={styles.flex}>
@@ -125,6 +131,7 @@ type ButtonProps = {
 };
 
 export function PrimaryButton({ label, onPress, loading, disabled, icon, style }: ButtonProps) {
+  const styles = useStyles();
   const inactive = disabled || loading;
   return (
     <TouchableOpacity
@@ -146,6 +153,8 @@ export function PrimaryButton({ label, onPress, loading, disabled, icon, style }
 }
 
 export function SecondaryButton({ label, onPress, loading, disabled, icon, style }: ButtonProps) {
+  const a = useAccent();
+  const styles = useStyles();
   const inactive = disabled || loading;
   return (
     <TouchableOpacity
@@ -155,7 +164,7 @@ export function SecondaryButton({ label, onPress, loading, disabled, icon, style
       activeOpacity={0.86}
     >
       {loading ? (
-        <ActivityIndicator color={MOM_THEME.roseDark} size="small" />
+        <ActivityIndicator color={a.primary} size="small" />
       ) : (
         <>
           {icon}
@@ -173,6 +182,7 @@ export function Field({
   style,
   ...inputProps
 }: TextInputProps & { label: string; hint?: string; error?: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -202,6 +212,7 @@ export function Chip({
   onPress?: () => void;
   disabled?: boolean;
 }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity
       style={[styles.chip, selected && styles.chipSelected]}
@@ -224,20 +235,23 @@ export function ToggleRow({
   value: boolean;
   onValueChange: (value: boolean) => void;
 }) {
+  const a = useAccent();
+  const styles = useStyles();
   return (
     <View style={styles.toggleRow}>
       <Text style={styles.toggleLabel}>{label}</Text>
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: MOM_THEME.beige, true: MOM_THEME.rose }}
-        thumbColor={value ? MOM_THEME.roseDark : MOM_THEME.white}
+        trackColor={{ false: MOM_THEME.beige, true: a.tint }}
+        thumbColor={value ? a.primary : MOM_THEME.white}
       />
     </View>
   );
 }
 
 export function InfoRow({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
@@ -247,10 +261,12 @@ export function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 export function LoadingView({ text }: { text?: string }) {
+  const a = useAccent();
+  const styles = useStyles();
   const t = useT();
   return (
     <View style={styles.stateBox}>
-      <ActivityIndicator color={MOM_THEME.roseDark} />
+      <ActivityIndicator color={a.primary} />
       <Text style={styles.stateText}>{text ?? t('Đang tải dữ liệu...', 'Loading...')}</Text>
     </View>
   );
@@ -269,6 +285,7 @@ export function EmptyState({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={[styles.stateBox, styles.stateCard]}>
       <Text style={styles.stateEmoji}>{emoji}</Text>
@@ -294,14 +311,16 @@ export function ErrorState({
   onRetry?: () => void;
   offline?: boolean;
 }) {
+  const a = useAccent();
+  const styles = useStyles();
   const t = useT();
   return (
     <View style={[styles.stateBox, styles.stateCard]}>
       <View style={styles.errorIcon}>
         {offline ? (
-          <WifiOff size={22} color={MOM_THEME.roseDark} />
+          <WifiOff size={22} color={a.primary} />
         ) : (
-          <AlertTriangle size={22} color={MOM_THEME.roseDark} />
+          <AlertTriangle size={22} color={a.primary} />
         )}
       </View>
       <Text style={styles.stateTitle}>
@@ -312,7 +331,7 @@ export function ErrorState({
         <SecondaryButton
           label={t('Thử lại', 'Try again')}
           onPress={onRetry}
-          icon={<RefreshCw size={15} color={MOM_THEME.roseDark} />}
+          icon={<RefreshCw size={15} color={a.primary} />}
           style={styles.stateAction}
         />
       ) : null}
@@ -336,6 +355,7 @@ export function TierLockedCard({
   feature: string;
   tierName?: string;
 }) {
+  const styles = useStyles();
   const t = useT();
   return (
     <View style={[styles.stateBox, styles.stateCard, styles.lockedCard]}>
@@ -379,7 +399,7 @@ export const uiStyles = StyleSheet.create({
   },
 });
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   flex: {
     flex: 1,
   },
@@ -408,7 +428,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   eyebrow: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.8,
@@ -454,7 +474,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     minHeight: 48,
     borderRadius: RADII.control,
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -470,9 +490,9 @@ const styles = StyleSheet.create({
   secondaryButton: {
     minHeight: 46,
     borderRadius: RADII.control,
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     borderWidth: 1,
-    borderColor: MOM_THEME.pink,
+    borderColor: a.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -481,7 +501,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   secondaryButtonText: {
-    color: MOM_THEME.roseDeep,
+    color: a.primaryDark,
     fontSize: 14,
     fontWeight: '800',
   },
@@ -536,8 +556,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chipSelected: {
-    backgroundColor: MOM_THEME.roseDark,
-    borderColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
+    borderColor: a.primary,
   },
   chipText: {
     color: MOM_THEME.charcoalMid,
@@ -607,7 +627,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
@@ -631,4 +651,4 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     marginTop: 10,
   },
-});
+}));

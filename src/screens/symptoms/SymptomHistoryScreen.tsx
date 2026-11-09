@@ -10,9 +10,11 @@ import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { formatDateTime } from '../../utils/date';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+import { useT } from '../../i18n';
 
 export default function SymptomHistoryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const t = useT();
   const [items, setItems] = useState<SymptomLogDto[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,9 +45,9 @@ export default function SymptomHistoryScreen() {
 
   return (
     <Screen
-      eyebrow="Trợ lý sức khỏe AI"
-      title="Lịch sử phân tích"
-      subtitle="Các lần mẹ đã hỏi trợ lý AI, mới nhất ở trên cùng."
+      eyebrow={t('Trợ lý sức khỏe AI', 'AI assistant')}
+      title={t('Lịch sử phân tích', 'Question history')}
+      subtitle={t('Các lần mẹ đã hỏi trợ lý AI, mới nhất ở trên cùng.', 'Questions you asked the AI assistant, newest first.')}
       refreshing={refreshing}
       onRefresh={refresh}
     >
@@ -56,9 +58,9 @@ export default function SymptomHistoryScreen() {
       ) : items.length === 0 ? (
         <EmptyState
           emoji="🩺"
-          title="Chưa có lần phân tích nào"
-          body="Khi mẹ mô tả triệu chứng ở tab AI, kết quả sẽ được lưu lại tại đây."
-          actionLabel="Hỏi trợ lý AI"
+          title={t('Chưa có lần phân tích nào', 'No questions yet')}
+          body={t('Khi mẹ mô tả triệu chứng ở tab AI, kết quả sẽ được lưu lại tại đây.', 'When you ask a question in the AI tab, the answer is saved here.')}
+          actionLabel={t('Hỏi trợ lý AI', 'Ask the AI assistant')}
           onAction={() => navigation.navigate('MainTabs', { screen: 'SymptomAI' })}
         />
       ) : (
@@ -79,7 +81,7 @@ export default function SymptomHistoryScreen() {
                   <Text style={styles.date}>{formatDateTime(item.createdAt)}</Text>
                 </View>
                 <Text style={styles.text} numberOfLines={2}>
-                  {item.textDescription || 'Triệu chứng gửi bằng hình ảnh'}
+                  {item.textDescription || t('Triệu chứng gửi bằng hình ảnh', 'Sent as a photo')}
                 </Text>
               </View>
               <ChevronRight size={18} color={MOM_THEME.mutedLight} />

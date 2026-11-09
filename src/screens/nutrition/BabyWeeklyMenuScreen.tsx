@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { RouteProp, useFocusEffect, useRoute } from '@react-navigation/native';
 import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react-native';
 import { Card, ErrorState, LoadingView, Screen, TierLockedCard, uiStyles } from '../../components/ui';
@@ -7,18 +7,24 @@ import babyService, { DailyMenuDto, MealItem, WeeklyMenuDto } from '../../servic
 import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+import { createThemedStyles, useAccent } from '../../theme/accent';
+import { useT } from '../../i18n';
 
 const SLOTS = [
-  { key: 'breakfast', label: 'Bữa sáng', icon: '🥣' },
-  { key: 'lunch', label: 'Bữa trưa', icon: '🍲' },
-  { key: 'snack', label: 'Bữa xế', icon: '🍎' },
-  { key: 'dinner', label: 'Bữa tối', icon: '🥘' },
-  { key: 'supplementary_snack', label: 'Cữ phụ', icon: '🍼' },
+  { key: 'breakfast', label: 'Bữa sáng', labelEn: 'Breakfast', icon: '🥣' },
+  { key: 'lunch', label: 'Bữa trưa', labelEn: 'Lunch', icon: '🍲' },
+  { key: 'snack', label: 'Bữa xế', labelEn: 'Afternoon snack', icon: '🍎' },
+  { key: 'dinner', label: 'Bữa tối', labelEn: 'Dinner', icon: '🥘' },
+  { key: 'supplementary_snack', label: 'Cữ phụ', labelEn: 'Extra feed', icon: '🍼' },
 ] as const;
 
 type Meals = NonNullable<DailyMenuDto['meals']>;
 
 export default function BabyWeeklyMenuScreen() {
+  const a = useAccent();
+  const styles = useStyles();
+  const t = useT();
+  const en = t('vi', 'en') === 'en';
   const { params } = useRoute<RouteProp<RootStackParamList, 'BabyWeeklyMenu'>>();
   const [menu, setMenu] = useState<WeeklyMenuDto | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,14 +41,14 @@ export default function BabyWeeklyMenuScreen() {
           setMenu(res.data);
           setError(null);
         } else {
-          setError(res.message || 'Chưa tạo được thực đơn tuần cho bé.');
+          setError(res.message || t('Chưa tạo được thực đơn tuần cho bé.', 'Could not create a weekly menu yet.'));
         }
       } catch (err) {
         if (isTierLocked(err)) setLocked(true);
         else setError(getApiErrorMessage(err));
       }
     },
-    [params.babyId]
+    [params.babyId, t]
   );
 
   useFocusEffect(
@@ -58,15 +64,18 @@ export default function BabyWeeklyMenuScreen() {
   };
 
   const header = {
-    eyebrow: 'Bé yêu',
-    title: 'Thực đơn 7 ngày',
-    subtitle: `Gợi ý cho ${params.babyName}, đã tránh các thực phẩm bé dị ứng.`,
+    eyebrow: t('Bé yêu', 'Your baby'),
+    title: t('Thực đơn 7 ngày', '7-day menu'),
+    subtitle: t(
+      `Gợi ý cho ${params.babyName}, đã tránh các thực phẩm bé dị ứng.`,
+      `Ideas for ${params.babyName}, avoiding foods your baby is allergic to.`
+    ),
   };
 
   if (locked) {
     return (
       <Screen {...header}>
-        <TierLockedCard feature="Thực đơn 7 ngày" />
+        <TierLockedCard feature={t('Thực đơn 7 ngày', '7-day menu')} />
       </Screen>
     );
   }
@@ -80,7 +89,7 @@ export default function BabyWeeklyMenuScreen() {
   if (!menu) {
     return (
       <Screen {...header}>
-        <LoadingView text="Đang lên thực đơn cho cả tuần..." />
+        <LoadingView text={t('Đang lên thực đơn cho cả tuần...', 'Planning the week...')} />
       </Screen>
     );
   }
@@ -99,9 +108,9 @@ export default function BabyWeeklyMenuScreen() {
           style={styles.refresh}
           onPress={regenerate}
           disabled={refreshing}
-          accessibilityLabel="Tạo lại thực đơn tuần"
+          accessibilityLabel={t('Tạo lại thực đơn tuần', 'Make a new weekly menu')}
         >
-          <RefreshCw size={18} color={MOM_THEME.roseDark} />
+          <RefreshCw size={18} color={a.primary} />
         </TouchableOpacity>
       }
     >
@@ -118,7 +127,7 @@ export default function BabyWeeklyMenuScreen() {
               }}
               accessibilityState={{ selected: active }}
             >
-              <Text style={[styles.dayLabel, active && styles.dayLabelActive]}>Ngày</Text>
+              <Text style={[styles.dayLabel, active && styles.dayLabelActive]}>{t('Ngày', 'Day')}</Text>
               <Text style={[styles.dayNumber, active && styles.dayLabelActive]}>{index + 1}</Text>
             </TouchableOpacity>
           );
@@ -133,17 +142,20 @@ export default function BabyWeeklyMenuScreen() {
           </Text>
           <View style={[styles.badge, day.meets_80pct ? styles.badgeOk : styles.badgeWatch]}>
             <Text style={[styles.badgeText, day.meets_80pct ? styles.badgeOkText : styles.badgeWatchText]}>
-              {day.meets_80pct ? 'Đủ ≥ 80% nhu cầu' : 'Chưa đủ 80% nhu cầu'}
+              {day.meets_80pct ? t('Đủ ≥ 80% nhu cầu', 'Meets ≥ 80% of needs') : t('Chưa đủ 80% nhu cầu', 'Under 80% of needs')}
             </Text>
           </View>
         </View>
         <Text style={uiStyles.muted}>
-          Đạm {Math.round(totals.protein_g || 0)}g · Béo {Math.round(totals.fat_g || 0)}g · Tinh bột{' '}
-          {Math.round(totals.carbs_g || 0)}g · Sắt {(totals.iron_mg || 0).toFixed(1)}mg
+          {t('Đạm', 'Protein')} {Math.round(totals.protein_g || 0)}g · {t('Béo', 'Fat')} {Math.round(totals.fat_g || 0)}g ·{' '}
+          {t('Tinh bột', 'Carbs')} {Math.round(totals.carbs_g || 0)}g · {t('Sắt', 'Iron')} {(totals.iron_mg || 0).toFixed(1)}mg
         </Text>
         {!day.meets_80pct ? (
           <Text style={[uiStyles.muted, styles.note]}>
-            Bữa ăn dặm chưa đủ năng lượng; phần còn lại bé nhận từ sữa mẹ hoặc sữa công thức.
+            {t(
+              'Bữa ăn dặm chưa đủ năng lượng; phần còn lại bé nhận từ sữa mẹ hoặc sữa công thức.',
+              'Solid meals do not cover all the energy; breast milk or formula makes up the rest.'
+            )}
           </Text>
         ) : null}
       </Card>
@@ -162,15 +174,15 @@ export default function BabyWeeklyMenuScreen() {
             >
               <Text style={styles.mealIcon}>{slot.icon}</Text>
               <View style={styles.flex}>
-                <Text style={styles.mealSlot}>{slot.label}</Text>
+                <Text style={styles.mealSlot}>{t(slot.label, slot.labelEn)}</Text>
                 {meal ? (
-                  <Text style={styles.mealName}>{meal.name_vi || meal.name_en}</Text>
+                  <Text style={styles.mealName}>{(en ? meal.name_en : meal.name_vi) || meal.name_vi || meal.name_en}</Text>
                 ) : (
-                  <Text style={styles.mealMissing}>Chưa có món phù hợp với dị ứng của bé.</Text>
+                  <Text style={styles.mealMissing}>{t('Chưa có món phù hợp với dị ứng của bé.', "No dish fits your baby's allergies yet.")}</Text>
                 )}
                 {meal?.total_calories ? (
                   <Text style={styles.mealMeta}>
-                    {Math.round(meal.total_calories)} kcal{meal.prep_time_min ? ` · ${meal.prep_time_min} phút` : ''}
+                    {Math.round(meal.total_calories)} kcal{meal.prep_time_min ? ` · ${meal.prep_time_min} ${t('phút', 'min')}` : ''}
                   </Text>
                 ) : null}
               </View>
@@ -181,10 +193,12 @@ export default function BabyWeeklyMenuScreen() {
                 {meal.description ? <Text style={uiStyles.body}>{meal.description}</Text> : null}
                 {meal.ingredients?.length ? (
                   <>
-                    <Text style={styles.subTitle}>Nguyên liệu</Text>
+                    <Text style={styles.subTitle}>{t('Nguyên liệu', 'Ingredients')}</Text>
                     {meal.ingredients.map((item, i) => (
                       <Text key={i} style={uiStyles.body}>
-                        • {item.ingredient.vietnamese_name || item.ingredient.english_name}
+                        • {(en ? item.ingredient.english_name : item.ingredient.vietnamese_name) ||
+                          item.ingredient.vietnamese_name ||
+                          item.ingredient.english_name}
                         {item.weight_grams ? ` – ${item.weight_grams}g` : ''}
                       </Text>
                     ))}
@@ -192,7 +206,7 @@ export default function BabyWeeklyMenuScreen() {
                 ) : null}
                 {meal.cooking_steps?.length ? (
                   <>
-                    <Text style={styles.subTitle}>Cách làm</Text>
+                    <Text style={styles.subTitle}>{t('Cách làm', 'Steps')}</Text>
                     {meal.cooking_steps.map((s) => (
                       <Text key={s.step} style={uiStyles.body}>
                         {s.step}. {s.instruction}
@@ -210,7 +224,7 @@ export default function BabyWeeklyMenuScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   flex: {
     flex: 1,
   },
@@ -239,8 +253,8 @@ const styles = StyleSheet.create({
     borderColor: MOM_THEME.border,
   },
   dayActive: {
-    backgroundColor: MOM_THEME.roseDark,
-    borderColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
+    borderColor: a.primary,
   },
   dayLabel: {
     color: MOM_THEME.muted,
@@ -331,7 +345,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   mealMeta: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 12,
     fontWeight: '700',
     marginTop: 2,
@@ -347,4 +361,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 8,
   },
-});
+}));

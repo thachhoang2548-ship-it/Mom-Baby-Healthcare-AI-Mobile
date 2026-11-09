@@ -5,7 +5,6 @@ import {
   Image,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -20,7 +19,6 @@ import {
   ChevronRight,
   ClipboardList,
   Droplet,
-  Heart,
   HeartPulse,
   LogOut,
   Moon,
@@ -43,12 +41,19 @@ import {
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
 import { useT } from '../../i18n';
+import { createThemedStyles, useAccent } from '../../theme/accent';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
 const STAGE_ROUTE = { 0: 'Fertility', 1: 'Pregnancy', 2: 'Postpartum' } as const;
 
+// Nước luôn màu xanh, không đổi theo màu chủ đạo.
+const WATER_BLUE = '#3F7FBF';
+const WATER_BLUE_LIGHT = '#EEF5FC';
+
 export default function DashboardScreen() {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, logout } = useAuthStore();
   const t = useT();
@@ -249,7 +254,7 @@ export default function DashboardScreen() {
               accessibilityLabel={t('Đăng xuất', 'Sign out')}
               activeOpacity={0.8}
             >
-              <LogOut size={17} color={MOM_THEME.roseDark} />
+              <LogOut size={17} color={a.primary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -262,7 +267,7 @@ export default function DashboardScreen() {
             activeOpacity={0.88}
           >
             <View style={styles.setupIcon}>
-              <UserRound size={20} color={MOM_THEME.roseDark} />
+              <UserRound size={20} color={a.primary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.setupTitle}>{t('Hoàn thiện hồ sơ của mẹ', 'Complete your profile')}</Text>
@@ -273,7 +278,7 @@ export default function DashboardScreen() {
                 )}
               </Text>
             </View>
-            <ChevronRight size={18} color={MOM_THEME.roseDark} />
+            <ChevronRight size={18} color={a.primary} />
           </TouchableOpacity>
         ) : null}
 
@@ -304,7 +309,7 @@ export default function DashboardScreen() {
             <View style={styles.heroFooter}>
               <Text style={styles.heroFooterText}>{t('Xem lộ trình của mẹ', 'See your journey')}</Text>
               <View style={styles.heroFooterArrow}>
-                <ChevronRight size={14} color={MOM_THEME.roseDark} />
+                <ChevronRight size={14} color={a.primary} />
               </View>
             </View>
           </View>
@@ -355,12 +360,12 @@ export default function DashboardScreen() {
           {/* Mood card */}
           <View style={[styles.priorityCard, { backgroundColor: '#FCF2F4' }]}>
             <View style={[styles.priorityIconCircle, { backgroundColor: '#F9DCE3' }]}>
-              <HeartPulse size={18} color={MOM_THEME.roseDark} />
+              <HeartPulse size={18} color={a.primary} />
             </View>
             <Text style={styles.priorityVal}>{mood ? mood.emoji : '—'}</Text>
             <Text style={styles.priorityLbl}>{t('Tâm trạng', 'Mood')}</Text>
             <View style={[styles.priorityStatusPill, { backgroundColor: '#F9DCE3' }]}>
-              <Text style={[styles.priorityStatusText, { color: MOM_THEME.roseDark }]}>
+              <Text style={[styles.priorityStatusText, { color: a.primary }]}>
                 {mood ? moodLabel(mood) : t('Chưa chọn', 'Not set')}
               </Text>
             </View>
@@ -380,7 +385,7 @@ export default function DashboardScreen() {
             activeOpacity={0.88}
           >
             <View style={[styles.gridIconWrap, { backgroundColor: '#FDECEF' }]}>
-              <Activity size={22} color={MOM_THEME.roseDark} />
+              <Activity size={22} color={a.primary} />
             </View>
             <Text style={styles.gridCardTitle}>{t('Hỏi Mom Ơi AI', 'Ask Mom Ơi AI')}</Text>
             <Text style={styles.gridCardSub}>{t('Gợi ý chăm sóc mẹ và bé', 'Care tips for mom and baby')}</Text>
@@ -423,57 +428,62 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* ── Daily Check-in Card ── */}
+        {/* ── Ghi nhanh trong ngày: nước, tâm trạng, lối vào nhật ký đầy đủ ── */}
         <View style={[styles.checkInCard, SHADOWS.card]}>
-          <View style={styles.checkInHeader}>
-            <View>
-              <Text style={styles.checkInTitle}>{t('Ghi nhận trong ngày', 'Daily check-in')}</Text>
-              <Text style={styles.checkInSub}>
-                {t('Tín hiệu nhỏ giúp Mom Ơi hiểu mẹ hơn mỗi ngày', 'Small signals help Mom Ơi understand you better')}
+          <Text style={styles.checkInTitle}>{t('Hôm nay của mẹ', 'Your day')}</Text>
+          <Text style={styles.checkInSub}>{t('Chạm để ghi nhanh, Mom Ơi tự lưu lại.', 'Tap to log. Mom Ơi saves it for you.')}</Text>
+
+          {/* Uống nước */}
+          <View style={styles.waterRow}>
+            <View style={styles.waterIcon}>
+              <Droplet size={20} color={WATER_BLUE} fill={WATER_BLUE} />
+            </View>
+            <View style={styles.flex}>
+              <Text style={styles.sectionLabel}>{t('Uống nước', 'Water')}</Text>
+              <Text style={styles.waterCount}>
+                {waterCups}
+                <Text style={styles.waterGoal}>
+                  {' '}
+                  / {DAILY_CUP_GOAL} {t('ly', 'cups')}
+                </Text>
               </Text>
             </View>
-            <View style={styles.checkInHeart}>
-              <Heart size={18} color={MOM_THEME.roseDark} fill={MOM_THEME.roseDark} />
-            </View>
-          </View>
-
-          {/* Water progress */}
-          <View style={styles.waterHeader}>
-            <Text style={styles.waterLabel}>
-              {t('Mục tiêu nước', 'Water goal')}: {waterCups}/{DAILY_CUP_GOAL} {t('ly', 'cups')}
-            </Text>
-            <TouchableOpacity style={styles.waterAddBtn} onPress={addWater}>
-              <Plus size={14} color={MOM_THEME.white} />
-              <Text style={styles.waterAddBtnText}>{t('Thêm ly', 'Add a cup')}</Text>
+            <TouchableOpacity
+              style={styles.waterAddBtn}
+              onPress={addWater}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={t('Thêm 1 ly nước', 'Add a cup of water')}
+            >
+              <Plus size={18} color={WATER_BLUE} />
+              <Text style={styles.waterAddBtnText}>{t('1 ly', '1 cup')}</Text>
             </TouchableOpacity>
           </View>
-
           <View style={styles.waterTrack}>
-            {Array.from({ length: DAILY_CUP_GOAL }).map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.waterSegment,
-                  index < waterCups && styles.waterSegmentActive,
-                ]}
-              />
-            ))}
+            <View
+              style={[styles.waterFill, { width: `${Math.min(100, (waterCups / DAILY_CUP_GOAL) * 100)}%` }]}
+            />
           </View>
 
-          {/* Mood Selector */}
-          <Text style={styles.moodSectionTitle}>{t('Mẹ đang cảm thấy thế nào?', 'How are you feeling?')}</Text>
+          <View style={styles.checkInDivider} />
+
+          {/* Tâm trạng: 5 ô bằng nhau trên một hàng */}
+          <Text style={styles.sectionLabel}>{t('Mẹ đang cảm thấy thế nào?', 'How are you feeling?')}</Text>
           <View style={styles.moodRow}>
             {MOOD_OPTIONS.map((item) => {
               const active = moodScore === item.score;
               return (
                 <TouchableOpacity
                   key={item.score}
-                  style={[styles.moodChip, active && styles.moodChipActive]}
+                  style={[styles.moodItem, active && styles.moodItemActive]}
                   onPress={() => chooseMood(item.score)}
                   activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={moodLabel(item)}
                 >
                   <Text style={styles.moodEmoji}>{item.emoji}</Text>
-                  <Text style={[styles.moodText, active && styles.moodTextActive]}>
+                  <Text style={[styles.moodText, active && styles.moodTextActive]} numberOfLines={2}>
                     {moodLabel(item)}
                   </Text>
                 </TouchableOpacity>
@@ -481,16 +491,22 @@ export default function DashboardScreen() {
             })}
           </View>
 
+          <View style={styles.checkInDivider} />
+
           <TouchableOpacity
             style={styles.fullLogLink}
             onPress={() => navigation.navigate('DailyMonitoring')}
             activeOpacity={0.8}
+            accessibilityRole="button"
           >
-            <ClipboardList size={15} color={MOM_THEME.roseDark} />
-            <Text style={styles.fullLogText}>
-              {t('Ghi nhật ký đầy đủ (giấc ngủ, bữa ăn, huyết áp...)', 'Full daily log (sleep, meals, blood pressure...)')}
-            </Text>
-            <ChevronRight size={15} color={MOM_THEME.roseDark} />
+            <View style={styles.fullLogIcon}>
+              <ClipboardList size={18} color={a.primary} />
+            </View>
+            <View style={styles.flex}>
+              <Text style={styles.fullLogText}>{t('Ghi nhật ký đầy đủ', 'Full daily log')}</Text>
+              <Text style={styles.fullLogSub}>{t('Giấc ngủ, bữa ăn, huyết áp, cân nặng', 'Sleep, meals, blood pressure, weight')}</Text>
+            </View>
+            <ChevronRight size={18} color={MOM_THEME.mutedLight} />
           </TouchableOpacity>
         </View>
 
@@ -514,7 +530,7 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   root: {
     flex: 1,
     backgroundColor: MOM_THEME.cream,
@@ -542,7 +558,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: MOM_THEME.pink,
+    backgroundColor: a.border,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -578,14 +594,14 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   logoutBtn: {
-    backgroundColor: MOM_THEME.pinkLight,
-    borderColor: MOM_THEME.pink,
+    backgroundColor: a.light,
+    borderColor: a.border,
   },
   notifyDot: {
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
     position: 'absolute',
     top: 9,
     right: 10,
@@ -670,7 +686,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -787,105 +803,118 @@ const styles = StyleSheet.create({
     borderColor: MOM_THEME.border,
     marginBottom: 20,
   },
-  checkInHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+  flex: {
+    flex: 1,
   },
   checkInTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '800',
     color: MOM_THEME.charcoal,
   },
   checkInSub: {
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
     color: MOM_THEME.muted,
     marginTop: 2,
+    marginBottom: 18,
   },
-  checkInHeart: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: MOM_THEME.pinkLight,
+  checkInDivider: {
+    height: 1,
+    backgroundColor: MOM_THEME.borderSoft,
+    marginVertical: 18,
+  },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: MOM_THEME.charcoal,
+  },
+  waterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  waterIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: WATER_BLUE_LIGHT,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  waterHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  waterLabel: {
-    fontSize: 13,
-    fontWeight: '700',
+  waterCount: {
+    fontSize: 22,
+    fontWeight: '800',
     color: MOM_THEME.charcoal,
+    marginTop: 1,
+  },
+  waterGoal: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: MOM_THEME.muted,
   },
   waterAddBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#4A88C7',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: RADII.pill,
+    backgroundColor: WATER_BLUE_LIGHT,
+    borderWidth: 1,
+    borderColor: '#CFE1F3',
   },
   waterAddBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: MOM_THEME.white,
+    fontSize: 15,
+    fontWeight: '800',
+    color: WATER_BLUE,
   },
   waterTrack: {
-    flexDirection: 'row',
-    gap: 5,
-    marginBottom: 18,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#EEEAE3',
+    overflow: 'hidden',
+    marginTop: 14,
   },
-  waterSegment: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EAE6DF',
-  },
-  waterSegmentActive: {
-    backgroundColor: '#4A88C7',
-  },
-  moodSectionTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: MOM_THEME.charcoal,
-    marginBottom: 10,
+  waterFill: {
+    height: '100%',
+    borderRadius: 5,
+    backgroundColor: WATER_BLUE,
   },
   moodRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
+    marginTop: 12,
   },
-  moodChip: {
-    flexDirection: 'row',
+  moodItem: {
+    flex: 1,
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: RADII.pill,
-    backgroundColor: MOM_THEME.cream,
-    borderWidth: 1,
-    borderColor: MOM_THEME.border,
+    gap: 4,
+    minHeight: 72,
+    paddingTop: 10,
+    paddingBottom: 8,
+    paddingHorizontal: 2,
+    borderRadius: 16,
+    backgroundColor: MOM_THEME.creamSoft,
+    borderWidth: 1.5,
+    borderColor: MOM_THEME.borderSoft,
   },
-  moodChipActive: {
-    backgroundColor: MOM_THEME.roseDark,
-    borderColor: MOM_THEME.roseDark,
+  moodItemActive: {
+    backgroundColor: a.light,
+    borderColor: a.primary,
   },
   moodEmoji: {
-    fontSize: 13,
+    fontSize: 26,
   },
   moodText: {
-    fontSize: 12,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '600',
-    color: MOM_THEME.charcoalMid,
+    textAlign: 'center',
+    color: MOM_THEME.muted,
   },
   moodTextActive: {
-    color: MOM_THEME.white,
+    color: a.primaryDark,
+    fontWeight: '800',
   },
   warmNoteCard: {
     flexDirection: 'row',
@@ -923,10 +952,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: MOM_THEME.pink,
+    borderColor: a.border,
     padding: 14,
     marginBottom: 16,
   },
@@ -941,7 +970,7 @@ const styles = StyleSheet.create({
   setupTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: MOM_THEME.roseDeep,
+    color: a.primaryDark,
   },
   setupBody: {
     fontSize: 12,
@@ -952,17 +981,26 @@ const styles = StyleSheet.create({
   fullLogLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: MOM_THEME.borderSoft,
+    gap: 12,
+    minHeight: 48,
+  },
+  fullLogIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: a.light,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   fullLogText: {
-    flex: 1,
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: '700',
-    color: MOM_THEME.roseDark,
+    color: MOM_THEME.charcoal,
   },
-});
+  fullLogSub: {
+    fontSize: 12,
+    color: MOM_THEME.muted,
+    marginTop: 2,
+  },
+}));
 

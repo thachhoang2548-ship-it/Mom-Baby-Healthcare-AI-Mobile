@@ -8,15 +8,17 @@ import { getStageIndex, StageIndex } from '../../services/profileService';
 import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { useT } from '../../i18n';
 
-const STAGES: Record<StageIndex, { label: string; accent: string; soft: string }> = {
-  0: { label: 'Chuẩn bị mang thai', accent: MOM_THEME.amberDark, soft: MOM_THEME.amberLight },
-  1: { label: 'Đang mang thai', accent: MOM_THEME.roseDark, soft: MOM_THEME.pinkLight },
-  2: { label: 'Sau sinh', accent: MOM_THEME.sageDark, soft: MOM_THEME.sageLight },
+const STAGES: Record<StageIndex, { label: string; labelEn: string; accent: string; soft: string }> = {
+  0: { label: 'Chuẩn bị mang thai', labelEn: 'Trying to conceive', accent: MOM_THEME.amberDark, soft: MOM_THEME.amberLight },
+  1: { label: 'Đang mang thai', labelEn: 'Pregnant', accent: MOM_THEME.roseDark, soft: MOM_THEME.pinkLight },
+  2: { label: 'Sau sinh', labelEn: 'After birth', accent: MOM_THEME.sageDark, soft: MOM_THEME.sageLight },
 };
 
 export default function CareCalendarScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const t = useT();
   const [calendar, setCalendar] = useState<CareCalendar | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -48,9 +50,12 @@ export default function CareCalendarScreen() {
 
   return (
     <Screen
-      eyebrow="Chăm sóc mỗi ngày"
-      title="Lịch chăm sóc"
-      subtitle="Những việc nên làm sắp tới, theo giai đoạn mẹ đã chọn trong hồ sơ."
+      eyebrow={t('Chăm sóc mỗi ngày', 'Everyday care')}
+      title={t('Lịch chăm sóc', 'Care calendar')}
+      subtitle={t(
+        'Những việc nên làm sắp tới, theo giai đoạn mẹ đã chọn trong hồ sơ.',
+        'What to do next, based on the stage in your profile. Items are written in Vietnamese.'
+      )}
       refreshing={refreshing}
       onRefresh={refresh}
     >
@@ -61,15 +66,15 @@ export default function CareCalendarScreen() {
         <>
           <View style={[styles.stage, { backgroundColor: stage.soft }]}>
             <View style={styles.flex}>
-              <Text style={[styles.stageLabel, { color: stage.accent }]}>{stage.label}</Text>
-              {week ? <Text style={styles.stageMeta}>Tuần thai thứ {week}</Text> : null}
+              <Text style={[styles.stageLabel, { color: stage.accent }]}>{t(stage.label, stage.labelEn)}</Text>
+              {week ? <Text style={styles.stageMeta}>{t(`Tuần thai thứ ${week}`, `Week ${week} of pregnancy`)}</Text> : null}
             </View>
             <TouchableOpacity
               onPress={() => navigation.navigate('Profile')}
               accessibilityRole="button"
               activeOpacity={0.8}
             >
-              <Text style={[styles.stageLink, { color: stage.accent }]}>Đổi giai đoạn</Text>
+              <Text style={[styles.stageLink, { color: stage.accent }]}>{t('Đổi giai đoạn', 'Change stage')}</Text>
             </TouchableOpacity>
           </View>
 

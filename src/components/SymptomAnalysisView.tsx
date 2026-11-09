@@ -1,11 +1,12 @@
 import React from 'react';
-import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Text, TouchableOpacity, View } from 'react-native';
 import { AlertCircle, CheckCircle2, PhoneCall, ShieldCheck, Stethoscope, Utensils } from 'lucide-react-native';
 import { SymptomAnalysisResult } from '../services/symptomService';
 import { MOM_THEME, RADII } from '../theme/colors';
 import { MEDICAL_FEATURES_ENABLED } from '../constants/features';
 import { normalizeUrgency, getUrgencyMeta as metaForKey } from '../utils/urgency';
 import { useT } from '../i18n';
+import { createThemedStyles } from '../theme/accent';
 
 const urgencyKeyOf = (analysis?: SymptomAnalysisResult) =>
   analysis?.aiAvailable ? normalizeUrgency(analysis.urgencyLevel) : 'unknown';
@@ -16,6 +17,7 @@ export function getUrgencyMeta(analysis?: SymptomAnalysisResult) {
 
 /** Hiển thị kết quả phân tích AI, dùng chung cho màn Trợ lý sức khỏe AI và Chi tiết lịch sử. */
 export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAnalysisResult }) {
+  const styles = useStyles();
   const t = useT();
   const badge = getUrgencyMeta(analysis);
   const isCritical = urgencyKeyOf(analysis) === 'critical';
@@ -110,7 +112,7 @@ export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAn
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   flex: {
     flex: 1,
   },
@@ -199,7 +201,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   probability: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -234,4 +236,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-});
+}));

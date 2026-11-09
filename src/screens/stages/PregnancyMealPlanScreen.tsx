@@ -1,27 +1,49 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Card, ErrorState, LoadingView, Screen, TierLockedCard, uiStyles } from '../../components/ui';
 import featureService, { PregnancyMealDay } from '../../services/featureService';
 import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { createThemedStyles } from '../../theme/accent';
+import { useT } from '../../i18n';
 
-const MEALS: { key: 'breakfast' | 'lunch' | 'snack' | 'dinner'; label: string; icon: string }[] = [
-  { key: 'breakfast', label: 'Bữa sáng', icon: '🌅' },
-  { key: 'lunch', label: 'Bữa trưa', icon: '🍚' },
-  { key: 'snack', label: 'Bữa phụ', icon: '🍎' },
-  { key: 'dinner', label: 'Bữa tối', icon: '🌙' },
+const MEALS: { key: 'breakfast' | 'lunch' | 'snack' | 'dinner'; label: string; labelEn: string; icon: string }[] = [
+  { key: 'breakfast', label: 'Bữa sáng', labelEn: 'Breakfast', icon: '🌅' },
+  { key: 'lunch', label: 'Bữa trưa', labelEn: 'Lunch', icon: '🍚' },
+  { key: 'snack', label: 'Bữa phụ', labelEn: 'Snack', icon: '🍎' },
+  { key: 'dinner', label: 'Bữa tối', labelEn: 'Dinner', icon: '🌙' },
 ];
 
-// "Thứ Hai" -> "T2", "Chủ Nhật" -> "CN"
-const shortDay = (day: string) => {
-  const map: Record<string, string> = { Hai: 'T2', Ba: 'T3', Tư: 'T4', Năm: 'T5', Sáu: 'T6', Bảy: 'T7' };
-  if (/chủ nhật/i.test(day)) return 'CN';
+// "Thứ Hai" -> "T2" / "Mon", "Chủ Nhật" -> "CN" / "Sun"
+const DAY_SHORT: Record<string, [string, string]> = {
+  Hai: ['T2', 'Mon'],
+  Ba: ['T3', 'Tue'],
+  Tư: ['T4', 'Wed'],
+  Năm: ['T5', 'Thu'],
+  Sáu: ['T6', 'Fri'],
+  Bảy: ['T7', 'Sat'],
+};
+const DAY_FULL_EN: Record<string, string> = {
+  Mon: 'Monday',
+  Tue: 'Tuesday',
+  Wed: 'Wednesday',
+  Thu: 'Thursday',
+  Fri: 'Friday',
+  Sat: 'Saturday',
+  Sun: 'Sunday',
+};
+const shortDay = (day: string, en: boolean) => {
+  if (/chủ nhật/i.test(day)) return en ? 'Sun' : 'CN';
   const last = day.trim().split(' ').pop() || day;
-  return map[last] || day.slice(0, 3);
+  const pair = DAY_SHORT[last];
+  return pair ? pair[en ? 1 : 0] : day.slice(0, 3);
 };
 
 export default function PregnancyMealPlanScreen() {
+  const styles = useStyles();
+  const t = useT();
+  const en = t('vi', 'en') === 'en';
   const [plan, setPlan] = useState<PregnancyMealDay[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
@@ -45,15 +67,18 @@ export default function PregnancyMealPlanScreen() {
   );
 
   const header = {
-    eyebrow: 'Thai kỳ',
-    title: 'Thực đơn 7 ngày',
-    subtitle: 'Gợi ý theo tuần thai của mẹ. Mẹ có thể đổi món tương đương nếu không hợp khẩu vị.',
+    eyebrow: t('Thai kỳ', 'Pregnancy'),
+    title: t('Thực đơn 7 ngày', '7-day meal plan'),
+    subtitle: t(
+      'Gợi ý theo tuần thai của mẹ. Mẹ có thể đổi món tương đương nếu không hợp khẩu vị.',
+      'Based on your pregnancy week. Swap in a similar dish if something does not suit you. Dishes are named in Vietnamese.'
+    ),
   };
 
   if (locked) {
     return (
       <Screen {...header}>
-        <TierLockedCard feature="Thực đơn thai kỳ" />
+        <TierLockedCard feature={t('Thực đơn thai kỳ', 'Pregnancy meal plan')} />
       </Screen>
     );
   }
@@ -88,7 +113,7 @@ export default function PregnancyMealPlanScreen() {
               accessibilityLabel={d.day}
               accessibilityState={{ selected: active }}
             >
-              <Text style={[styles.dayText, active && styles.dayTextActive]}>{shortDay(d.day)}</Text>
+              <Text style={[styles.dayText, active && styles.dayTextActive]}>{shortDay(d.day, en)}</Text>
             </TouchableOpacity>
           );
         })}
@@ -96,12 +121,12 @@ export default function PregnancyMealPlanScreen() {
 
       {day ? (
         <>
-          <Text style={styles.dayTitle}>{day.day}</Text>
+          <Text style={styles.dayTitle}>{en ? DAY_FULL_EN[shortDay(day.day, true)] ?? day.day : day.day}</Text>
           {MEALS.map((meal) => (
             <View key={meal.key} style={styles.mealRow}>
               <Text style={styles.mealIcon}>{meal.icon}</Text>
               <View style={styles.flex}>
-                <Text style={styles.mealLabel}>{meal.label}</Text>
+                <Text style={styles.mealLabel}>{t(meal.label, meal.labelEn)}</Text>
                 <Text style={styles.mealText}>{day[meal.key] || '—'}</Text>
               </View>
             </View>
@@ -110,10 +135,14 @@ export default function PregnancyMealPlanScreen() {
             <Card style={styles.nutrients}>
               <Text style={styles.kcal}>{n.calories ?? '—'} kcal</Text>
               <Text style={uiStyles.muted}>
-                Đạm {n.protein ?? '—'} · Tinh bột {n.carbs ?? '—'} · Béo {n.fat ?? '—'} · Sắt {n.iron ?? '—'}
+                {t('Đạm', 'Protein')} {n.protein ?? '—'} · {t('Tinh bột', 'Carbs')} {n.carbs ?? '—'} · {t('Béo', 'Fat')}{' '}
+                {n.fat ?? '—'} · {t('Sắt', 'Iron')} {n.iron ?? '—'}
               </Text>
               <Text style={[uiStyles.muted, styles.note]}>
-                Mẹ bầu nên bổ sung thêm viên sắt và acid folic theo chỉ định của bác sĩ.
+                {t(
+                  'Mẹ bầu nên bổ sung thêm viên sắt và acid folic theo chỉ định của bác sĩ.',
+                  'Take iron and folic acid supplements as your doctor advises.'
+                )}
               </Text>
             </Card>
           ) : null}
@@ -123,7 +152,7 @@ export default function PregnancyMealPlanScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   flex: {
     flex: 1,
   },
@@ -142,8 +171,8 @@ const styles = StyleSheet.create({
     borderColor: MOM_THEME.border,
   },
   dayActive: {
-    backgroundColor: MOM_THEME.roseDark,
-    borderColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
+    borderColor: a.primary,
   },
   dayText: {
     color: MOM_THEME.charcoal,
@@ -187,7 +216,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   kcal: {
-    color: MOM_THEME.roseDeep,
+    color: a.primaryDark,
     fontSize: 22,
     fontWeight: '800',
     marginBottom: 4,
@@ -195,4 +224,4 @@ const styles = StyleSheet.create({
   note: {
     marginTop: 8,
   },
-});
+}));

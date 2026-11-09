@@ -4,13 +4,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -19,9 +18,13 @@ import { COLORS } from '../../theme/colors';
 import { Mail, Lock, Eye, EyeOff, Sparkles, HeartHandshake } from 'lucide-react-native';
 import LanguageToggle from '../../components/LanguageToggle';
 import { useT } from '../../i18n';
+import { createThemedStyles, useAccent } from '../../theme/accent';
 
 export default function LoginScreen() {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   const { login, isLoading, error, clearError } = useAuthStore();
   const t = useT();
 
@@ -54,11 +57,11 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
       style={styles.container}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContainer}
+        contentContainerStyle={[styles.scrollContainer, { paddingBottom: 40 + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.langRow}>
@@ -69,7 +72,7 @@ export default function LoginScreen() {
         <View style={styles.header}>
           <View style={styles.badgeRow}>
             <View style={styles.iconCircle}>
-              <HeartHandshake size={28} color={COLORS.primary} />
+              <HeartHandshake size={28} color={a.primary} />
             </View>
           </View>
           <Text style={styles.welcomeText}>{t('Chào mừng trở lại! 🌸', 'Welcome back! 🌸')}</Text>
@@ -169,7 +172,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
@@ -195,11 +198,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: a.light,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.primarySoft,
+    borderColor: a.soft,
   },
   welcomeText: {
     fontSize: 24,
@@ -261,13 +264,13 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   loginBtn: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: a.primary,
     height: 52,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 28,
-    shadowColor: COLORS.primary,
+    shadowColor: a.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -293,7 +296,7 @@ const styles = StyleSheet.create({
   registerLink: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: a.primary,
   },
   demoCard: {
     marginTop: 32,
@@ -310,4 +313,4 @@ const styles = StyleSheet.create({
     color: COLORS.secondaryDark,
     fontWeight: '600',
   },
-});
+}));

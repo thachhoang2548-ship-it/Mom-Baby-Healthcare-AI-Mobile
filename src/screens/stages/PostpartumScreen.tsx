@@ -25,12 +25,14 @@ import { daysBetween, formatDate, formatDateTime, fromUtcDateIso, startOfToday }
 import { epdsRisk } from '../../utils/epds';
 import { MOM_THEME, RADII } from '../../theme/colors';
 import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
+import { useAccent } from '../../theme/accent';
+import { tr, useT } from '../../i18n';
 
 // Cùng mốc với backend (PostpartumService.SetupPostpartumAsync).
 function phaseOf(days: number) {
-  if (days <= 7) return 'Hồi phục cấp tính (tuần đầu)';
-  if (days <= 42) return 'Phục hồi vết thương (tuần 2 - 6)';
-  return 'Ổn định lâu dài (sau 6 tuần)';
+  if (days <= 7) return tr('Hồi phục cấp tính (tuần đầu)', 'Early recovery (first week)');
+  if (days <= 42) return tr('Phục hồi vết thương (tuần 2 - 6)', 'Healing (weeks 2 - 6)');
+  return tr('Ổn định lâu dài (sau 6 tuần)', 'Long-term recovery (after 6 weeks)');
 }
 
 type Gated<T> = { data: T | null; locked: boolean; error: string | null };
@@ -44,6 +46,8 @@ async function gated<T>(task: () => Promise<T>): Promise<Gated<T>> {
 }
 
 export default function PostpartumScreen() {
+  const a = useAccent();
+  const t = useT();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const isFree = useIsFreeTier();
   const [profile, setProfile] = useState<MomProfileDto | null>(null);
@@ -81,7 +85,7 @@ export default function PostpartumScreen() {
     }, [load])
   );
 
-  const header = { eyebrow: 'Sau sinh', title: 'Phục hồi & chăm con' };
+  const header = { eyebrow: t('Sau sinh', 'After birth'), title: t('Phục hồi & chăm con', 'Recovery & baby care') };
 
   if (error) {
     return (
@@ -102,9 +106,12 @@ export default function PostpartumScreen() {
       <Screen {...header}>
         <EmptyState
           emoji="🍼"
-          title="Mẹ chưa ở giai đoạn sau sinh"
-          body="Cập nhật giai đoạn “Sau sinh & nuôi con” và ngày sinh em bé trong hồ sơ để nhận lộ trình phục hồi."
-          actionLabel="Cập nhật hồ sơ"
+          title={t('Mẹ chưa ở giai đoạn sau sinh', "You're not set as after birth yet")}
+          body={t(
+            'Cập nhật giai đoạn “Sau sinh & nuôi con” và ngày sinh em bé trong hồ sơ để nhận lộ trình phục hồi.',
+            "Set your stage to “After birth” and add your baby's birth date in your profile to get a recovery plan."
+          )}
+          actionLabel={t('Cập nhật hồ sơ', 'Update profile')}
           onAction={() => navigation.navigate('Profile')}
         />
       </Screen>
@@ -118,24 +125,30 @@ export default function PostpartumScreen() {
   return (
     <Screen {...header} onRefresh={load}>
       <View style={styles.hero}>
-        <Text style={styles.heroEyebrow}>{days !== null ? phaseOf(days) : 'Sau sinh'}</Text>
-        <Text style={styles.heroTitle}>{days !== null ? `Ngày thứ ${days} sau sinh` : 'Chưa có ngày sinh'}</Text>
-        {delivery ? <Text style={styles.heroSub}>Bé chào đời ngày {formatDate(delivery)}</Text> : null}
-        {profile.isBreastfeeding ? <Text style={styles.heroSub}>Mẹ đang nuôi con bằng sữa mẹ 🤱</Text> : null}
+        <Text style={styles.heroEyebrow}>{days !== null ? phaseOf(days) : t('Sau sinh', 'After birth')}</Text>
+        <Text style={styles.heroTitle}>{days !== null ? t(`Ngày thứ ${days} sau sinh`, `Day ${days} after birth`) : t('Chưa có ngày sinh', 'Birth date not set')}</Text>
+        {delivery ? <Text style={styles.heroSub}>{t('Bé chào đời ngày', 'Born on')} {formatDate(delivery)}</Text> : null}
+        {profile.isBreastfeeding ? <Text style={styles.heroSub}>{t('Mẹ đang nuôi con bằng sữa mẹ 🤱', "You're breastfeeding 🤱")}</Text> : null}
       </View>
 
-      {locked ? <TierLockedCard feature="Kế hoạch phục hồi & khảo sát EPDS" /> : null}
+      {locked ? <TierLockedCard
+          feature={
+            MEDICAL_FEATURES_ENABLED
+              ? t('Kế hoạch phục hồi & khảo sát EPDS', 'Recovery plan & EPDS survey')
+              : t('Kế hoạch phục hồi', 'Recovery plan')
+          }
+        /> : null}
 
       {plan?.data ? (
         <>
-          <SectionTitle title="Kế hoạch vận động phục hồi" subtitle={plan.data.recoveryPhase} />
+          <SectionTitle title={t('Kế hoạch vận động phục hồi', 'Recovery exercise plan')} subtitle={plan.data.recoveryPhase} />
           <Card>
             {plan.data.exerciseSchedule?.activeExercise ? (
               <Text style={uiStyles.body}>{plan.data.exerciseSchedule.activeExercise}</Text>
             ) : null}
             {plan.data.exerciseSchedule?.allowed?.length ? (
               <View style={styles.tagBlock}>
-                <Text style={styles.tagTitle}>Nên tập</Text>
+                <Text style={styles.tagTitle}>{t('Nên tập', 'Good to do')}</Text>
                 <View style={uiStyles.rowWrap}>
                   {plan.data.exerciseSchedule.allowed.map((item) => (
                     <View key={item} style={[styles.tag, styles.tagOk]}>
@@ -147,7 +160,7 @@ export default function PostpartumScreen() {
             ) : null}
             {plan.data.exerciseSchedule?.locked?.length ? (
               <View style={styles.tagBlock}>
-                <Text style={styles.tagTitle}>Chưa nên tập</Text>
+                <Text style={styles.tagTitle}>{t('Chưa nên tập', 'Not yet')}</Text>
                 <View style={uiStyles.rowWrap}>
                   {plan.data.exerciseSchedule.locked.map((item) => (
                     <View key={item} style={[styles.tag, styles.tagNo]}>
@@ -191,15 +204,15 @@ export default function PostpartumScreen() {
         </>
       ) : null}
 
-      <SectionTitle title="Chăm sóc hằng ngày" />
+      <SectionTitle title={t('Chăm sóc hằng ngày', 'Everyday care')} />
       <SecondaryButton
-        label="Hồ sơ & thực đơn của bé"
-        icon={isFree ? <LockIcon color={MOM_THEME.roseDeep} /> : <Baby size={16} color={MOM_THEME.roseDeep} />}
+        label={t('Hồ sơ & thực đơn của bé', 'Baby profile & menus')}
+        icon={isFree ? <LockIcon color={a.primaryDark} /> : <Baby size={16} color={a.primaryDark} />}
         onPress={() => navigation.navigate('MainTabs', { screen: 'Nutrition' })}
       />
       <SecondaryButton
-        label="Ghi nhật ký sức khỏe hôm nay"
-        icon={<HeartPulse size={16} color={MOM_THEME.roseDeep} />}
+        label={t('Ghi nhật ký sức khỏe hôm nay', "Log today's health")}
+        icon={<HeartPulse size={16} color={a.primaryDark} />}
         onPress={() => navigation.navigate('DailyMonitoring')}
       />
     </Screen>

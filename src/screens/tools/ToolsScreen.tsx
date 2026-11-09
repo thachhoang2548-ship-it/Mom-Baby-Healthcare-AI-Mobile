@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -25,6 +25,7 @@ import {
   LifeBuoy,
   MessageSquare,
   Pill,
+  Settings,
   Sparkles,
   User,
   Utensils,
@@ -41,8 +42,8 @@ import { LockIcon } from '../../components/ui';
 import { formatDate } from '../../utils/date';
 import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
-import LanguageToggle from '../../components/LanguageToggle';
 import { tr, useT } from '../../i18n';
+import { createThemedStyles, useAccent } from '../../theme/accent';
 
 type PanelKey = 'plan' | 'feedback';
 
@@ -85,6 +86,8 @@ const FEEDBACK_LABEL_EN: Record<string, string> = {
 };
 
 export default function ToolsScreen() {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const t = useT();
   const tier = useAuthStore((s) => s.tier);
@@ -112,18 +115,18 @@ export default function ToolsScreen() {
   }, []);
 
   const healthItems = [
-    { key: 'profile', label: t('Hồ sơ mẹ', 'My profile'), icon: User, color: MOM_THEME.roseDark, go: () => navigation.navigate('Profile') },
+    { key: 'profile', label: t('Hồ sơ mẹ', 'My profile'), icon: User, color: a.primary, go: () => navigation.navigate('Profile') },
     { key: 'log', label: t('Nhật ký hằng ngày', 'Daily log'), icon: ClipboardList, color: MOM_THEME.sageDark, go: () => navigation.navigate('DailyMonitoring') },
     { key: 'care', label: t('Lịch chăm sóc', 'Care calendar'), icon: CalendarHeart, color: MOM_THEME.sageDark, go: () => navigation.navigate('CareCalendar') },
     { key: 'vitamins', label: t('Lịch uống vitamin', 'Vitamin schedule'), icon: Pill, color: '#8E6BB8', go: () => navigation.navigate('Medications') },
     { key: 'alerts', label: t('Thông báo', 'Notifications'), icon: Bell, color: MOM_THEME.amberDark, go: () => navigation.navigate('Notifications') },
-    { key: 'ai', label: t('Lịch sử Trợ lý AI', 'AI history'), icon: HeartPulse, color: MOM_THEME.roseDark, go: () => navigation.navigate('SymptomHistory') },
+    { key: 'ai', label: t('Lịch sử Trợ lý AI', 'AI history'), icon: HeartPulse, color: a.primary, go: () => navigation.navigate('SymptomHistory') },
     { key: 'recipes', label: t('Món ăn AI', 'AI recipes'), icon: Utensils, color: MOM_THEME.amberDark, go: () => navigation.navigate('Recipes') },
   ];
 
   const stageItems = [
-    { key: 'fertility', label: t('Rụng trứng', 'Ovulation'), icon: Calendar, color: MOM_THEME.roseDark, go: () => navigation.navigate('Fertility') },
-    { key: 'pregnancy', label: t('Thai kỳ', 'Pregnancy'), icon: Heart, color: MOM_THEME.roseDark, go: () => navigation.navigate('Pregnancy') },
+    { key: 'fertility', label: t('Rụng trứng', 'Ovulation'), icon: Calendar, color: a.primary, go: () => navigation.navigate('Fertility') },
+    { key: 'pregnancy', label: t('Thai kỳ', 'Pregnancy'), icon: Heart, color: a.primary, go: () => navigation.navigate('Pregnancy') },
     { key: 'postpartum', label: t('Hậu sản', 'After birth'), icon: Activity, color: MOM_THEME.sageDark, go: () => navigation.navigate('Postpartum') },
     {
       key: 'baby',
@@ -223,7 +226,7 @@ export default function ToolsScreen() {
         <Text style={styles.sectionLabel}>{t('Lịch sử giao dịch', 'Transaction history')}</Text>
         {planLoading ? (
           <View style={styles.loadingRow}>
-            <ActivityIndicator color={MOM_THEME.roseDark} size="small" />
+            <ActivityIndicator color={a.primary} size="small" />
             <Text style={styles.loadingText}>{t('Đang tải thông tin gói...', 'Loading your plan...')}</Text>
           </View>
         ) : planError ? (
@@ -286,7 +289,7 @@ export default function ToolsScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView behavior="padding" style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={MOM_THEME.cream} />
 
       <ScrollView
@@ -305,11 +308,6 @@ export default function ToolsScreen() {
               'Tools for your cycle, pregnancy and baby care 🌸'
             )}
           </Text>
-        </View>
-
-        <View style={styles.languageRow}>
-          <Text style={styles.languageLabel}>{t('Ngôn ngữ', 'Language')}</Text>
-          <LanguageToggle />
         </View>
 
         <Text style={styles.groupTitle}>{t('Sức khỏe của mẹ', 'Your health')}</Text>
@@ -359,6 +357,12 @@ export default function ToolsScreen() {
               onPress={() => openPanel(item.key)}
             />
           ))}
+          <MenuTile
+            label={t('Cài đặt', 'Settings')}
+            icon={Settings}
+            color={MOM_THEME.charcoalMid}
+            onPress={() => navigation.navigate('Settings')}
+          />
         </View>
 
         {renderPanel()}
@@ -370,7 +374,7 @@ export default function ToolsScreen() {
             </View>
             {loading ? (
               <View style={styles.loadingRow}>
-                <ActivityIndicator color={MOM_THEME.roseDark} size="small" />
+                <ActivityIndicator color={a.primary} size="small" />
                 <Text style={styles.loadingText}>{t('Đang gửi...', 'Sending...')}</Text>
               </View>
             ) : (
@@ -379,7 +383,7 @@ export default function ToolsScreen() {
           </View>
         ) : null}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -398,6 +402,7 @@ function MenuTile({
   locked?: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity
       style={[styles.menuItem, selected && styles.menuItemActive]}
@@ -414,6 +419,7 @@ function MenuTile({
 }
 
 function Panel({ title, subtitle, children }: React.PropsWithChildren<{ title: string; subtitle: string }>) {
+  const styles = useStyles();
   return (
     <View style={[styles.panel, SHADOWS.card]}>
       <Text style={styles.panelTitle}>{title}</Text>
@@ -424,6 +430,7 @@ function Panel({ title, subtitle, children }: React.PropsWithChildren<{ title: s
 }
 
 function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity style={styles.primaryButton} onPress={onPress} activeOpacity={0.86}>
       <Text style={styles.primaryButtonText}>{label}</Text>
@@ -433,6 +440,7 @@ function PrimaryButton({ label, onPress }: { label: string; onPress: () => void 
 
 
 function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+  const styles = useStyles();
   return (
     <TouchableOpacity style={styles.secondaryButton} onPress={onPress} activeOpacity={0.86}>
       <Text style={styles.secondaryButtonText}>{label}</Text>
@@ -441,6 +449,7 @@ function SecondaryButton({ label, onPress }: { label: string; onPress: () => voi
 }
 
 function TransactionRow({ transaction: tx }: { transaction: PaymentTransaction }) {
+  const styles = useStyles();
   const t = useT();
   const status = PAYMENT_STATUS_LABELS[tx.status];
   const date = formatTimestamp(tx.paidAt || tx.createdAt);
@@ -461,7 +470,7 @@ function TransactionRow({ transaction: tx }: { transaction: PaymentTransaction }
 }
 
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   root: {
     flex: 1,
     backgroundColor: MOM_THEME.cream,
@@ -481,7 +490,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   eyebrow: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -504,17 +513,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 10,
   },
-  languageRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 18,
-  },
-  languageLabel: {
-    color: MOM_THEME.charcoal,
-    fontSize: 15,
-    fontWeight: '800',
-  },
   menuGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -536,8 +534,8 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   chipActive: {
-    backgroundColor: MOM_THEME.roseDark,
-    borderColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
+    borderColor: a.primary,
   },
   chipText: {
     color: MOM_THEME.charcoalMid,
@@ -561,8 +559,8 @@ const styles = StyleSheet.create({
     gap: 9,
   },
   menuItemActive: {
-    backgroundColor: MOM_THEME.roseDark,
-    borderColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
+    borderColor: a.primary,
   },
   menuIconWrap: {
     width: 32,
@@ -636,7 +634,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     minHeight: 48,
     borderRadius: 14,
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 6,
@@ -649,13 +647,13 @@ const styles = StyleSheet.create({
   secondaryButton: {
     minHeight: 44,
     borderRadius: 14,
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
   },
   secondaryButtonText: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -673,7 +671,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   currentPlanName: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 18,
     fontWeight: '800',
     marginTop: 2,
@@ -768,4 +766,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-});
+}));

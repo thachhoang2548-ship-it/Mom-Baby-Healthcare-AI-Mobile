@@ -1,10 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { AlertTriangle, PhoneCall } from 'lucide-react-native';
 import { Card, Screen, SectionTitle, uiStyles } from '../../components/ui';
 import featureService, { EmergencyGuide } from '../../services/featureService';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { createThemedStyles } from '../../theme/accent';
 
 const EMERGENCY_NUMBER = '115';
 const DANGER = '#C8102E';
@@ -43,6 +44,7 @@ const callEmergency = () => {
 };
 
 export default function EmergencyScreen() {
+  const styles = useStyles();
   const [guide, setGuide] = useState<EmergencyGuide>(OFFLINE_GUIDE);
 
   useFocusEffect(
@@ -99,7 +101,7 @@ export default function EmergencyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   call: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -152,8 +154,8 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: MOM_THEME.pinkLight,
-    color: MOM_THEME.roseDeep,
+    backgroundColor: a.light,
+    color: a.primaryDark,
     fontSize: 13,
     fontWeight: '800',
     textAlign: 'center',
@@ -167,4 +169,4 @@ const styles = StyleSheet.create({
     marginTop: 16,
     lineHeight: 18,
   },
-});
+}));

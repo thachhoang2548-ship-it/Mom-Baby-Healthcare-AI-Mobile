@@ -1,10 +1,9 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -30,6 +29,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage, isNetworkError, isTierLocked } from '../../utils/apiError';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 import { tr, useT } from '../../i18n';
+import { createThemedStyles, useAccent, useThemeStore } from '../../theme/accent';
 
 const MEAL_SLOTS = [
   { key: 'breakfast', label: 'Bữa sáng', labelEn: 'Breakfast', time: '07:30', icon: '🥣' },
@@ -43,6 +43,8 @@ const formatMeasure = (value: number | undefined, unit: string) =>
   value ? `${value} ${unit}` : tr('Chưa có', 'Not yet');
 
 export default function BabyNutritionScreen() {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const t = useT();
   const [offline, setOffline] = useState(false);
@@ -130,6 +132,13 @@ export default function BabyNutritionScreen() {
   };
 
   const selectedBaby = babies?.find((b) => b.id === selectedId) ?? null;
+
+  // Màu giao diện đổi theo bé đang chọn (bé gái hồng, bé trai xanh).
+  const setActiveBaby = useThemeStore((s) => s.setActiveBaby);
+  useEffect(() => {
+    if (babies === null || locked) return;
+    setActiveBaby(selectedBaby ? { id: selectedBaby.id, gender: selectedBaby.gender } : null);
+  }, [babies, locked, selectedBaby, setActiveBaby]);
   const ageMonths = selectedBaby?.ageMonths ?? 0;
   const tip = getNutritionTip(ageMonths, t);
   const totals = dailyMenu?.nutrition_totals || {};
@@ -188,7 +197,7 @@ export default function BabyNutritionScreen() {
             onPress={() => navigation.navigate('BabyProfileForm')}
             activeOpacity={0.8}
           >
-            <Plus size={14} color={MOM_THEME.roseDark} />
+            <Plus size={14} color={a.primary} />
             <Text style={styles.babyChipText}>{t('Thêm bé', 'Add baby')}</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -215,7 +224,7 @@ export default function BabyNutritionScreen() {
                 onPress={() => navigation.navigate('BabyProfileForm', { baby: selectedBaby })}
                 activeOpacity={0.85}
               >
-                <Pencil size={12} color={MOM_THEME.roseDark} />
+                <Pencil size={12} color={a.primary} />
                 <Text style={styles.agePillText}>{t('Sửa hồ sơ', 'Edit profile')}</Text>
               </TouchableOpacity>
             </View>
@@ -227,7 +236,7 @@ export default function BabyNutritionScreen() {
 
             <View style={styles.statsCardRow}>
               <View style={styles.statMiniCard}>
-                <Weight size={15} color={MOM_THEME.roseDark} />
+                <Weight size={15} color={a.primary} />
                 <View>
                   <Text style={styles.statMiniVal}>{formatMeasure(selectedBaby.currentWeightKg, 'kg')}</Text>
                   <Text style={styles.statMiniLbl}>{t('Cân nặng', 'Weight')}</Text>
@@ -247,13 +256,13 @@ export default function BabyNutritionScreen() {
         <View style={styles.quickLinks}>
           <SecondaryButton
             label={t('Tăng trưởng', 'Growth')}
-            icon={<ChartLine size={16} color={MOM_THEME.roseDeep} />}
+            icon={<ChartLine size={16} color={a.primaryDark} />}
             onPress={() => navigation.navigate('GrowthChart', { babyId: String(selectedBaby.id) })}
             style={styles.quickLink}
           />
           <SecondaryButton
             label={t('Thực đơn 7 ngày', '7-day menu')}
-            icon={<CalendarDays size={16} color={MOM_THEME.roseDeep} />}
+            icon={<CalendarDays size={16} color={a.primaryDark} />}
             onPress={() =>
               navigation.navigate('BabyWeeklyMenu', {
                 babyId: String(selectedBaby.id),
@@ -310,7 +319,7 @@ export default function BabyNutritionScreen() {
 
         {isLoading ? (
           <View style={styles.loadingBox}>
-            <ActivityIndicator color={MOM_THEME.roseDark} />
+            <ActivityIndicator color={a.primary} />
             <Text style={styles.loadingText}>{t('Đang chuẩn bị thực đơn dinh dưỡng...', 'Preparing the menu...')}</Text>
           </View>
         ) : menuMessage || !hasAnyMeal ? (
@@ -399,9 +408,9 @@ export default function BabyNutritionScreen() {
               activeOpacity={0.8}
             >
               {isRefreshing ? (
-                <ActivityIndicator size="small" color={MOM_THEME.roseDark} />
+                <ActivityIndicator size="small" color={a.primary} />
               ) : (
-                <RefreshCw size={19} color={MOM_THEME.roseDark} />
+                <RefreshCw size={19} color={a.primary} />
               )}
             </TouchableOpacity>
           ) : null}
@@ -451,6 +460,7 @@ function getNutritionTip(ageMonths: number, t: (vi: string, en: string) => strin
 }
 
 function Nutrient({ label, value, color, bg }: { label: string; value: string; color: string; bg: string }) {
+  const styles = useStyles();
   return (
     <View style={[styles.nutrient, { backgroundColor: bg }]}>
       <Text style={[styles.nutrientValue, { color }]}>{value}</Text>
@@ -459,7 +469,7 @@ function Nutrient({ label, value, color, bg }: { label: string; value: string; c
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   root: {
     flex: 1,
     backgroundColor: MOM_THEME.cream,
@@ -482,7 +492,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   eyebrow: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.8,
@@ -519,8 +529,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   babyChipActive: {
-    backgroundColor: MOM_THEME.roseDark,
-    borderColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
+    borderColor: a.primary,
   },
   babyChipEmoji: {
     fontSize: 14,
@@ -794,7 +804,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   retryLink: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 12,
     fontWeight: '700',
     marginTop: 6,
@@ -842,7 +852,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   mealTime: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -864,7 +874,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   mealMetaKcal: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -875,5 +885,5 @@ const styles = StyleSheet.create({
     color: MOM_THEME.muted,
     fontSize: 11,
   },
-});
+}));
 

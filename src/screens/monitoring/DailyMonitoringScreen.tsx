@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Minus, Plus } from 'lucide-react-native';
 import {
@@ -17,6 +17,8 @@ import featureService, { DailyMonitoringLog, DailyMonitoringPayload } from '../.
 import { getApiErrorMessage } from '../../utils/apiError';
 import { LITERS_PER_CUP, MOOD_OPTIONS, SLEEP_QUALITY_OPTIONS, cupsFromLiters } from '../../utils/monitoring';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { createThemedStyles, useAccent } from '../../theme/accent';
+import { useT } from '../../i18n';
 
 const toNumber = (value: string): number | undefined => {
   const n = parseFloat(value.replace(',', '.'));
@@ -38,14 +40,17 @@ function Stepper({
   max: number;
   unit: string;
 }) {
+  const a = useAccent();
+  const styles = useStyles();
+  const t = useT();
   return (
     <View style={styles.stepper}>
       <TouchableOpacity
         style={styles.stepButton}
         onPress={() => onChange(Math.max(min, value - step))}
-        accessibilityLabel="Giảm"
+        accessibilityLabel={t('Giảm', 'Decrease')}
       >
-        <Minus size={18} color={MOM_THEME.roseDark} />
+        <Minus size={18} color={a.primary} />
       </TouchableOpacity>
       <Text style={styles.stepValue}>
         {value} <Text style={styles.stepUnit}>{unit}</Text>
@@ -53,9 +58,9 @@ function Stepper({
       <TouchableOpacity
         style={styles.stepButton}
         onPress={() => onChange(Math.min(max, value + step))}
-        accessibilityLabel="Tăng"
+        accessibilityLabel={t('Tăng', 'Increase')}
       >
-        <Plus size={18} color={MOM_THEME.roseDark} />
+        <Plus size={18} color={a.primary} />
       </TouchableOpacity>
     </View>
   );
@@ -66,10 +71,12 @@ function EmojiScale({
   value,
   onChange,
 }: {
-  options: { score: number; emoji: string; label: string }[];
+  options: { score: number; emoji: string; label: string; labelEn: string }[];
   value: number | null;
   onChange: (score: number) => void;
 }) {
+  const styles = useStyles();
+  const t = useT();
   return (
     <View style={styles.emojiRow}>
       {options.map((opt) => {
@@ -82,7 +89,7 @@ function EmojiScale({
             accessibilityState={{ selected: active }}
           >
             <Text style={styles.emoji}>{opt.emoji}</Text>
-            <Text style={[styles.emojiLabel, active && styles.emojiLabelActive]}>{opt.label}</Text>
+            <Text style={[styles.emojiLabel, active && styles.emojiLabelActive]}>{t(opt.label, opt.labelEn)}</Text>
           </TouchableOpacity>
         );
       })}
@@ -91,6 +98,8 @@ function EmojiScale({
 }
 
 export default function DailyMonitoringScreen() {
+  const styles = useStyles();
+  const t = useT();
   const navigation = useNavigation();
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -149,11 +158,14 @@ export default function DailyMonitoringScreen() {
     const high = toNumber(bpHigh);
     const low = toNumber(bpLow);
     if ((high && !low) || (!high && low)) {
-      Alert.alert('Huyết áp chưa đủ', 'Mẹ nhập cả chỉ số tâm thu và tâm trương (VD: 110 / 70) nhé.');
+      Alert.alert(
+        t('Huyết áp chưa đủ', 'Blood pressure incomplete'),
+        t('Mẹ nhập cả chỉ số tâm thu và tâm trương (VD: 110 / 70) nhé.', 'Enter both numbers (e.g. 110 / 70).')
+      );
       return;
     }
     if (high && low && (high < 60 || high > 250 || low < 30 || low > 150 || low >= high)) {
-      Alert.alert('Kiểm tra lại', 'Chỉ số huyết áp chưa hợp lý. VD: 110 / 70 mmHg.');
+      Alert.alert(t('Kiểm tra lại', 'Please check'), t('Chỉ số huyết áp chưa hợp lý. VD: 110 / 70 mmHg.', 'These numbers look off. Example: 110 / 70 mmHg.'));
       return;
     }
 
@@ -177,20 +189,23 @@ export default function DailyMonitoringScreen() {
     setSaving(true);
     try {
       await featureService.saveDailyMonitoring(payload);
-      Alert.alert('Đã lưu', 'Nhật ký sức khỏe hôm nay đã được ghi nhận.', [
+      Alert.alert(t('Đã lưu', 'Saved'), t('Nhật ký sức khỏe hôm nay đã được ghi nhận.', "Today's log is saved."), [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (err) {
-      Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+      Alert.alert(t('Chưa lưu được', 'Could not save'), getApiErrorMessage(err));
     } finally {
       setSaving(false);
     }
   };
 
   const header = {
-    eyebrow: 'Theo dõi hằng ngày',
-    title: 'Nhật ký hôm nay',
-    subtitle: 'Chỉ mất khoảng 1 phút. Mẹ có thể lưu nhiều lần trong ngày, số liệu mới sẽ ghi đè.',
+    eyebrow: t('Theo dõi hằng ngày', 'Daily tracking'),
+    title: t('Nhật ký hôm nay', "Today's log"),
+    subtitle: t(
+      'Chỉ mất khoảng 1 phút. Mẹ có thể lưu nhiều lần trong ngày, số liệu mới sẽ ghi đè.',
+      'Takes about a minute. You can save several times a day; the latest entry wins.'
+    ),
   };
 
   if (loadError) {
@@ -210,53 +225,62 @@ export default function DailyMonitoringScreen() {
 
   return (
     <Screen {...header}>
-      <SectionTitle title="😴 Giấc ngủ" />
+      <SectionTitle title={t('😴 Giấc ngủ', '😴 Sleep')} />
       <Card>
-        <Text style={uiStyles.label}>Đêm qua mẹ ngủ bao lâu?</Text>
-        <Stepper value={sleepHours} onChange={setSleepHours} step={0.5} min={0} max={14} unit="giờ" />
-        <Text style={[uiStyles.label, styles.gap]}>Chất lượng giấc ngủ</Text>
+        <Text style={uiStyles.label}>{t('Đêm qua mẹ ngủ bao lâu?', 'How long did you sleep last night?')}</Text>
+        <Stepper value={sleepHours} onChange={setSleepHours} step={0.5} min={0} max={14} unit={t('giờ', 'h')} />
+        <Text style={[uiStyles.label, styles.gap]}>{t('Chất lượng giấc ngủ', 'Sleep quality')}</Text>
         <EmojiScale options={SLEEP_QUALITY_OPTIONS} value={sleepQuality} onChange={setSleepQuality} />
       </Card>
 
-      <SectionTitle title="💧 Uống nước" subtitle={`1 ly ≈ ${LITERS_PER_CUP * 1000} ml · mục tiêu 10 ly (2,5 lít)`} />
+      <SectionTitle
+        title={t('💧 Uống nước', '💧 Water')}
+        subtitle={t(
+          `1 ly ≈ ${LITERS_PER_CUP * 1000} ml · mục tiêu 10 ly (2,5 lít)`,
+          `1 glass ≈ ${LITERS_PER_CUP * 1000} ml · goal 10 glasses (2.5 L)`
+        )}
+      />
       <Card>
-        <Stepper value={cups} onChange={setCups} step={1} min={0} max={20} unit="ly" />
+        <Stepper value={cups} onChange={setCups} step={1} min={0} max={20} unit={t('ly', 'glasses')} />
       </Card>
 
-      <SectionTitle title="🍚 Bữa ăn" />
+      <SectionTitle title={t('🍚 Bữa ăn', '🍚 Meals')} />
       <Card>
-        <ToggleRow label="Bữa sáng" value={meals.breakfast} onValueChange={(v) => setMeals((m) => ({ ...m, breakfast: v }))} />
-        <ToggleRow label="Bữa trưa" value={meals.lunch} onValueChange={(v) => setMeals((m) => ({ ...m, lunch: v }))} />
-        <ToggleRow label="Bữa tối" value={meals.dinner} onValueChange={(v) => setMeals((m) => ({ ...m, dinner: v }))} />
+        <ToggleRow label={t('Bữa sáng', 'Breakfast')} value={meals.breakfast} onValueChange={(v) => setMeals((m) => ({ ...m, breakfast: v }))} />
+        <ToggleRow label={t('Bữa trưa', 'Lunch')} value={meals.lunch} onValueChange={(v) => setMeals((m) => ({ ...m, lunch: v }))} />
+        <ToggleRow label={t('Bữa tối', 'Dinner')} value={meals.dinner} onValueChange={(v) => setMeals((m) => ({ ...m, dinner: v }))} />
       </Card>
 
-      <SectionTitle title="🌸 Tâm trạng" />
+      <SectionTitle title={t('🌸 Tâm trạng', '🌸 Mood')} />
       <Card>
         <EmojiScale options={MOOD_OPTIONS} value={moodScore} onChange={setMoodScore} />
         <View style={styles.gap} />
         <Field
-          label="Ghi chú (không bắt buộc)"
+          label={t('Ghi chú (không bắt buộc)', 'Note (optional)')}
           value={moodNote}
           onChangeText={setMoodNote}
-          placeholder="Hôm nay mẹ thấy thế nào?"
+          placeholder={t('Hôm nay mẹ thấy thế nào?', 'How are you feeling today?')}
         />
       </Card>
 
-      <SectionTitle title="🩺 Chỉ số cơ thể" subtitle="Không bắt buộc, nhập nếu mẹ có đo" />
+      <SectionTitle
+        title={t('🩺 Chỉ số cơ thể', '🩺 Body measurements')}
+        subtitle={t('Không bắt buộc, nhập nếu mẹ có đo', 'Optional, if you measured them')}
+      />
       <Card>
-        <Text style={uiStyles.label}>Huyết áp (mmHg)</Text>
+        <Text style={uiStyles.label}>{t('Huyết áp (mmHg)', 'Blood pressure (mmHg)')}</Text>
         <View style={styles.row}>
           <View style={styles.flex}>
-            <Field label="Tâm thu" value={bpHigh} onChangeText={setBpHigh} keyboardType="number-pad" placeholder="110" />
+            <Field label={t('Tâm thu', 'Systolic')} value={bpHigh} onChangeText={setBpHigh} keyboardType="number-pad" placeholder="110" />
           </View>
           <View style={styles.flex}>
-            <Field label="Tâm trương" value={bpLow} onChangeText={setBpLow} keyboardType="number-pad" placeholder="70" />
+            <Field label={t('Tâm trương', 'Diastolic')} value={bpLow} onChangeText={setBpLow} keyboardType="number-pad" placeholder="70" />
           </View>
         </View>
         <View style={styles.row}>
           <View style={styles.flex}>
             <Field
-              label="Đường huyết (mmol/L)"
+              label={t('Đường huyết (mmol/L)', 'Blood sugar (mmol/L)')}
               value={bloodSugar}
               onChangeText={setBloodSugar}
               keyboardType="decimal-pad"
@@ -264,14 +288,16 @@ export default function DailyMonitoringScreen() {
             />
           </View>
           <View style={styles.flex}>
-            <Field label="Cân nặng (kg)" value={weight} onChangeText={setWeight} keyboardType="decimal-pad" placeholder="55" />
+            <Field label={t('Cân nặng (kg)', 'Weight (kg)')} value={weight} onChangeText={setWeight} keyboardType="decimal-pad" placeholder="55" />
           </View>
         </View>
       </Card>
 
-      <SectionTitle title="🤒 Triệu chứng" />
+      <SectionTitle title={t('🤒 Triệu chứng', '🤒 Symptoms')} />
       <Card>
-        <Text style={uiStyles.label}>Mức độ khó chịu: {symptomSeverity} / 5</Text>
+        <Text style={uiStyles.label}>
+          {t('Mức độ khó chịu:', 'Discomfort:')} {symptomSeverity} / 5
+        </Text>
         <View style={styles.severityRow}>
           {[0, 1, 2, 3, 4, 5].map((level) => (
             <TouchableOpacity
@@ -284,20 +310,20 @@ export default function DailyMonitoringScreen() {
           ))}
         </View>
         <Field
-          label="Mô tả (không bắt buộc)"
+          label={t('Mô tả (không bắt buộc)', 'Description (optional)')}
           value={symptomNote}
           onChangeText={setSymptomNote}
-          placeholder="VD: hơi đau lưng buổi chiều"
+          placeholder={t('VD: hơi đau lưng buổi chiều', 'e.g. mild back pain in the afternoon')}
           multiline
         />
       </Card>
 
-      <PrimaryButton label="Lưu nhật ký hôm nay" onPress={save} loading={saving} />
+      <PrimaryButton label={t('Lưu nhật ký hôm nay', "Save today's log")} onPress={save} loading={saving} />
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   flex: {
     flex: 1,
   },
@@ -317,7 +343,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: MOM_THEME.pinkLight,
+    backgroundColor: a.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -345,8 +371,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   emojiItemActive: {
-    backgroundColor: MOM_THEME.pinkLight,
-    borderColor: MOM_THEME.rose,
+    backgroundColor: a.light,
+    borderColor: a.tint,
   },
   emoji: {
     fontSize: 26,
@@ -359,7 +385,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emojiLabelActive: {
-    color: MOM_THEME.roseDeep,
+    color: a.primaryDark,
     fontWeight: '800',
   },
   severityRow: {
@@ -378,8 +404,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   severityDotActive: {
-    backgroundColor: MOM_THEME.roseDark,
-    borderColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
+    borderColor: a.primary,
   },
   severityText: {
     color: MOM_THEME.charcoalMid,
@@ -388,4 +414,4 @@ const styles = StyleSheet.create({
   severityTextActive: {
     color: MOM_THEME.white,
   },
-});
+}));

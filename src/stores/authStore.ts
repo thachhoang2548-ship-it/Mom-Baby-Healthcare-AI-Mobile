@@ -5,6 +5,7 @@ import featureService from '../services/featureService';
 import { STORAGE_KEYS } from '../api/axiosClient';
 import { tr } from '../i18n';
 import { getApiErrorMessage } from '../utils/apiError';
+import { useThemeStore } from '../theme/accent';
 
 export type TierType = 'Free' | 'MomHienDai' | 'SuperMomVip';
 
@@ -211,6 +212,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         STORAGE_KEYS.USER,
         STORAGE_KEYS.TIER,
       ]);
+      // Màu theo bé của tài khoản cũ không áp cho người đăng nhập sau.
+      await useThemeStore.getState().clearBaby();
       set({
         user: null,
         token: null,

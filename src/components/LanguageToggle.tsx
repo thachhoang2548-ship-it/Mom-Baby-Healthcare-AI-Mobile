@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Lang, useLanguageStore } from '../i18n';
 import { MOM_THEME } from '../theme/colors';
+import { createThemedStyles } from '../theme/accent';
 
 const OPTIONS: { lang: Lang; label: string; a11y: string }[] = [
   { lang: 'vi', label: 'VI', a11y: 'Tiếng Việt' },
@@ -10,6 +11,7 @@ const OPTIONS: { lang: Lang; label: string; a11y: string }[] = [
 
 /** Nút chuyển Tiếng Việt / English; lựa chọn được lưu lại cho lần mở sau. */
 export default function LanguageToggle() {
+  const styles = useStyles();
   const lang = useLanguageStore((s) => s.lang);
   const setLang = useLanguageStore((s) => s.setLang);
 
@@ -35,7 +37,7 @@ export default function LanguageToggle() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   wrap: {
     flexDirection: 'row',
     borderRadius: 999,
@@ -50,7 +52,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   optionActive: {
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
   },
   text: {
     fontSize: 12,
@@ -60,4 +62,4 @@ const styles = StyleSheet.create({
   textActive: {
     color: MOM_THEME.white,
   },
-});
+}));

@@ -9,18 +9,20 @@ import { STORAGE_KEYS } from '../../api/axiosClient';
 import { useAuthStore } from '../../stores/authStore';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { RADII } from '../../theme/colors';
+import { tr, useT } from '../../i18n';
 
 const DELETED_DATA = [
-  'Thông tin tài khoản (họ tên, email)',
-  'Hồ sơ sức khỏe của mẹ và hồ sơ của bé',
-  'Nhật ký hằng ngày, cân nặng, chu kỳ, lịch uống thuốc',
-  'Lịch sử phân tích triệu chứng (kèm ảnh) và kết quả EPDS',
-  'Món ăn đã lưu và thông báo',
+  { vi: 'Thông tin tài khoản (họ tên, email)', en: 'Account details (name, email)' },
+  { vi: 'Hồ sơ sức khỏe của mẹ và hồ sơ của bé', en: "Your health profile and your baby's profiles" },
+  { vi: 'Nhật ký hằng ngày, cân nặng, chu kỳ, lịch uống vitamin', en: 'Daily logs, weight, cycles and supplement schedules' },
+  { vi: 'Lịch sử hỏi trợ lý AI (kèm ảnh) và kết quả khảo sát', en: 'AI question history (with photos) and survey results' },
+  { vi: 'Món ăn đã lưu và thông báo', en: 'Saved recipes and notifications' },
 ];
 
 export default function DeleteAccountScreen() {
   const navigation = useNavigation();
   const { user, clearSession } = useAuthStore();
+  const t = useT();
   const [password, setPassword] = useState('');
   const [deleting, setDeleting] = useState(false);
 
@@ -31,9 +33,12 @@ export default function DeleteAccountScreen() {
       await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
       clearSession();
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'GuestHome' }] }));
-      Alert.alert('Đã xóa tài khoản', 'Tài khoản và dữ liệu của mẹ đã được xóa khỏi Mom Ơi.');
+      Alert.alert(
+        tr('Đã xóa tài khoản', 'Account deleted'),
+        tr('Tài khoản và dữ liệu của mẹ đã được xóa khỏi Mom Ơi.', 'Your account and data have been deleted from Mom Ơi.')
+      );
     } catch (err) {
-      Alert.alert('Chưa xóa được tài khoản', getApiErrorMessage(err));
+      Alert.alert(tr('Chưa xóa được tài khoản', 'Could not delete your account'), getApiErrorMessage(err));
     } finally {
       setDeleting(false);
     }
@@ -41,51 +46,65 @@ export default function DeleteAccountScreen() {
 
   const confirm = () => {
     if (!password) {
-      Alert.alert('Cần nhập mật khẩu', 'Mẹ nhập mật khẩu hiện tại để xác nhận.');
+      Alert.alert(
+        t('Cần nhập mật khẩu', 'Password needed'),
+        t('Mẹ nhập mật khẩu hiện tại để xác nhận.', 'Enter your current password to confirm.')
+      );
       return;
     }
     Alert.alert(
-      'Xóa vĩnh viễn tài khoản?',
-      'Toàn bộ dữ liệu sẽ bị xóa và không thể khôi phục. Gói dịch vụ còn hạn (nếu có) cũng sẽ mất.',
+      t('Xóa vĩnh viễn tài khoản?', 'Delete your account permanently?'),
+      t(
+        'Toàn bộ dữ liệu sẽ bị xóa và không thể khôi phục. Gói dịch vụ còn hạn (nếu có) cũng sẽ mất.',
+        'All your data will be deleted and cannot be recovered. Any remaining plan time will be lost too.'
+      ),
       [
-        { text: 'Hủy', style: 'cancel' },
-        { text: 'Xóa tài khoản', style: 'destructive', onPress: deleteAccount },
+        { text: t('Hủy', 'Cancel'), style: 'cancel' },
+        { text: t('Xóa tài khoản', 'Delete account'), style: 'destructive', onPress: deleteAccount },
       ]
     );
   };
 
   return (
     <Screen
-      eyebrow="Tài khoản"
-      title="Xóa tài khoản"
-      subtitle={user?.email ? `Tài khoản: ${user.email}` : undefined}
+      eyebrow={t('Tài khoản', 'Account')}
+      title={t('Xóa tài khoản', 'Delete account')}
+      subtitle={user?.email ? `${t('Tài khoản', 'Account')}: ${user.email}` : undefined}
     >
       <View style={styles.warning}>
         <TriangleAlert size={20} color="#B42318" />
         <Text style={styles.warningText}>
-          Việc xóa tài khoản là vĩnh viễn. Mẹ sẽ không thể đăng nhập lại hay khôi phục dữ liệu.
+          {t(
+            'Việc xóa tài khoản là vĩnh viễn. Mẹ sẽ không thể đăng nhập lại hay khôi phục dữ liệu.',
+            'Deleting your account is permanent. You will not be able to sign in again or recover your data.'
+          )}
         </Text>
       </View>
 
       <Card>
-        <Text style={uiStyles.label}>Dữ liệu sẽ bị xóa</Text>
+        <Text style={uiStyles.label}>{t('Dữ liệu sẽ bị xóa', 'Data that will be deleted')}</Text>
         {DELETED_DATA.map((item) => (
-          <Text key={item} style={[uiStyles.body, styles.item]}>
-            • {item}
+          <Text key={item.vi} style={[uiStyles.body, styles.item]}>
+            • {t(item.vi, item.en)}
           </Text>
         ))}
       </Card>
 
       <Card>
         <Field
-          label="Mật khẩu hiện tại"
+          label={t('Mật khẩu hiện tại', 'Current password')}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
           autoCapitalize="none"
-          placeholder="Nhập mật khẩu để xác nhận"
+          placeholder={t('Nhập mật khẩu để xác nhận', 'Enter your password to confirm')}
         />
-        <PrimaryButton label="Xóa vĩnh viễn tài khoản" onPress={confirm} loading={deleting} style={styles.danger} />
+        <PrimaryButton
+          label={t('Xóa vĩnh viễn tài khoản', 'Delete account permanently')}
+          onPress={confirm}
+          loading={deleting}
+          style={styles.danger}
+        />
       </Card>
     </Screen>
   );

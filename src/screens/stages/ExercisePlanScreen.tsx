@@ -17,10 +17,15 @@ import {
 import featureService, { ExercisePlan } from '../../services/featureService';
 import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { useT } from '../../i18n';
 
 const DURATIONS = [10, 20, 30, 45];
 
+// Giá trị gửi lên server giữ tiếng Việt; tiếng Anh chỉ để hiển thị.
+const WALKING = 'Đi bộ';
+
 export default function ExercisePlanScreen() {
+  const t = useT();
   const [plan, setPlan] = useState<ExercisePlan | null>(null);
   const [steps, setSteps] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,32 +62,38 @@ export default function ExercisePlanScreen() {
     if (!type) return;
     const stepCount = stepInput ? parseInt(stepInput, 10) : 0;
     if (stepInput && (!Number.isFinite(stepCount) || stepCount < 0 || stepCount > 50000)) {
-      Alert.alert('Kiểm tra lại', 'Số bước chân cần nằm trong khoảng 0 - 50.000.');
+      Alert.alert(t('Kiểm tra lại', 'Please check'), t('Số bước chân cần nằm trong khoảng 0 - 50.000.', 'Steps should be between 0 and 50,000.'));
       return;
     }
     setSaving(true);
     try {
       await featureService.logExercise(type, duration, stepCount);
       setStepInput('');
-      Alert.alert('Đã lưu', `Đã ghi ${duration} phút "${type}".`);
+      Alert.alert(
+        t('Đã lưu', 'Saved'),
+        t(`Đã ghi ${duration} phút "${type}".`, `Logged ${duration} min of "${type === WALKING ? 'Walking' : type}".`)
+      );
       await load();
     } catch (err) {
-      Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+      Alert.alert(t('Chưa lưu được', 'Could not save'), getApiErrorMessage(err));
     } finally {
       setSaving(false);
     }
   };
 
   const header = {
-    eyebrow: 'Thai kỳ',
-    title: 'Bài tập an toàn',
-    subtitle: 'Bài tập nhẹ nhàng phù hợp tam cá nguyệt hiện tại của mẹ.',
+    eyebrow: t('Thai kỳ', 'Pregnancy'),
+    title: t('Bài tập an toàn', 'Safe exercises'),
+    subtitle: t(
+      'Bài tập nhẹ nhàng phù hợp tam cá nguyệt hiện tại của mẹ.',
+      'Gentle exercises for your current trimester. Exercise names are in Vietnamese.'
+    ),
   };
 
   if (locked) {
     return (
       <Screen {...header}>
-        <TierLockedCard feature="Bài tập thai kỳ" />
+        <TierLockedCard feature={t('Bài tập thai kỳ', 'Pregnancy exercises')} />
       </Screen>
     );
   }
@@ -106,9 +117,18 @@ export default function ExercisePlanScreen() {
   return (
     <Screen {...header}>
       <View style={styles.hero}>
-        <Text style={styles.heroLabel}>Tam cá nguyệt {plan.trimester}</Text>
-        <Text style={styles.heroValue}>{plan.exercises.length} bài tập gợi ý</Text>
-        {steps !== null ? <Text style={styles.heroSub}>Hôm nay mẹ đã đi {steps.toLocaleString('vi-VN')} bước</Text> : null}
+        <Text style={styles.heroLabel}>{t(`Tam cá nguyệt ${plan.trimester}`, `Trimester ${plan.trimester}`)}</Text>
+        <Text style={styles.heroValue}>
+          {t(`${plan.exercises.length} bài tập gợi ý`, `${plan.exercises.length} suggested exercises`)}
+        </Text>
+        {steps !== null ? (
+          <Text style={styles.heroSub}>
+            {t(
+              `Hôm nay mẹ đã đi ${steps.toLocaleString('vi-VN')} bước`,
+              `${steps.toLocaleString('en-US')} steps today`
+            )}
+          </Text>
+        ) : null}
       </View>
 
       {plan.exercises.map((ex) => (
@@ -128,32 +148,38 @@ export default function ExercisePlanScreen() {
       <View style={styles.warning}>
         <ShieldAlert size={18} color="#B42318" />
         <Text style={styles.warningText}>
-          Dừng tập ngay nếu mẹ thấy đau bụng, ra máu, chóng mặt, khó thở hoặc co thắt tử cung, và liên hệ bác sĩ.
+          {t(
+            'Dừng tập ngay nếu mẹ thấy đau bụng, ra máu, chóng mặt, khó thở hoặc co thắt tử cung, và liên hệ bác sĩ.',
+            'Stop right away and contact your doctor if you have belly pain, bleeding, dizziness, shortness of breath or contractions.'
+          )}
         </Text>
       </View>
 
-      <SectionTitle title="Ghi lại buổi tập" />
+      <SectionTitle title={t('Ghi lại buổi tập', 'Log a workout')} />
       <Card>
-        <Text style={uiStyles.label}>Bài tập</Text>
+        <Text style={uiStyles.label}>{t('Bài tập', 'Exercise')}</Text>
         <View style={[uiStyles.rowWrap, styles.gap]}>
-          {[...plan.exercises.map((e) => e.name), 'Đi bộ'].map((name) => (
-            <Chip key={name} label={name} selected={selected === name} onPress={() => setExerciseType(name)} />
+          {[...plan.exercises.map((e) => e.name), WALKING].map((name) => (
+            <Chip
+              key={name}
+              label={name === WALKING ? t(WALKING, 'Walking') : name}
+              selected={selected === name} onPress={() => setExerciseType(name)} />
           ))}
         </View>
-        <Text style={uiStyles.label}>Thời gian</Text>
+        <Text style={uiStyles.label}>{t('Thời gian', 'Duration')}</Text>
         <View style={[uiStyles.rowWrap, styles.gap]}>
           {DURATIONS.map((m) => (
-            <Chip key={m} label={`${m} phút`} selected={duration === m} onPress={() => setDuration(m)} />
+            <Chip key={m} label={t(`${m} phút`, `${m} min`)} selected={duration === m} onPress={() => setDuration(m)} />
           ))}
         </View>
         <Field
-          label="Số bước chân (không bắt buộc)"
+          label={t('Số bước chân (không bắt buộc)', 'Steps (optional)')}
           value={stepInput}
           onChangeText={setStepInput}
           keyboardType="number-pad"
-          placeholder="VD: 3500"
+          placeholder={t('VD: 3500', 'e.g. 3500')}
         />
-        <PrimaryButton label="Lưu buổi tập" onPress={submit} loading={saving} />
+        <PrimaryButton label={t('Lưu buổi tập', 'Save workout')} onPress={submit} loading={saving} />
       </Card>
     </Screen>
   );

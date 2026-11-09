@@ -8,9 +8,11 @@ import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { formatDateTime } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { useT } from '../../i18n';
 
 export default function SymptomDetailScreen() {
   const { params } = useRoute<RouteProp<RootStackParamList, 'SymptomDetail'>>();
+  const t = useT();
   const [log, setLog] = useState<SymptomLogDto | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,12 +23,12 @@ export default function SymptomDetailScreen() {
         setLog(res.data);
         setError(null);
       } else {
-        setError(res.message || 'Không tìm thấy lần phân tích này.');
+        setError(res.message || t('Không tìm thấy lần phân tích này.', 'This answer could not be found.'));
       }
     } catch (err) {
       setError(getApiErrorMessage(err));
     }
-  }, [params.id]);
+  }, [params.id, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -35,7 +37,7 @@ export default function SymptomDetailScreen() {
   );
 
   return (
-    <Screen eyebrow="Trợ lý sức khỏe AI" title="Chi tiết phân tích">
+    <Screen eyebrow={t('Trợ lý sức khỏe AI', 'AI assistant')} title={t('Chi tiết phân tích', 'Answer details')}>
       {error ? (
         <ErrorState message={error} onRetry={load} />
       ) : !log ? (
@@ -44,7 +46,7 @@ export default function SymptomDetailScreen() {
         <>
           <Card>
             <Text style={styles.date}>{formatDateTime(log.createdAt)}</Text>
-            <Text style={styles.label}>Mẹ đã mô tả</Text>
+            <Text style={styles.label}>{t('Mẹ đã mô tả', 'What you described')}</Text>
             <Text style={styles.description}>{log.textDescription || '—'}</Text>
             {log.imageUrl ? (
               <Image source={{ uri: log.imageUrl }} style={styles.image} resizeMode="cover" />

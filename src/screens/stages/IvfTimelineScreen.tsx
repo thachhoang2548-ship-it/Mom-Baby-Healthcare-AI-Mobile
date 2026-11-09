@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Card, Chip, PrimaryButton, Screen, SectionTitle, TierLockedCard, uiStyles } from '../../components/ui';
 import DateField from '../../components/DateField';
 import featureService, { IvfMilestone } from '../../services/featureService';
 import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
 import { addDays, daysBetween, formatUtcDate, fromUtcDateIso, startOfToday, toUtcDateIso } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { createThemedStyles } from '../../theme/accent';
 
 const PROTOCOLS: { id: 'long' | 'short'; label: string; desc: string }[] = [
   { id: 'long', label: 'Phác đồ dài', desc: 'Ức chế buồng trứng trước khi kích thích (khoảng 1 tháng)' },
@@ -13,6 +14,7 @@ const PROTOCOLS: { id: 'long' | 'short'; label: string; desc: string }[] = [
 ];
 
 export default function IvfTimelineScreen() {
+  const styles = useStyles();
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [protocol, setProtocol] = useState<'long' | 'short'>('long');
   const [timeline, setTimeline] = useState<IvfMilestone[] | null>(null);
@@ -100,7 +102,7 @@ export default function IvfTimelineScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   gap: {
     marginBottom: 12,
   },
@@ -121,7 +123,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
     marginTop: 18,
   },
   dotPast: {
@@ -130,7 +132,7 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     width: 2,
-    backgroundColor: MOM_THEME.pink,
+    backgroundColor: a.border,
   },
   card: {
     flex: 1,
@@ -152,7 +154,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   day: {
-    color: MOM_THEME.roseDeep,
+    color: a.primaryDark,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -165,4 +167,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-});
+}));

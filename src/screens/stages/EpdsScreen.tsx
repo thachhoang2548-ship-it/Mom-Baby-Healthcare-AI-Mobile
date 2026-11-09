@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { ChevronLeft, ChevronRight, PhoneCall } from 'lucide-react-native';
 import {
@@ -16,8 +16,10 @@ import featureService, { EpdsResult } from '../../services/featureService';
 import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
 import { EPDS_QUESTIONS, EPDS_SELF_HARM_INDEX, epdsRisk, usableResources } from '../../utils/epds';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { createThemedStyles, useAccent } from '../../theme/accent';
 
 function SafetyBanner() {
+  const styles = useStyles();
   return (
     <View style={styles.safety}>
       <Text style={styles.safetyTitle}>Mẹ không phải một mình</Text>
@@ -34,6 +36,8 @@ function SafetyBanner() {
 }
 
 export default function EpdsScreen() {
+  const a = useAccent();
+  const styles = useStyles();
   const navigation = useNavigation();
   const [checking, setChecking] = useState(true);
   const [locked, setLocked] = useState(false);
@@ -194,7 +198,7 @@ export default function EpdsScreen() {
           onPress={() => setIndex((i) => Math.max(0, i - 1))}
           disabled={index === 0}
         >
-          <ChevronLeft size={18} color={MOM_THEME.roseDark} />
+          <ChevronLeft size={18} color={a.primary} />
           <Text style={styles.navText}>Câu trước</Text>
         </TouchableOpacity>
         {index < EPDS_QUESTIONS.length - 1 ? (
@@ -204,7 +208,7 @@ export default function EpdsScreen() {
             disabled={answers[index] === null}
           >
             <Text style={styles.navText}>Câu sau</Text>
-            <ChevronRight size={18} color={MOM_THEME.roseDark} />
+            <ChevronRight size={18} color={a.primary} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -223,7 +227,7 @@ export default function EpdsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   progressRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -237,13 +241,13 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: MOM_THEME.pink,
+    backgroundColor: a.border,
     overflow: 'hidden',
     marginBottom: 14,
   },
   progressFill: {
     height: 6,
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
   },
   question: {
     color: MOM_THEME.charcoal,
@@ -262,8 +266,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   optionActive: {
-    borderColor: MOM_THEME.roseDark,
-    backgroundColor: MOM_THEME.pinkLight,
+    borderColor: a.primary,
+    backgroundColor: a.light,
   },
   optionText: {
     color: MOM_THEME.charcoalMid,
@@ -271,7 +275,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   optionTextActive: {
-    color: MOM_THEME.roseDeep,
+    color: a.primaryDark,
     fontWeight: '800',
   },
   navRow: {
@@ -290,7 +294,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   navText: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontWeight: '800',
   },
   scoreCard: {
@@ -355,4 +359,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-});
+}));

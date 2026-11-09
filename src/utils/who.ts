@@ -1,3 +1,4 @@
+import { tr } from '../i18n';
 // Bảng bách phân vị WHO 0-24 tháng, cùng số liệu với web (GrowthChartPage.jsx).
 export interface WhoRow {
   month: number;
@@ -94,12 +95,13 @@ export interface GrowthBand {
 export function classifyGrowth(metric: GrowthMetric, isBoy: boolean, month: number, value: number): GrowthBand | null {
   const ref = whoAt(whoTable(metric, isBoy), month);
   if (!ref) return null;
-  const low = metric === 'weight' ? 'Nhẹ cân so với chuẩn' : 'Thấp so với chuẩn';
-  const high = metric === 'weight' ? 'Nặng cân so với chuẩn' : 'Cao vượt chuẩn';
+  const w = metric === 'weight';
+  const low = w ? tr('Nhẹ cân so với chuẩn', 'Below the WHO range') : tr('Thấp so với chuẩn', 'Below the WHO range');
+  const high = w ? tr('Nặng cân so với chuẩn', 'Above the WHO range') : tr('Cao vượt chuẩn', 'Above the WHO range');
   if (value < ref.P3) return { label: low, tone: 'low' };
-  if (value < ref.P15) return { label: metric === 'weight' ? 'Hơi nhẹ cân' : 'Hơi thấp', tone: 'watch' };
-  if (value <= ref.P85) return { label: 'Trong mức chuẩn', tone: 'normal' };
-  if (value <= ref.P97) return { label: metric === 'weight' ? 'Hơi nặng cân' : 'Hơi cao', tone: 'watch' };
+  if (value < ref.P15) return { label: w ? tr('Hơi nhẹ cân', 'A little light') : tr('Hơi thấp', 'A little short'), tone: 'watch' };
+  if (value <= ref.P85) return { label: tr('Trong mức chuẩn', 'Within the normal range'), tone: 'normal' };
+  if (value <= ref.P97) return { label: w ? tr('Hơi nặng cân', 'A little heavy') : tr('Hơi cao', 'A little tall'), tone: 'watch' };
   return { label: high, tone: 'low' };
 }
 

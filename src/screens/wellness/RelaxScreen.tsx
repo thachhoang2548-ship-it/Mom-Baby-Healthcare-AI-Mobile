@@ -8,6 +8,7 @@ import featureService, { RelaxLibrary, RelaxTrack } from '../../services/feature
 import { API_BASE_URL } from '../../api/endpoints';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { useT } from '../../i18n';
 
 const TONES: Record<string, { accent: string; soft: string }> = {
   pink: { accent: MOM_THEME.roseDark, soft: MOM_THEME.pinkLight },
@@ -38,6 +39,7 @@ const formatClock = (seconds: number) => {
 };
 
 export default function RelaxScreen() {
+  const t = useT();
   const [library, setLibrary] = useState<RelaxLibrary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<RelaxTrack | null>(null);
@@ -109,13 +111,16 @@ export default function RelaxScreen() {
   };
 
   const tracks = library?.tracks ?? [];
-  const hasAudio = tracks.some((t) => t.audioUrl);
+  const hasAudio = tracks.some((track) => track.audioUrl);
 
   return (
     <Screen
-      eyebrow="Một phút cho riêng mẹ"
-      title="Thư giãn"
-      subtitle={library?.description ?? 'Âm thanh nhẹ giúp mẹ nghỉ ngơi, không thay thế trị liệu y khoa.'}
+      eyebrow={t('Một phút cho riêng mẹ', 'A minute for you')}
+      title={t('Thư giãn', 'Relax')}
+      subtitle={t(
+        library?.description ?? 'Âm thanh nhẹ giúp mẹ nghỉ ngơi, không thay thế trị liệu y khoa.',
+        'Gentle sounds to help you rest. Not a replacement for medical care.'
+      )}
     >
       {!library && !error ? <LoadingView /> : null}
       {error && !library ? <ErrorState message={error} onRetry={load} /> : null}
@@ -123,8 +128,8 @@ export default function RelaxScreen() {
       {library && !hasAudio ? (
         <EmptyState
           emoji="🎧"
-          title="Nhạc thư giãn đang được cập nhật"
-          body="Trong lúc chờ, mẹ thử bài thở bên dưới nhé."
+          title={t('Nhạc thư giãn đang được cập nhật', 'Relaxing sounds are on the way')}
+          body={t('Trong lúc chờ, mẹ thử bài thở bên dưới nhé.', 'Meanwhile, try the breathing exercise below.')}
         />
       ) : null}
 
@@ -145,7 +150,7 @@ export default function RelaxScreen() {
                 disabled={disabled}
                 activeOpacity={0.85}
                 accessibilityRole="button"
-                accessibilityLabel={`${isPlaying ? 'Tạm dừng' : 'Phát'} ${track.title}`}
+                accessibilityLabel={`${isPlaying ? t('Tạm dừng', 'Pause') : t('Phát', 'Play')} ${track.title}`}
               >
                 <View style={[styles.playButton, { backgroundColor: disabled ? MOM_THEME.beige : tone.accent }]}>
                   {isLoading ? (
@@ -163,10 +168,10 @@ export default function RelaxScreen() {
                     </Text>
                     <Text style={styles.time}>
                       {disabled
-                        ? 'Chưa có âm thanh'
+                        ? t('Chưa có âm thanh', 'No audio yet')
                         : isCurrent
-                          ? `Còn ${formatClock(remaining)}`
-                          : `${track.durationMinutes} phút`}
+                          ? t(`Còn ${formatClock(remaining)}`, `${formatClock(remaining)} left`)
+                          : t(`${track.durationMinutes} phút`, `${track.durationMinutes} min`)}
                     </Text>
                   </View>
                 </View>
@@ -175,10 +180,16 @@ export default function RelaxScreen() {
           })
         : null}
 
-      <SectionTitle title="Thở 4 - 2 - 6" subtitle="Không cần tai nghe, làm được ở bất cứ đâu." />
+      <SectionTitle
+        title={t('Thở 4 - 2 - 6', '4-2-6 breathing')}
+        subtitle={t('Không cần tai nghe, làm được ở bất cứ đâu.', 'No headphones needed. Do it anywhere.')}
+      />
       <Card>
         <Text style={uiStyles.body}>
-          Hít vào bằng mũi 4 giây, giữ 2 giây, thở ra chậm bằng miệng 6 giây. Lặp lại 5 lần, vai thả lỏng.
+          {t(
+            'Hít vào bằng mũi 4 giây, giữ 2 giây, thở ra chậm bằng miệng 6 giây. Lặp lại 5 lần, vai thả lỏng.',
+            'Breathe in through your nose for 4 seconds, hold for 2, then breathe out slowly through your mouth for 6. Repeat 5 times with relaxed shoulders.'
+          )}
         </Text>
       </Card>
     </Screen>

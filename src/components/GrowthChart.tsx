@@ -3,6 +3,8 @@ import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Line, Polygon, Polyline, Text as SvgText } from 'react-native-svg';
 import { MOM_THEME } from '../theme/colors';
 import { GrowthMetric, WHO_MAX_MONTH, whoTable } from '../utils/who';
+import { useAccent } from '../theme/accent';
+import { useT } from '../i18n';
 
 export interface GrowthPoint {
   month: number;
@@ -22,6 +24,8 @@ export default function GrowthChart({
   isBoy: boolean;
   points: GrowthPoint[];
 }) {
+  const a = useAccent();
+  const t = useT();
   const [width, setWidth] = useState(0);
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
 
@@ -72,7 +76,7 @@ export default function GrowthChart({
           <Polygon points={band} fill={MOM_THEME.sageLight} />
           <Polyline points={median} fill="none" stroke={MOM_THEME.sageDark} strokeWidth={1.5} strokeDasharray="5,4" />
           {sorted.length > 1 ? (
-            <Polyline points={babyLine} fill="none" stroke={MOM_THEME.roseDark} strokeWidth={2.5} />
+            <Polyline points={babyLine} fill="none" stroke={a.primary} strokeWidth={2.5} />
           ) : null}
           {sorted.map((p, i) => (
             <Circle
@@ -80,7 +84,7 @@ export default function GrowthChart({
               cx={x(p.month)}
               cy={y(p.value)}
               r={i === sorted.length - 1 ? 5 : 3.5}
-              fill={MOM_THEME.roseDark}
+              fill={a.primary}
               stroke={MOM_THEME.white}
               strokeWidth={1.5}
             />
@@ -92,19 +96,19 @@ export default function GrowthChart({
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.swatch, { backgroundColor: MOM_THEME.sageLight }]} />
-          <Text style={styles.legendText}>Chuẩn WHO (P3–P97)</Text>
+          <Text style={styles.legendText}>{t('Chuẩn WHO (P3–P97)', 'WHO range (P3–P97)')}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.dash, { borderColor: MOM_THEME.sageDark }]} />
-          <Text style={styles.legendText}>Trung vị</Text>
+          <Text style={styles.legendText}>{t('Trung vị', 'Median')}</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.dot, { backgroundColor: MOM_THEME.roseDark }]} />
-          <Text style={styles.legendText}>Bé</Text>
+          <View style={[styles.dot, { backgroundColor: a.primary }]} />
+          <Text style={styles.legendText}>{t('Bé', 'Your baby')}</Text>
         </View>
       </View>
       <Text style={styles.axisNote}>
-        Trục ngang: tháng tuổi · Trục dọc: {metric === 'weight' ? 'kg' : 'cm'}
+        {t('Trục ngang: tháng tuổi · Trục dọc:', 'Across: age in months · Up:')} {metric === 'weight' ? 'kg' : 'cm'}
       </Text>
     </View>
   );

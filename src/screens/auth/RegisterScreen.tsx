@@ -4,14 +4,13 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Alert,
   Linking,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -20,9 +19,12 @@ import { COLORS } from '../../theme/colors';
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, Check } from 'lucide-react-native';
 import { PRIVACY_POLICY_URL } from '../../constants/links';
 import { useT } from '../../i18n';
+import { createThemedStyles } from '../../theme/accent';
 
 export default function RegisterScreen() {
+  const styles = useStyles();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   const { register, isLoading, error, clearError } = useAuthStore();
   const t = useT();
 
@@ -83,11 +85,11 @@ export default function RegisterScreen() {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior="padding"
       style={styles.container}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContainer}
+        contentContainerStyle={[styles.scrollContainer, { paddingBottom: 40 + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
       >
         <TouchableOpacity
@@ -235,7 +237,7 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   consentRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -254,8 +256,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   checkboxChecked: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: a.primary,
+    borderColor: a.primary,
   },
   consentText: {
     flex: 1,
@@ -264,7 +266,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   consentLink: {
-    color: COLORS.primary,
+    color: a.primary,
     fontWeight: '700',
     textDecorationLine: 'underline',
   },
@@ -346,13 +348,13 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   registerBtn: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: a.primary,
     height: 52,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 26,
-    shadowColor: COLORS.primary,
+    shadowColor: a.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -378,6 +380,6 @@ const styles = StyleSheet.create({
   loginLink: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: a.primary,
   },
-});
+}));

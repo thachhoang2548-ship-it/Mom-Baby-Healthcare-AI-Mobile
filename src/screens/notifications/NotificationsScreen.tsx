@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { BellRing, CheckCheck } from 'lucide-react-native';
 import { EmptyState, ErrorState, LoadingView, Screen } from '../../components/ui';
@@ -7,31 +7,36 @@ import featureService, { NotificationAlert } from '../../services/featureService
 import { getApiErrorMessage } from '../../utils/apiError';
 import { formatDateTime } from '../../utils/date';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
+import { createThemedStyles, useAccent } from '../../theme/accent';
+import { tr, useT } from '../../i18n';
 
-const TYPE_LABELS: Record<string, string> = {
-  Symptom: 'Triệu chứng',
-  Medication: 'Uống vitamin',
-  RoutineCheck: 'Nhắc định kỳ',
+const TYPE_LABELS: Record<string, { vi: string; en: string }> = {
+  Symptom: { vi: 'Triệu chứng', en: 'Symptom' },
+  Medication: { vi: 'Uống vitamin', en: 'Vitamins' },
+  RoutineCheck: { vi: 'Nhắc định kỳ', en: 'Routine check' },
 };
 
 function severityStyle(severity: string) {
   switch (severity) {
     case 'Critical':
     case 'High':
-      return { color: '#B42318', bg: '#FEE4E2', label: 'Quan trọng' };
+      return { color: '#B42318', bg: '#FEE4E2', label: tr('Quan trọng', 'Important') };
     case 'Medium':
     case 'Warning':
-      return { color: MOM_THEME.amberDark, bg: MOM_THEME.amberLight, label: 'Cần chú ý' };
+      return { color: MOM_THEME.amberDark, bg: MOM_THEME.amberLight, label: tr('Cần chú ý', 'Needs attention') };
     case 'Positive':
-      return { color: MOM_THEME.sageDark, bg: MOM_THEME.sageLight, label: 'Tích cực' };
+      return { color: MOM_THEME.sageDark, bg: MOM_THEME.sageLight, label: tr('Tích cực', 'Good news') };
     default:
-      return { color: '#4A88C7', bg: '#EEF5FA', label: 'Thông tin' };
+      return { color: '#4A88C7', bg: '#EEF5FA', label: tr('Thông tin', 'Info') };
   }
 }
 
 export const isUnresolved = (alert: NotificationAlert) => alert.status !== 'Resolved';
 
 export default function NotificationsScreen() {
+  const a = useAccent();
+  const styles = useStyles();
+  const t = useT();
   const [alerts, setAlerts] = useState<NotificationAlert[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -65,7 +70,7 @@ export default function NotificationsScreen() {
       await featureService.resolveNotification(alert.id);
       setAlerts((prev) => prev?.map((a) => (a.id === alert.id ? { ...a, status: 'Resolved' } : a)) ?? prev);
     } catch (err) {
-      Alert.alert('Chưa cập nhật được', getApiErrorMessage(err));
+      Alert.alert(t('Chưa cập nhật được', 'Could not update'), getApiErrorMessage(err));
     } finally {
       setBusyId(null);
     }
@@ -75,13 +80,13 @@ export default function NotificationsScreen() {
 
   return (
     <Screen
-      eyebrow="Cảnh báo & nhắc nhở"
-      title="Thông báo"
+      eyebrow={t('Cảnh báo & nhắc nhở', 'Alerts & reminders')}
+      title={t('Thông báo', 'Notifications')}
       subtitle={
         alerts && alerts.length
           ? pending
-            ? `Mẹ có ${pending} thông báo chưa xử lý.`
-            : 'Mẹ đã xem hết các thông báo.'
+            ? t(`Mẹ có ${pending} thông báo chưa xử lý.`, `You have ${pending} unread notification${pending > 1 ? 's' : ''}.`)
+            : t('Mẹ đã xem hết các thông báo.', "You're all caught up.")
           : undefined
       }
       refreshing={refreshing}
@@ -94,8 +99,11 @@ export default function NotificationsScreen() {
       ) : alerts.length === 0 ? (
         <EmptyState
           emoji="🔔"
-          title="Chưa có thông báo nào"
-          body="Cảnh báo sức khỏe, nhắc uống vitamin và lời khuyên từ chuyên gia sẽ hiện ở đây."
+          title={t('Chưa có thông báo nào', 'No notifications yet')}
+          body={t(
+            'Cảnh báo sức khỏe, nhắc uống vitamin và lời khuyên từ chuyên gia sẽ hiện ở đây.',
+            'Health alerts, vitamin reminders and expert tips will show up here.'
+          )}
         />
       ) : (
         alerts.map((alert) => {
@@ -109,7 +117,7 @@ export default function NotificationsScreen() {
               <View style={styles.body}>
                 <View style={styles.metaRow}>
                   <Text style={[styles.severity, { color: sev.color }]}>{sev.label}</Text>
-                  <Text style={styles.type}>{TYPE_LABELS[alert.type] || alert.type}</Text>
+                  <Text style={styles.type}>{TYPE_LABELS[alert.type] ? t(TYPE_LABELS[alert.type].vi, TYPE_LABELS[alert.type].en) : alert.type}</Text>
                 </View>
                 <Text style={styles.message}>{alert.message}</Text>
                 <View style={styles.footer}>
@@ -120,11 +128,11 @@ export default function NotificationsScreen() {
                       onPress={() => resolve(alert)}
                       disabled={busyId === alert.id}
                     >
-                      <CheckCheck size={14} color={MOM_THEME.roseDark} />
-                      <Text style={styles.resolveText}>Đã xem</Text>
+                      <CheckCheck size={14} color={a.primary} />
+                      <Text style={styles.resolveText}>{t('Đã xem', 'Mark as read')}</Text>
                     </TouchableOpacity>
                   ) : (
-                    <Text style={styles.resolvedText}>Đã xử lý</Text>
+                    <Text style={styles.resolvedText}>{t('Đã xử lý', 'Read')}</Text>
                   )}
                 </View>
               </View>
@@ -136,7 +144,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   item: {
     flexDirection: 'row',
     gap: 12,
@@ -196,7 +204,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   resolveText: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -205,4 +213,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-});
+}));

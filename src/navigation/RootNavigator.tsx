@@ -8,6 +8,7 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 import TabNavigator from './TabNavigator';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import DeleteAccountScreen from '../screens/profile/DeleteAccountScreen';
+import SettingsScreen from '../screens/settings/SettingsScreen';
 import BabyProfileFormScreen from '../screens/nutrition/BabyProfileFormScreen';
 import DailyMonitoringScreen from '../screens/monitoring/DailyMonitoringScreen';
 import MedicationScreen from '../screens/medication/MedicationScreen';
@@ -48,6 +49,7 @@ export default function RootNavigator() {
       <Stack.Group screenOptions={{ animation: 'slide_from_right' }}>
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="BabyProfileForm" component={BabyProfileFormScreen} />
         <Stack.Screen name="DailyMonitoring" component={DailyMonitoringScreen} />
         <Stack.Screen name="Medications" component={MedicationScreen} />

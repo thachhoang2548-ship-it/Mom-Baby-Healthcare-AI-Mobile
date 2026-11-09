@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
@@ -45,10 +46,13 @@ export const useLanguageStore = create<LanguageState>((set) => ({
   },
 }));
 
-/** Dùng trong component: tự vẽ lại khi đổi ngôn ngữ. */
+/**
+ * Dùng trong component: tự vẽ lại khi đổi ngôn ngữ. Hàm trả về giữ nguyên giữa các lần vẽ
+ * (chỉ đổi khi đổi ngôn ngữ) nên dùng được trong dependency của useCallback/useEffect.
+ */
 export function useT() {
   const lang = useLanguageStore((s) => s.lang);
-  return (vi: string, en: string) => (lang === 'en' ? en : vi);
+  return useCallback((vi: string, en: string) => (lang === 'en' ? en : vi), [lang]);
 }
 
 /** Dùng ngoài component (Alert trong callback, store, util). */

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, Text, TouchableOpacity, View } from 'react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Calendar, Clock } from 'lucide-react-native';
 import { MOM_THEME, RADII } from '../theme/colors';
 import { formatDate, formatTime } from '../utils/date';
+import { createThemedStyles, useAccent } from '../theme/accent';
+import { useT } from '../i18n';
 
 type Props = {
   label: string;
@@ -24,9 +26,12 @@ export default function DateField({
   mode = 'date',
   minimumDate,
   maximumDate,
-  placeholder = mode === 'date' ? 'Chọn ngày' : 'Chọn giờ',
+  placeholder,
   hint,
 }: Props) {
+  const a = useAccent();
+  const styles = useStyles();
+  const t = useT();
   const [iosOpen, setIosOpen] = useState(false);
   const pickerValue = value ?? new Date();
 
@@ -45,7 +50,7 @@ export default function DateField({
     setIosOpen((v) => !v);
   };
 
-  const text = value ? (mode === 'date' ? formatDate(value) : formatTime(value)) : placeholder;
+  const text = value ? (mode === 'date' ? formatDate(value) : formatTime(value)) : placeholder ?? (mode === 'date' ? t('Chọn ngày', 'Choose a date') : t('Chọn giờ', 'Choose a time'));
   const Icon = mode === 'date' ? Calendar : Clock;
 
   return (
@@ -53,7 +58,7 @@ export default function DateField({
       <Text style={styles.label}>{label}</Text>
       <TouchableOpacity style={styles.input} onPress={open} activeOpacity={0.8}>
         <Text style={[styles.value, !value && styles.placeholder]}>{text}</Text>
-        <Icon size={17} color={MOM_THEME.roseDark} />
+        <Icon size={17} color={a.primary} />
       </TouchableOpacity>
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       {Platform.OS === 'ios' && iosOpen ? (
@@ -76,7 +81,7 @@ export default function DateField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   field: {
     marginBottom: 12,
   },
@@ -125,7 +130,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   doneText: {
-    color: MOM_THEME.roseDark,
+    color: a.primary,
     fontWeight: '800',
   },
-});
+}));

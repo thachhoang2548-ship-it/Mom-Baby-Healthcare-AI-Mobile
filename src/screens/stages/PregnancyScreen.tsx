@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Baby, Dumbbell, HeartPulse, Pill, Salad, Scale } from 'lucide-react-native';
@@ -24,12 +24,17 @@ import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { daysBetween, formatDate, formatUtcDate, fromUtcDateIso, startOfToday } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { createThemedStyles, useAccent } from '../../theme/accent';
+import { useT } from '../../i18n';
 
 const trimesterOf = (week: number) => (week <= 13 ? 1 : week <= 27 ? 2 : 3);
 
 const lockIcon = <LockIcon color={MOM_THEME.roseDeep} />;
 
 export default function PregnancyScreen() {
+  const a = useAccent();
+  const styles = useStyles();
+  const t = useT();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const isFree = useIsFreeTier();
   const [profile, setProfile] = useState<MomProfileDto | null>(null);
@@ -77,24 +82,24 @@ export default function PregnancyScreen() {
   const submitWeight = async () => {
     const w = parseFloat(weight.replace(',', '.'));
     if (!Number.isFinite(w) || w < 20 || w > 300) {
-      Alert.alert('Kiểm tra lại', 'Cân nặng cần nằm trong khoảng 20 - 300 kg.');
+      Alert.alert(t('Kiểm tra lại', 'Please check'), t('Cân nặng cần nằm trong khoảng 20 - 300 kg.', 'Weight should be between 20 and 300 kg.'));
       return;
     }
     setSaving(true);
     try {
       const result = await featureService.logPregnancyWeight(w);
-      setAdvice(result?.recommendation || 'Đã ghi nhận cân nặng.');
+      setAdvice(result?.recommendation || t('Đã ghi nhận cân nặng.', 'Weight saved.'));
       setWeight('');
       const weightLogs = await featureService.getPregnancyWeightLogs();
       setLogs(Array.isArray(weightLogs) ? weightLogs : []);
     } catch (err) {
-      Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+      Alert.alert(t('Chưa lưu được', 'Could not save'), getApiErrorMessage(err));
     } finally {
       setSaving(false);
     }
   };
 
-  const header = { eyebrow: 'Thai kỳ', title: 'Hành trình 40 tuần' };
+  const header = { eyebrow: t('Thai kỳ', 'Pregnancy'), title: t('Hành trình 40 tuần', 'Your 40-week journey') };
 
   if (error) {
     return (
@@ -115,9 +120,12 @@ export default function PregnancyScreen() {
       <Screen {...header}>
         <EmptyState
           emoji="🤰"
-          title="Mẹ chưa ở giai đoạn mang thai"
-          body="Cập nhật giai đoạn “Đang mang thai” và ngày kinh cuối trong hồ sơ để theo dõi tuần thai."
-          actionLabel="Cập nhật hồ sơ"
+          title={t('Mẹ chưa ở giai đoạn mang thai', "You're not set as pregnant yet")}
+          body={t(
+            'Cập nhật giai đoạn “Đang mang thai” và ngày kinh cuối trong hồ sơ để theo dõi tuần thai.',
+            'Set your stage to “Pregnant” and add your last period date in your profile to track your weeks.'
+          )}
+          actionLabel={t('Cập nhật hồ sơ', 'Update profile')}
           onAction={() => navigation.navigate('Profile')}
         />
       </Screen>
@@ -136,14 +144,14 @@ export default function PregnancyScreen() {
     <Screen {...header} refreshing={false} onRefresh={load}>
       <View style={styles.hero}>
         <Text style={styles.heroEyebrow}>
-          {week ? `Tam cá nguyệt ${trimesterOf(week)}` : 'Thai kỳ'}
+          {week ? t(`Tam cá nguyệt ${trimesterOf(week)}`, `Trimester ${trimesterOf(week)}`) : t('Thai kỳ', 'Pregnancy')}
         </Text>
-        <Text style={styles.heroTitle}>{week ? `Tuần thai thứ ${week}` : 'Chưa rõ tuần thai'}</Text>
-        {weekInfo?.babySize ? <Text style={styles.heroSize}>Bé {weekInfo.babySize}</Text> : null}
+        <Text style={styles.heroTitle}>{week ? t(`Tuần thai thứ ${week}`, `Week ${week}`) : t('Chưa rõ tuần thai', 'Week not known yet')}</Text>
+        {weekInfo?.babySize ? <Text style={styles.heroSize}>{t('Bé', 'Baby:')} {weekInfo.babySize}</Text> : null}
         {dueDate ? (
           <Text style={styles.heroDue}>
-            Dự sinh {formatDate(dueDate)}
-            {daysLeft !== null && daysLeft >= 0 ? ` · còn ${daysLeft} ngày` : ''}
+            {t('Dự sinh', 'Due')} {formatDate(dueDate)}
+            {daysLeft !== null && daysLeft >= 0 ? t(` · còn ${daysLeft} ngày`, ` · ${daysLeft} days to go`) : ''}
           </Text>
         ) : null}
       </View>
@@ -153,8 +161,8 @@ export default function PregnancyScreen() {
           {weekInfo.development ? (
             <Card>
               <View style={styles.cardTitleRow}>
-                <Baby size={18} color={MOM_THEME.roseDark} />
-                <Text style={styles.cardTitle}>Bé phát triển thế nào</Text>
+                <Baby size={18} color={a.primary} />
+                <Text style={styles.cardTitle}>{t('Bé phát triển thế nào', "How your baby is growing")}</Text>
               </View>
               <Text style={uiStyles.body}>{weekInfo.development}</Text>
             </Card>
@@ -163,7 +171,7 @@ export default function PregnancyScreen() {
             <Card>
               <View style={styles.cardTitleRow}>
                 <HeartPulse size={18} color={MOM_THEME.sageDark} />
-                <Text style={styles.cardTitle}>Lời khuyên cho mẹ</Text>
+                <Text style={styles.cardTitle}>{t('Lời khuyên cho mẹ', 'Tips for you')}</Text>
               </View>
               <Text style={uiStyles.body}>{weekInfo.momTips}</Text>
             </Card>
@@ -173,17 +181,20 @@ export default function PregnancyScreen() {
         <ErrorState message={weekError} onRetry={load} />
       ) : null}
 
-      <SectionTitle title="Cân nặng thai kỳ" subtitle="Ghi đều mỗi tuần để theo dõi mức tăng cân" />
+      <SectionTitle
+        title={t('Cân nặng thai kỳ', 'Pregnancy weight')}
+        subtitle={t('Ghi đều mỗi tuần để theo dõi mức tăng cân', 'Log it weekly to follow your weight gain')}
+      />
       <Card>
         <Field
-          label="Cân nặng hôm nay (kg)"
+          label={t('Cân nặng hôm nay (kg)', "Today's weight (kg)")}
           value={weight}
           onChangeText={setWeight}
           keyboardType="decimal-pad"
-          placeholder="VD: 56.8"
+          placeholder={t('VD: 56.8', 'e.g. 56.8')}
         />
         <PrimaryButton
-          label="Ghi cân nặng"
+          label={t('Ghi cân nặng', 'Save weight')}
           icon={<Scale size={16} color={MOM_THEME.white} />}
           onPress={submitWeight}
           loading={saving}
@@ -194,54 +205,57 @@ export default function PregnancyScreen() {
           <View style={styles.logs}>
             {totalGain !== null ? (
               <Text style={styles.gain}>
-                Tổng thay đổi: {totalGain >= 0 ? '+' : ''}
-                {totalGain.toFixed(1)} kg kể từ lần ghi đầu
+                {t('Tổng thay đổi:', 'Total change:')} {totalGain >= 0 ? '+' : ''}
+                {totalGain.toFixed(1)} kg {t('kể từ lần ghi đầu', 'since your first entry')}
               </Text>
             ) : null}
             {sortedLogs.slice(0, 8).map((log, index) => (
               <View key={`${log.recordedAt}-${index}`} style={styles.logRow}>
-                <Text style={styles.logWeek}>Tuần {log.week}</Text>
+                <Text style={styles.logWeek}>{t('Tuần', 'Week')} {log.week}</Text>
                 <Text style={styles.logWeight}>{log.weight} kg</Text>
                 <Text style={styles.logDate}>{formatUtcDate(log.recordedAt)}</Text>
               </View>
             ))}
           </View>
         ) : (
-          <Text style={[uiStyles.muted, styles.noLogs]}>Chưa có lần ghi cân nặng nào.</Text>
+          <Text style={[uiStyles.muted, styles.noLogs]}>{t('Chưa có lần ghi cân nặng nào.', 'No weight entries yet.')}</Text>
         )}
       </Card>
 
-      <SectionTitle title="Bữa ăn hôm nay" subtitle="Mom Ơi nhắc nếu có món cần tránh khi mang thai" />
+      <SectionTitle
+        title={t('Bữa ăn hôm nay', "Today's meals")}
+        subtitle={t('Mom Ơi nhắc nếu có món cần tránh khi mang thai', 'Mom Ơi flags foods to avoid during pregnancy')}
+      />
       <FoodLogCard />
 
-      <SectionTitle title="Chăm sóc hằng ngày" />
+      <SectionTitle title={t('Chăm sóc hằng ngày', 'Everyday care')} />
       <SecondaryButton
-        label="Ghi nhật ký sức khỏe hôm nay"
-        icon={<HeartPulse size={16} color={MOM_THEME.roseDeep} />}
+        label={t('Ghi nhật ký sức khỏe hôm nay', "Log today's health")}
+        icon={<HeartPulse size={16} color={a.primaryDark} />}
         onPress={() => navigation.navigate('DailyMonitoring')}
       />
       <SecondaryButton
-        label="Lịch uống vitamin & sắt"
-        icon={<Pill size={16} color={MOM_THEME.roseDeep} />}
+        label={t('Lịch uống vitamin & sắt', 'Vitamin & iron schedule')}
+        icon={<Pill size={16} color={a.primaryDark} />}
         onPress={() => navigation.navigate('Medications')}
       />
       <SecondaryButton
-        label="Thực đơn thai kỳ 7 ngày"
-        icon={isFree ? lockIcon : <Salad size={16} color={MOM_THEME.roseDeep} />}
+        label={t('Thực đơn thai kỳ 7 ngày', '7-day pregnancy meal plan')}
+        icon={isFree ? lockIcon : <Salad size={16} color={a.primaryDark} />}
         onPress={() => navigation.navigate('PregnancyMealPlan')}
       />
       <SecondaryButton
-        label="Bài tập an toàn"
-        icon={isFree ? lockIcon : <Dumbbell size={16} color={MOM_THEME.roseDeep} />}
+        label={t('Bài tập an toàn', 'Safe exercises')}
+        icon={isFree ? lockIcon : <Dumbbell size={16} color={a.primaryDark} />}
         onPress={() => navigation.navigate('ExercisePlan')}
       />
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles((a) => ({
   hero: {
-    backgroundColor: MOM_THEME.roseDark,
+    backgroundColor: a.primary,
     borderRadius: RADII.cardLg,
     padding: 20,
     marginBottom: 14,
@@ -292,7 +306,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   gain: {
-    color: MOM_THEME.roseDeep,
+    color: a.primaryDark,
     fontSize: 13,
     fontWeight: '800',
     marginBottom: 8,
@@ -322,4 +336,4 @@ const styles = StyleSheet.create({
   noLogs: {
     marginTop: 12,
   },
-});
+}));

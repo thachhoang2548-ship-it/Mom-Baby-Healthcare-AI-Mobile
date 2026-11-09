@@ -23,6 +23,7 @@ import { getApiErrorMessage, isTierLocked } from '../../utils/apiError';
 import { formatUtcDate, fromUtcDateIso, startOfToday } from '../../utils/date';
 import { ageInMonths, classifyGrowth, GrowthMetric } from '../../utils/who';
 import { MOM_THEME, RADII } from '../../theme/colors';
+import { useT } from '../../i18n';
 
 const TONE_COLOR = {
   normal: { color: MOM_THEME.sageDark, bg: MOM_THEME.sageLight },
@@ -37,6 +38,7 @@ const toNumber = (value: string): number | null => {
 
 export default function GrowthChartScreen() {
   const { params } = useRoute<RouteProp<RootStackParamList, 'GrowthChart'>>();
+  const t = useT();
   const [baby, setBaby] = useState<BabyProfileDto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [locked, setLocked] = useState(false);
@@ -53,12 +55,12 @@ export default function GrowthChartScreen() {
       const res = await babyService.getProfiles();
       const found = (res.data || []).find((b) => String(b.id) === String(params.babyId)) ?? null;
       setBaby(found);
-      setError(found ? null : 'Không tìm thấy hồ sơ bé.');
+      setError(found ? null : t('Không tìm thấy hồ sơ bé.', "Could not find this baby's profile."));
     } catch (err) {
       if (isTierLocked(err)) setLocked(true);
       else setError(getApiErrorMessage(err));
     }
-  }, [params.babyId]);
+  }, [params.babyId, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -66,12 +68,12 @@ export default function GrowthChartScreen() {
     }, [load])
   );
 
-  const header = { eyebrow: 'Bé yêu', title: 'Biểu đồ tăng trưởng' };
+  const header = { eyebrow: t('Bé yêu', 'Your baby'), title: t('Biểu đồ tăng trưởng', 'Growth chart') };
 
   if (locked) {
     return (
       <Screen {...header}>
-        <TierLockedCard feature="Biểu đồ tăng trưởng" />
+        <TierLockedCard feature={t('Biểu đồ tăng trưởng', 'Growth chart')} />
       </Screen>
     );
   }
@@ -108,11 +110,11 @@ export default function GrowthChartScreen() {
     const w = toNumber(weight);
     const h = toNumber(height);
     if (w === null || w < 1 || w > 40) {
-      Alert.alert('Kiểm tra lại', 'Cân nặng của bé cần nằm trong khoảng 1 - 40 kg.');
+      Alert.alert(t('Kiểm tra lại', 'Please check'), t('Cân nặng của bé cần nằm trong khoảng 1 - 40 kg.', 'Weight should be between 1 and 40 kg.'));
       return;
     }
     if (h === null || h < 30 || h > 130) {
-      Alert.alert('Kiểm tra lại', 'Chiều cao của bé cần nằm trong khoảng 30 - 130 cm.');
+      Alert.alert(t('Kiểm tra lại', 'Please check'), t('Chiều cao của bé cần nằm trong khoảng 30 - 130 cm.', 'Height should be between 30 and 130 cm.'));
       return;
     }
     // Ghi mốc vào giữa trưa giờ máy để ngày đo không bị lệch khi đổi sang UTC.
@@ -126,24 +128,24 @@ export default function GrowthChartScreen() {
       setMeasuredAt(startOfToday());
       await load();
     } catch (err) {
-      Alert.alert('Chưa lưu được', getApiErrorMessage(err));
+      Alert.alert(t('Chưa lưu được', 'Could not save'), getApiErrorMessage(err));
     } finally {
       setSaving(false);
     }
   };
 
   const confirmDelete = (record: GrowthRecord) => {
-    Alert.alert('Xóa lần đo', 'Mẹ muốn xóa lần đo này?', [
-      { text: 'Hủy', style: 'cancel' },
+    Alert.alert(t('Xóa lần đo', 'Delete measurement'), t('Mẹ muốn xóa lần đo này?', 'Delete this measurement?'), [
+      { text: t('Hủy', 'Cancel'), style: 'cancel' },
       {
-        text: 'Xóa',
+        text: t('Xóa', 'Delete'),
         style: 'destructive',
         onPress: async () => {
           try {
             await babyService.deleteGrowth(baby.id, record.id as number);
             await load();
           } catch (err) {
-            Alert.alert('Chưa xóa được', getApiErrorMessage(err));
+            Alert.alert(t('Chưa xóa được', 'Could not delete'), getApiErrorMessage(err));
           }
         },
       },
@@ -153,51 +155,72 @@ export default function GrowthChartScreen() {
   return (
     <Screen
       {...header}
-      subtitle={`${baby.babyName} · ${isBoy ? 'bé trai' : 'bé gái'} · ${baby.ageMonths ?? 0} tháng tuổi`}
+      subtitle={`${baby.babyName} · ${isBoy ? t('bé trai', 'boy') : t('bé gái', 'girl')} · ${baby.ageMonths ?? 0} ${t('tháng tuổi', 'months old')}`}
     >
       {latest ? (
         <Card>
           <Text style={styles.latestTitle}>
-            Lần đo gần nhất · {formatUtcDate(latest.recordedAt)} ({Math.floor(latest.month)} tháng)
+            {t('Lần đo gần nhất', 'Latest')} · {formatUtcDate(latest.recordedAt)} ({Math.floor(latest.month)}{' '}
+            {t('tháng', 'months')})
           </Text>
           <View style={styles.latestRow}>
-            <Measure label="Cân nặng" value={`${latest.weightKg} kg`} band={weightBand} />
-            <Measure label="Chiều cao" value={`${latest.heightCm} cm`} band={heightBand} />
+            <Measure label={t('Cân nặng', 'Weight')} value={`${latest.weightKg} kg`} band={weightBand} />
+            <Measure label={t('Chiều cao', 'Height')} value={`${latest.heightCm} cm`} band={heightBand} />
           </View>
           {!weightBand && !heightBand ? (
-            <Text style={uiStyles.muted}>Bảng chuẩn WHO trong ứng dụng hiện có cho bé 0–24 tháng.</Text>
+            <Text style={uiStyles.muted}>
+              {t('Bảng chuẩn WHO trong ứng dụng hiện có cho bé 0–24 tháng.', 'WHO ranges in the app cover 0–24 months.')}
+            </Text>
           ) : null}
         </Card>
       ) : null}
 
       <Card>
         <View style={[uiStyles.rowWrap, styles.tabs]}>
-          <Chip label="Cân nặng" selected={metric === 'weight'} onPress={() => setMetric('weight')} />
-          <Chip label="Chiều cao" selected={metric === 'height'} onPress={() => setMetric('height')} />
+          <Chip label={t('Cân nặng', 'Weight')} selected={metric === 'weight'} onPress={() => setMetric('weight')} />
+          <Chip label={t('Chiều cao', 'Height')} selected={metric === 'height'} onPress={() => setMetric('height')} />
         </View>
         {records.length ? (
           <GrowthChart metric={metric} isBoy={isBoy} points={points} />
         ) : (
           <EmptyState
             emoji="📈"
-            title="Chưa có lần đo nào"
-            body="Mẹ ghi cân nặng và chiều cao của bé bên dưới để vẽ biểu đồ so với chuẩn WHO."
+            title={t('Chưa có lần đo nào', 'No measurements yet')}
+            body={t(
+              'Mẹ ghi cân nặng và chiều cao của bé bên dưới để vẽ biểu đồ so với chuẩn WHO.',
+              "Add your baby's weight and height below to chart them against the WHO range."
+            )}
           />
         )}
       </Card>
 
-      <SectionTitle title="Ghi lần đo mới" subtitle="Nên đo mỗi tháng, cùng giờ và trước khi ăn" />
+      <SectionTitle
+        title={t('Ghi lần đo mới', 'Add a measurement')}
+        subtitle={t('Nên đo mỗi tháng, cùng giờ và trước khi ăn', 'Measure monthly, at the same time and before a feed')}
+      />
       <Card>
-        <DateField label="Ngày đo" value={measuredAt} onChange={setMeasuredAt} minimumDate={dob} maximumDate={startOfToday()} />
+        <DateField label={t('Ngày đo', 'Date')} value={measuredAt} onChange={setMeasuredAt} minimumDate={dob} maximumDate={startOfToday()} />
         <View style={styles.row}>
           <View style={styles.flex}>
-            <Field label="Cân nặng (kg)" value={weight} onChangeText={setWeight} keyboardType="decimal-pad" placeholder="VD: 11.2" />
+            <Field
+              label={t('Cân nặng (kg)', 'Weight (kg)')}
+              value={weight}
+              onChangeText={setWeight}
+              keyboardType="decimal-pad"
+              placeholder={t('VD: 11.2', 'e.g. 11.2')}
+            />
           </View>
           <View style={styles.flex}>
-            <Field label="Chiều cao (cm)" value={height} onChangeText={setHeight} keyboardType="decimal-pad" placeholder="VD: 82" />
+            <Field
+              label={t('Chiều cao (cm)', 'Height (cm)')}
+              value={height}
+              onChangeText={setHeight}
+              keyboardType="decimal-pad"
+              placeholder={t('VD: 82', 'e.g. 82')}
+            />
           </View>
         </View>
-        <PrimaryButton label="Lưu lần đo" onPress={submit} loading={saving} />
+        <PrimaryButton label={t('Lưu lần đo', 'Save measurement')} onPress={submit} loading={saving} />
         {evaluation?.feedback ? (
           <View style={[styles.feedback, evaluation.isHealthy ? styles.feedbackOk : styles.feedbackWatch]}>
             <Text style={uiStyles.body}>{evaluation.feedback}</Text>
@@ -207,20 +230,20 @@ export default function GrowthChartScreen() {
 
       {records.length ? (
         <>
-          <SectionTitle title="Các lần đo" />
+          <SectionTitle title={t('Các lần đo', 'Measurements')} />
           <Card>
             {records.map((r, index) => (
               <View key={String(r.id ?? index)} style={[styles.historyRow, index > 0 && styles.historyBorder]}>
                 <View style={styles.flex}>
                   <Text style={styles.historyDate}>
-                    {formatUtcDate(r.recordedAt)} · {Math.floor(r.month)} tháng
+                    {formatUtcDate(r.recordedAt)} · {Math.floor(r.month)} {t('tháng', 'months')}
                   </Text>
                   <Text style={styles.historyValue}>
                     {r.weightKg} kg · {r.heightCm} cm
                   </Text>
                 </View>
                 {r.id !== undefined ? (
-                  <TouchableOpacity onPress={() => confirmDelete(r)} accessibilityLabel="Xóa lần đo">
+                  <TouchableOpacity onPress={() => confirmDelete(r)} accessibilityLabel={t('Xóa lần đo', 'Delete measurement')}>
                     <Trash2 size={18} color={MOM_THEME.mutedLight} />
                   </TouchableOpacity>
                 ) : null}
