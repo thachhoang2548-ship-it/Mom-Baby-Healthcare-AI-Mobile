@@ -51,8 +51,8 @@ const CONDITION_EN: Record<string, string> = {
 const STAGE_OPTIONS: { id: StageIndex; label: string; labelEn: string; desc: string; descEn: string; icon: typeof Heart }[] = [
   {
     id: 0,
-    label: 'Chuẩn bị mang thai',
-    labelEn: 'Trying to conceive',
+    label: 'Theo dõi chu kỳ',
+    labelEn: 'Cycle tracking',
     desc: 'Theo dõi chu kỳ & ngày rụng trứng',
     descEn: 'Track your cycle & ovulation',
     icon: CalendarHeart,
@@ -484,15 +484,15 @@ export default function ProfileScreen() {
           placeholder={t('VD: 5.1', 'e.g. 5.1')}
         />
         <ToggleRow
-          label={t('Mẹ được chẩn đoán tiểu đường thai kỳ', 'I have been diagnosed with gestational diabetes')}
+          label={t('Mẹ cần thực đơn ít đường (tiểu đường thai kỳ)', 'I need low-sugar meal ideas (gestational diabetes)')}
           value={hasGestDiabetes}
           onValueChange={setHasGestDiabetes}
         />
       </Card>
 
       <SectionTitle
-        title={t('Tiền sử bệnh', 'Health history')}
-        subtitle={t('Chọn các bệnh lý mẹ đang có (nếu có)', 'Pick any conditions you have')}
+        title={t('Lưu ý sức khỏe cho thực đơn', 'Health notes for meal ideas')}
+        subtitle={t('Gợi ý thực đơn sẽ tính đến các lưu ý này (nếu có)', 'Meal ideas will take these into account (if any)')}
       />
       <Card>
         <View style={uiStyles.rowWrap}>
@@ -510,7 +510,7 @@ export default function ProfileScreen() {
         <View style={[styles.row, styles.customRow]}>
           <View style={styles.flex}>
             <Field
-              label={t('Bệnh lý khác', 'Other condition')}
+              label={t('Lưu ý khác', 'Other note')}
               value={customCondition}
               onChangeText={setCustomCondition}
               placeholder={t('Nhập rồi bấm Thêm', 'Type it, then tap +')}
@@ -522,7 +522,7 @@ export default function ProfileScreen() {
             style={styles.addButton}
             onPress={addCustomCondition}
             accessibilityRole="button"
-            accessibilityLabel={t('Thêm bệnh lý', 'Add condition')}
+            accessibilityLabel={t('Thêm lưu ý', 'Add note')}
           >
             <Plus size={18} color={MOM_THEME.white} />
           </TouchableOpacity>

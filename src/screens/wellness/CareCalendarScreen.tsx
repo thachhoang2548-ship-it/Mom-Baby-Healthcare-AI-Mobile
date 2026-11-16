@@ -11,7 +11,7 @@ import { MOM_THEME, RADII } from '../../theme/colors';
 import { useT } from '../../i18n';
 
 const STAGES: Record<StageIndex, { label: string; labelEn: string; accent: string; soft: string }> = {
-  0: { label: 'Chuẩn bị mang thai', labelEn: 'Trying to conceive', accent: MOM_THEME.amberDark, soft: MOM_THEME.amberLight },
+  0: { label: 'Theo dõi chu kỳ', labelEn: 'Cycle tracking', accent: MOM_THEME.amberDark, soft: MOM_THEME.amberLight },
   1: { label: 'Đang mang thai', labelEn: 'Pregnant', accent: MOM_THEME.roseDark, soft: MOM_THEME.pinkLight },
   2: { label: 'Sau sinh', labelEn: 'After birth', accent: MOM_THEME.sageDark, soft: MOM_THEME.sageLight },
 };

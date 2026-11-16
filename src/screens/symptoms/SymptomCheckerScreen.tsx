@@ -24,13 +24,14 @@ import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 import { useLanguageStore, useT } from '../../i18n';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 
+// Câu hỏi chăm sóc hằng ngày (ăn uống, giấc ngủ, vận động), không phải kiểm tra triệu chứng.
 const quickSymptoms = [
-  { vi: 'Ốm nghén mệt mỏi', en: 'Morning sickness, tired' },
-  { vi: 'Đau thắt lưng dưới', en: 'Lower back pain' },
-  { vi: 'Bé sốt nhẹ 37.8°C', en: 'Baby has a mild fever, 37.8°C' },
-  { vi: 'Bé nổi mẩn đỏ ở má', en: 'Red rash on baby’s cheeks' },
-  { vi: 'Thai máy ít hơn', en: 'Baby moving less' },
-  { vi: 'Ợ chua, khó tiêu', en: 'Heartburn, indigestion' },
+  { vi: 'Mẹ bầu nên ăn gì để đỡ mệt?', en: 'What to eat for more energy while pregnant?' },
+  { vi: 'Bài tập nhẹ khi mỏi lưng', en: 'Gentle moves for a tired back' },
+  { vi: 'Bé 6 tháng ăn dặm thế nào?', en: 'How to start solids at 6 months?' },
+  { vi: 'Mẹo giúp bé ngủ ngon', en: 'Tips to help baby sleep' },
+  { vi: 'Mẹ khó ngủ về đêm', en: 'Trouble sleeping at night' },
+  { vi: 'Ợ chua thì nên ăn gì?', en: 'Heartburn: what to eat?' },
 ];
 
 export default function SymptomCheckerScreen() {
@@ -83,7 +84,7 @@ export default function SymptomCheckerScreen() {
     if (!permission.granted) {
       Alert.alert(
         t('Cần quyền camera', 'Camera access needed'),
-        t('Mẹ vui lòng cấp quyền máy ảnh để chụp ảnh triệu chứng nhé.', 'Please allow camera access to take a photo.')
+        t('Mẹ vui lòng cấp quyền máy ảnh để chụp ảnh nhé.', 'Please allow camera access to take a photo.')
       );
       return;
     }
@@ -218,7 +219,7 @@ export default function SymptomCheckerScreen() {
           }}
         >
           <View style={styles.cardHeader}>
-            <Text style={styles.label}>{t('Mẹ hoặc bé đang gặp vấn đề gì?', 'What is happening with you or your baby?')}</Text>
+            <Text style={styles.label}>{t('Mẹ muốn hỏi gì về chăm sóc mẹ và bé?', 'What would you like to ask about caring for you or your baby?')}</Text>
             <Text style={styles.charCount}>
               {description.length} {t('ký tự', 'chars')}
             </Text>
@@ -227,8 +228,8 @@ export default function SymptomCheckerScreen() {
           <TextInput
             style={styles.textArea}
             placeholder={t(
-              'Ví dụ: Em bé bị nổi nốt đỏ li ti quanh cổ, sốt 38 độ từ chiều nay, bú ít hơn mọi ngày...',
-              'Example: small red spots around the neck, 38°C fever since this afternoon, feeding less than usual...'
+              'Ví dụ: Bé 7 tháng nên ăn dặm những món gì? Mẹ bầu tháng thứ 5 hay mệt thì nên ăn uống, nghỉ ngơi thế nào?',
+              'Example: What foods suit a 7-month-old? I am 5 months pregnant and often tired, how should I eat and rest?'
             )}
             placeholderTextColor={MOM_THEME.mutedLight}
             multiline
@@ -264,7 +265,7 @@ export default function SymptomCheckerScreen() {
             </TouchableOpacity>
             <TouchableOpacity style={styles.mediaButton} onPress={takePhoto} activeOpacity={0.8}>
               <Camera size={17} color={MOM_THEME.sageDark} />
-              <Text style={styles.mediaText}>{t('Chụp ảnh triệu chứng', 'Take a photo')}</Text>
+              <Text style={styles.mediaText}>{t('Chụp ảnh', 'Take a photo')}</Text>
             </TouchableOpacity>
           </View>
 

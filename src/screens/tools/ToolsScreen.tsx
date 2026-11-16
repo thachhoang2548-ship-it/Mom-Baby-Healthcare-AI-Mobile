@@ -125,9 +125,9 @@ export default function ToolsScreen() {
   ];
 
   const stageItems = [
-    { key: 'fertility', label: t('Rụng trứng', 'Ovulation'), icon: Calendar, color: a.primary, go: () => navigation.navigate('Fertility') },
+    { key: 'fertility', label: t('Chu kỳ', 'Cycle'), icon: Calendar, color: a.primary, go: () => navigation.navigate('Fertility') },
     { key: 'pregnancy', label: t('Thai kỳ', 'Pregnancy'), icon: Heart, color: a.primary, go: () => navigation.navigate('Pregnancy') },
-    { key: 'postpartum', label: t('Hậu sản', 'After birth'), icon: Activity, color: MOM_THEME.sageDark, go: () => navigation.navigate('Postpartum') },
+    { key: 'postpartum', label: t('Sau sinh', 'After birth'), icon: Activity, color: MOM_THEME.sageDark, go: () => navigation.navigate('Postpartum') },
     {
       key: 'baby',
       label: t('Bé yêu', 'Baby'),

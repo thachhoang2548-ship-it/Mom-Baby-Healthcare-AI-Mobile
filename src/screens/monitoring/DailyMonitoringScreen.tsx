@@ -293,7 +293,7 @@ export default function DailyMonitoringScreen() {
         </View>
       </Card>
 
-      <SectionTitle title={t('🤒 Triệu chứng', '🤒 Symptoms')} />
+      <SectionTitle title={t('😣 Cảm giác khó chịu', '😣 Discomfort')} />
       <Card>
         <Text style={uiStyles.label}>
           {t('Mức độ khó chịu:', 'Discomfort:')} {symptomSeverity} / 5

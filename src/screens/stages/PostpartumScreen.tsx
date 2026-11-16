@@ -30,9 +30,9 @@ import { tr, useT } from '../../i18n';
 
 // Cùng mốc với backend (PostpartumService.SetupPostpartumAsync).
 function phaseOf(days: number) {
-  if (days <= 7) return tr('Hồi phục cấp tính (tuần đầu)', 'Early recovery (first week)');
-  if (days <= 42) return tr('Phục hồi vết thương (tuần 2 - 6)', 'Healing (weeks 2 - 6)');
-  return tr('Ổn định lâu dài (sau 6 tuần)', 'Long-term recovery (after 6 weeks)');
+  if (days <= 7) return tr('Tuần đầu sau sinh', 'First week after birth');
+  if (days <= 42) return tr('Tuần 2 - 6 sau sinh', 'Weeks 2 - 6 after birth');
+  return tr('Sau 6 tuần', 'After 6 weeks');
 }
 
 type Gated<T> = { data: T | null; locked: boolean; error: string | null };
@@ -85,7 +85,7 @@ export default function PostpartumScreen() {
     }, [load])
   );
 
-  const header = { eyebrow: t('Sau sinh', 'After birth'), title: t('Phục hồi & chăm con', 'Recovery & baby care') };
+  const header = { eyebrow: t('Sau sinh', 'After birth'), title: t('Vận động nhẹ & chăm con', 'Gentle activity & baby care') };
 
   if (error) {
     return (
@@ -108,8 +108,8 @@ export default function PostpartumScreen() {
           emoji="🍼"
           title={t('Mẹ chưa ở giai đoạn sau sinh', "You're not set as after birth yet")}
           body={t(
-            'Cập nhật giai đoạn “Sau sinh & nuôi con” và ngày sinh em bé trong hồ sơ để nhận lộ trình phục hồi.',
-            "Set your stage to “After birth” and add your baby's birth date in your profile to get a recovery plan."
+            'Cập nhật giai đoạn “Sau sinh & nuôi con” và ngày sinh em bé trong hồ sơ để nhận gợi ý vận động nhẹ.',
+            "Set your stage to “After birth” and add your baby's birth date in your profile to get gentle activity ideas."
           )}
           actionLabel={t('Cập nhật hồ sơ', 'Update profile')}
           onAction={() => navigation.navigate('Profile')}
@@ -134,14 +134,14 @@ export default function PostpartumScreen() {
       {locked ? <TierLockedCard
           feature={
             MEDICAL_FEATURES_ENABLED
-              ? t('Kế hoạch phục hồi & khảo sát EPDS', 'Recovery plan & EPDS survey')
-              : t('Kế hoạch phục hồi', 'Recovery plan')
+              ? t('Kế hoạch vận động & khảo sát EPDS', 'Activity plan & EPDS survey')
+              : t('Kế hoạch vận động nhẹ', 'Gentle activity plan')
           }
         /> : null}
 
       {plan?.data ? (
         <>
-          <SectionTitle title={t('Kế hoạch vận động phục hồi', 'Recovery exercise plan')} subtitle={plan.data.recoveryPhase} />
+          <SectionTitle title={t('Kế hoạch vận động nhẹ', 'Gentle activity plan')} />
           <Card>
             {plan.data.exerciseSchedule?.activeExercise ? (
               <Text style={uiStyles.body}>{plan.data.exerciseSchedule.activeExercise}</Text>

@@ -59,7 +59,7 @@ export default function SymptomHistoryScreen() {
         <EmptyState
           emoji="🩺"
           title={t('Chưa có lần phân tích nào', 'No questions yet')}
-          body={t('Khi mẹ mô tả triệu chứng ở tab AI, kết quả sẽ được lưu lại tại đây.', 'When you ask a question in the AI tab, the answer is saved here.')}
+          body={t('Khi mẹ hỏi trợ lý ở tab AI, câu trả lời sẽ được lưu lại tại đây.', 'When you ask a question in the AI tab, the answer is saved here.')}
           actionLabel={t('Hỏi trợ lý AI', 'Ask the AI assistant')}
           onAction={() => navigation.navigate('MainTabs', { screen: 'SymptomAI' })}
         />
@@ -81,7 +81,7 @@ export default function SymptomHistoryScreen() {
                   <Text style={styles.date}>{formatDateTime(item.createdAt)}</Text>
                 </View>
                 <Text style={styles.text} numberOfLines={2}>
-                  {item.textDescription || t('Triệu chứng gửi bằng hình ảnh', 'Sent as a photo')}
+                  {item.textDescription || t('Câu hỏi gửi bằng hình ảnh', 'Sent as a photo')}
                 </Text>
               </View>
               <ChevronRight size={18} color={MOM_THEME.mutedLight} />

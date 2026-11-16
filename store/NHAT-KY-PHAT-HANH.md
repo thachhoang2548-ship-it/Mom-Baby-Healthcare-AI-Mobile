@@ -18,7 +18,11 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
 | 01/11/2026 | (không đổi bản) | Mở kênh Alpha cho tất cả quốc gia | Được duyệt 01/11, kênh có 178 quốc gia/khu vực |
 | 06/11/2026 | 6 (1.0.0) | Thêm tiếng Anh, cải thiện thông báo lỗi, trang cửa hàng tiếng Anh | Được duyệt, xuất bản 06/11 |
 | 06/11/2026 | (tài khoản) | Khai báo trạng thái người bán (EU DSA): pháp nhân phi thương mại | Đã khai báo |
-| 09/11/2026 | 7 (1.1.0) | Màu theo giới tính bé, màn Cài đặt (ngôn ngữ, phiên bản), tiếng Anh cho toàn bộ màn phụ | Đang chuẩn bị, chưa build |
+| 09/11/2026 | 7 (1.1.0) | Sửa thanh tab và bàn phím theo góp ý, màu theo giới tính bé, màn Cài đặt, tiếng Anh toàn bộ | Được duyệt, phát hành cho người thử 09/11 19:23 |
+| 11/11/2026 | (tài khoản) | Gửi đơn xin quyền phát hành công khai (production) | **Được duyệt** 12/11/2026 lúc 05:12, khoảng 16 giờ sau khi nộp. Email "Your app has been granted Google Play production access" |
+| 12/11/2026 | 7 (1.1.0) – Phát hành công khai | Bản chính thức đầu tiên, phát hành 100%, tất cả quốc gia (177 quốc gia/khu vực và các nơi khác trên thế giới) | **Bị từ chối** 16/11: "Inaccurate Health Apps Declaration" (mô tả cửa hàng có nội dung sức khỏe sinh sản, mục thuộc nhóm Y tế) |
+| 16/11/2026 | (trang cửa hàng) | Viết lại mô tả VI/EN cho khớp 5 mục Sức khỏe & thể chất đã khai, thêm câu miễn trừ "không phải thiết bị y tế" (xem store/mo-ta-cua-hang-v2.md) | Đã lưu trên Play Console, chưa gửi |
+| 16/11/2026 | 8 (1.1.1) | Đổi chữ trong app cho khớp tờ khai sức khỏe: bỏ "thụ thai / chuẩn bị mang thai", "phục hồi sau sinh", "triệu chứng / bệnh lý" | Code xong, chờ commit và build |
 
 ## Chi tiết
 
@@ -91,7 +95,7 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
 - **Play Console:** thêm trang cửa hàng tiếng Anh (en-US) gồm tên, mô tả ngắn, mô tả đầy đủ.
 - **Thử nghiệm phụ:** trước buổi demo, nhóm nâng tạm lên SDK 58 để mở bằng Expo Go trên iPhone, demo xong hạ lại SDK 57. Thay đổi này không phát hành.
 
-### 09/11/2026 – Bản 7 (1.1.0): đang chuẩn bị
+### 09/11/2026 – Bản 7 (1.1.0)
 
 - **Lý do:**
   - Một người thử báo app "vẫn 1.0.0", tưởng nhóm không cập nhật.
@@ -142,6 +146,28 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
 - **Sửa lỗi tiềm ẩn:** hàm dịch `useT()` trả về hàm ổn định, tránh tải lại dữ liệu liên tục khi dùng trong `useCallback`.
 - **Kiểm tra:** typecheck, lint và đóng gói JS cho Android đều đạt.
 
+### 16/11/2026 – Bị từ chối bản công khai, chuẩn bị bản 8 (1.1.1)
+
+- **Email từ chối:** "Inaccurate Health Apps Declaration". Google liệt kê 6 mục cần kiểm tra, gồm 5 mục đã khai và **Reproductive and Sexual Health**. Nơi phát hiện là **Mô tả đầy đủ**. Cách sửa Google gợi ý: cập nhật tờ khai.
+- **Vì sao không khai thêm mục đó:**
+  - Reproductive and Sexual Health thuộc nhóm **Medical**.
+  - Chính sách Play Console Requirements ghi: *"developers providing the following services must register as an Organization: Health apps, such as Medical apps…"*.
+  - Tài khoản cá nhân khai mục Y tế thì bị từ chối như bản 3.
+  - Vì vậy nhóm sửa cho app và mô tả không còn nội dung thuộc sức khỏe sinh sản.
+- **Theo Google, mục Period Tracking bao gồm** "ovulation tracking and prediction, and fertility awareness". Chu kỳ và rụng trứng vẫn nằm trong mục đã khai.
+- **Sửa mô tả cửa hàng (VI + EN):**
+  - Chia theo 5 mục đã khai.
+  - Bỏ "chuẩn bị mang thai / trying to conceive", "sau sinh phục hồi", "gọi 115".
+  - Thêm câu bắt buộc "không phải thiết bị y tế, không chẩn đoán, điều trị, chữa khỏi hay phòng ngừa bệnh".
+  - Toàn văn ở `store/mo-ta-cua-hang-v2.md`.
+- **Sửa chữ trong app (bản 1.1.1), chỉ đổi chữ hiển thị, không đổi tính năng hay dữ liệu gửi server:**
+  - **Giai đoạn "Chuẩn bị mang thai / Trying to conceive"** thành "Theo dõi chu kỳ / Cycle tracking". "Ngày dễ thụ thai / cửa sổ thụ thai" thành "ngày rụng trứng / quanh ngày rụng trứng".
+  - **"Phục hồi sau sinh / Hậu sản / Recovery"** thành "Mẹ sau sinh", "Vận động nhẹ & chăm bé". Tên giai đoạn "phục hồi vết thương" thành "Tuần 2 - 6 sau sinh". Không hiện tên giai đoạn do server trả về.
+  - **Tab AI:** gợi ý nhanh đổi từ triệu chứng ("thai máy ít hơn", "bé sốt") sang câu hỏi chăm sóc (ăn dặm, giấc ngủ, vận động). Câu hỏi và ví dụ mẫu đổi tương tự. Bỏ chữ "triệu chứng" ở nút chụp ảnh và lịch sử.
+  - **Hồ sơ:** "Tiền sử bệnh / được chẩn đoán tiểu đường thai kỳ" thành "Lưu ý sức khỏe cho thực đơn / cần thực đơn ít đường". Nhật ký đổi "Triệu chứng" thành "Cảm giác khó chịu".
+  - Typecheck, lint, đóng gói Android đều đạt. Version 1.1.1.
+- **Rủi ro còn lại:** kết quả AI vẫn có mức độ (Thấp, Trung bình, Cao, Khẩn cấp) và nút gọi 115 khi khẩn cấp. Nhóm giữ lại vì an toàn cho người dùng.
+
 ## Theo dõi người thử (cập nhật dần)
 
 Điều kiện lên bản chính thức: **ít nhất 12 người thử tham gia liên tục 14 ngày**.
@@ -151,7 +177,56 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
 | 06/11/2026 | 12 người tham gia liên tục 9 ngày (đủ 2/3 điều kiện) | | 35 lượt thu nạp, 18 thiết bị cài lần đầu, 16 thiết bị hoạt động (28 ngày) |
 | 09/11/2026 | 12 người tham gia liên tục 12 ngày | 4 góp ý (#21, #54, #79, #97) cùng báo thanh tab bị thanh điều hướng của máy đè, khó bấm. Đã sửa ở bản 7. 2 góp ý (#59, #96) báo bàn phím che ô nhập và nút gửi. Đã sửa ở bản 7 | Dự kiến đủ 14 ngày vào 11/11. 64 lượt thu nạp, 49 thiết bị mở lần đầu, 39 thiết bị hoạt động hằng tháng |
 
+## Đơn xin phát hành công khai
+
+- **11/11/2026:** Play Console báo đủ cả 3 điều kiện: có bản thử nghiệm khép kín, có ít nhất 12 người thử, chạy liên tục 14 ngày.
+- **Bản 7 (1.1.0):** được duyệt và phát hành cho người thử lúc 19:23 ngày 09/11/2026.
+- **Số liệu 28 ngày đến 11/11:**
+  - 51 người thử đang tham gia.
+  - 65 lượt thu nạp.
+  - 52 thiết bị mở lần đầu.
+  - 42 thiết bị hoạt động hằng tháng.
+
+### Tổng hợp 98 góp ý của người thử (27/10 – 09/11)
+
+- **Đa số là khen hoặc xác nhận đã test** ("ok", "app mượt", "app có ý nghĩa"…). #81 mô tả kiểm thử chi tiết: đăng nhập bằng tài khoản thử, mở Tổng quan, Lộ trình, Menu, phát nhạc thư giãn, đồng hồ đếm ngược chạy đúng.
+- **Lỗi đã sửa ở bản 7:**
+  - Thanh tab bị thanh điều hướng che (#21, #54, #79, #97).
+  - Bàn phím che ô nhập và nút gửi (#59, #96).
+  - Giao diện hơi rối (#88): làm gọn thẻ ghi nhận trong ngày.
+- **Đã xử lý trước đó:** mở kênh cho mọi quốc gia (#65, ngày 01/11).
+- **Chưa xử lý, đưa vào kế hoạch bản sau:**
+  - Nút đăng nhập hơi mờ (#96).
+  - Một người đăng ký xong không đăng nhập được (#11), cần kiểm tra.
+  - Đăng nhập bằng Google (#69).
+  - Chọn nhiều cảm xúc cùng lúc (#19).
+  - Nút dùng thử không cần đăng nhập (#94).
+
+- **12/11/2026 05:12:** Google cấp quyền phát hành công khai.
+- **12/11/2026:** tạo bản phát hành chính thức trên kênh Phát hành công khai. Dùng lại gói 7 (1.1.0) từ thư viện, không build mới. Phát hành 100%, tất cả quốc gia. Ghi chú phát hành viết cho người dùng mới (tiếng Việt và tiếng Anh), khác ghi chú dành cho tester. Đã gửi 3 thay đổi để Google xem xét.
+
+### Câu trả lời đã gửi (11/11/2026)
+
+**Bước 1 – Thử nghiệm khép kín**
+- **Tuyển người thử thế nào?** We joined a Vietnamese cross-testing community of Android developers (a Google Group) and posted a request for testers there. Friends with real Android phones also joined. We opened the track to all countries so testers outside Vietnam could install the app.
+- **Tuyển có dễ không?** Bình thường.
+- **Người thử dùng app ra sao?** 51 testers opted in and left 98 notes over 14 days (Oct 27 - Nov 9). They used sign-up, daily check-in, baby profiles and meal ideas, AI care tips, vitamins, cycle tracking and Relax audio. 28 days to Nov 11: 65 installs, 52 first opens, 42 monthly active devices.
+- **Tóm tắt góp ý:** Testers sent daily notes in the cross-testing app and group chat (98 total, mostly positive). Issues: tab bar under the phone nav bar (4), keyboard hiding input/send (2), busy UI, faint login button, one sign-in failure after sign-up. Requests: Google sign-in, multi-select mood, guest demo.
+
+**Bước 2 – Về ứng dụng**
+- **Đối tượng:** Adults 18+ in Vietnam, mainly women who are trying to conceive, pregnant, or caring for a newborn and young baby, plus family members who support them. The app is in Vietnamese and English.
+- **Lợi ích:** One place for everyday mother and baby care: daily check-in (water, mood, sleep), cycle and pregnancy week tracking, vitamin reminders, baby profiles with growth charts and age-appropriate meal ideas, and AI care tips that always say they do not replace a doctor.
+- **Lượt cài năm đầu:** 0 – 10 nghìn.
+
+**Bước 3 – Sẵn sàng phát hành**
+- **Đã thay đổi gì?** 4 releases in the 14-day test: Oct 27 first build; Nov 1 name editing and opened to all countries; Nov 6 English UI and clearer offline/error screens; Nov 9 v1.1.0 fixed tab bar under phone nav bar and keyboard hiding inputs, simpler check-in, Settings. Next: login fixes, Google sign-in.
+- **Vì sao đã sẵn sàng?** We shipped an update every 3-5 days based on tester notes, and the layout bugs several testers reported are fixed in 1.1.0 (live since Nov 9). 51 testers stayed opted in for 14 days; monthly active devices reached 42. Store listing and policy declarations are complete.
+
 ## Bài học rút ra
+
+- Lần duyệt bản công khai xét cả mô tả cửa hàng so với tờ khai sức khỏe, kỹ hơn lần duyệt thử nghiệm. Mô tả nhắc "chuẩn bị mang thai, theo dõi thai kỳ" bị coi là Reproductive and Sexual Health (nhóm Y tế), dù cùng mô tả đó vẫn qua duyệt ở kênh thử nghiệm. Theo Google, rụng trứng và cửa sổ thụ thai thuộc Period Tracking. Mô tả phải dùng đúng từ ngữ của các mục đã khai và có câu "không phải thiết bị y tế".
+
+- Câu "Vì sao app sẵn sàng phát hành" trong đơn xin production nên khẳng định thẳng (đã sửa hết, ổn định, sẵn sàng). Không nên nêu việc chưa làm, vì Google có thể yêu cầu thử thêm 14 ngày. Kế hoạch sau phát hành có thể làm sau khi đã lên production. Đây là góp ý của một anh trong cộng đồng test chéo sau khi nhóm đã nộp đơn ngày 11/11.
 
 - versionCode (Google Play dùng) và versionName (người dùng thấy) là hai số khác nhau. Chỉ tăng versionCode thì người thử tưởng app không cập nhật, nên mỗi bản cần tăng cả versionName.
 

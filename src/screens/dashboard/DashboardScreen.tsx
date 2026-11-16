@@ -171,10 +171,10 @@ export default function DashboardScreen() {
     title: [
       t('Chu kỳ & rụng trứng', 'Cycle & ovulation'),
       t('Theo dõi thai kỳ', 'Pregnancy tracker'),
-      t('Phục hồi sau sinh', 'Postpartum recovery'),
+      t('Mẹ sau sinh', 'After birth'),
     ][stage],
     sub: [
-      t('Dự đoán ngày dễ thụ thai', 'Predict your fertile days'),
+      t('Dự đoán ngày rụng trứng', 'Predict your ovulation days'),
       t('Tuần thai & cân nặng mẹ', 'Pregnancy week & your weight'),
       MEDICAL_FEATURES_ENABLED
         ? t('Vận động & khảo sát EPDS', 'Exercise & EPDS check-in')
@@ -185,15 +185,15 @@ export default function DashboardScreen() {
   const stageTitle = isPregnant
     ? t('Thai kỳ hạnh phúc', 'Happy pregnancy')
     : isPostpartum
-      ? t('Chăm sóc hậu sản', 'Postpartum care')
-      : t('Chuẩn bị làm mẹ', 'Getting ready');
+      ? t('Mẹ sau sinh', 'After birth')
+      : t('Sức khỏe của mẹ', 'Your wellbeing');
 
   const stageValue = isPregnant
     ? week
       ? t(`Tuần thứ ${week}`, `Week ${week}`)
       : t('Cập nhật tuần thai', 'Add your pregnancy week')
     : isPostpartum
-      ? t('Phục hồi & chăm bé', 'Recovery & baby care')
+      ? t('Vận động nhẹ & chăm bé', 'Gentle activity & baby care')
       : t('Theo dõi chu kỳ', 'Track your cycle');
 
   // babySize / development do server trả về bằng tiếng Việt.

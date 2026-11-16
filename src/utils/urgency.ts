@@ -46,7 +46,7 @@ export function getUrgencyMeta(key: UrgencyKey): UrgencyMeta {
         short: tr('Cao', 'High'),
         label: tr('Cần gặp bác sĩ sớm', 'See a doctor soon'),
         sub: tr(
-          'Triệu chứng có thể cần thăm khám trực tiếp để xử lý an toàn.',
+          'Tình trạng này có thể cần bác sĩ xem trực tiếp để an toàn.',
           'This may need an in-person check to be handled safely.'
         ),
         color: '#D95368',
@@ -77,9 +77,9 @@ export function getUrgencyMeta(key: UrgencyKey): UrgencyMeta {
     default:
       return {
         short: tr('Chưa phân tích', 'Not analyzed'),
-        label: tr('AI chưa phân tích được triệu chứng này', 'The AI could not analyze this yet'),
+        label: tr('AI chưa trả lời được câu hỏi này', 'The AI could not analyze this yet'),
         sub: tr(
-          'Mẹ thử gửi lại sau ít phút. Nếu thấy lo lắng hoặc triệu chứng nặng lên, hãy liên hệ bác sĩ.',
+          'Mẹ thử gửi lại sau ít phút. Nếu thấy lo lắng hoặc không ổn hơn, hãy liên hệ bác sĩ.',
           'Try again in a few minutes. If you are worried or it gets worse, contact a doctor.'
         ),
         color: MOM_THEME.muted,

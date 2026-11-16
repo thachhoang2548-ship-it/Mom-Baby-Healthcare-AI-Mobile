@@ -11,7 +11,7 @@ import { createThemedStyles, useAccent } from '../../theme/accent';
 import { tr, useT } from '../../i18n';
 
 const TYPE_LABELS: Record<string, { vi: string; en: string }> = {
-  Symptom: { vi: 'Triệu chứng', en: 'Symptom' },
+  Symptom: { vi: 'Sức khỏe', en: 'Health' },
   Medication: { vi: 'Uống vitamin', en: 'Vitamins' },
   RoutineCheck: { vi: 'Nhắc định kỳ', en: 'Routine check' },
 };

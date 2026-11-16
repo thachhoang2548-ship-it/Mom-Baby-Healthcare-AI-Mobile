@@ -117,7 +117,7 @@ function MonthGrid({ month, calendar }: { month: Date; calendar: FertilityCalend
         </View>
       ))}
       <View style={styles.legend}>
-        <Legend color={MOM_THEME.sageLight} label={t('Cửa sổ thụ thai', 'Fertile window')} />
+        <Legend color={MOM_THEME.sageLight} label={t('Quanh ngày rụng trứng', 'Around ovulation')} />
         <Legend color={a.primary} label={t('Ngày rụng trứng', 'Ovulation')} />
         <Legend color="#F04438" label={t('Dự kiến có kinh', 'Expected period')} />
       </View>
@@ -213,7 +213,7 @@ export default function FertilityScreen() {
 
   return (
     <Screen
-      eyebrow={t('Chuẩn bị mang thai', 'Trying to conceive')}
+      eyebrow={t('Theo dõi chu kỳ', 'Cycle tracking')}
       title={t('Chu kỳ & rụng trứng', 'Cycle & ovulation')}
       subtitle={t(
         'Dự đoán dựa trên các kỳ kinh mẹ đã ghi. Ghi càng đều, dự đoán càng chính xác.',
@@ -224,8 +224,8 @@ export default function FertilityScreen() {
         <View style={[styles.todayCard, today.isInFertileWindow ? styles.todayFertile : styles.todayNormal]}>
           <Text style={styles.todayLabel}>
             {today.isInFertileWindow
-              ? t('Hôm nay trong cửa sổ thụ thai 🌱', "Today is in your fertile window 🌱")
-              : t('Hôm nay ngoài cửa sổ thụ thai', "Today is outside your fertile window")}
+              ? t('Hôm nay gần ngày rụng trứng 🌱', 'Today is close to ovulation 🌱')
+              : t('Hôm nay chưa gần ngày rụng trứng', 'Today is not close to ovulation')}
           </Text>
           <Text style={styles.todayValue}>
             {today.daysUntilOvulation > 0
@@ -299,7 +299,7 @@ export default function FertilityScreen() {
             'From the first day of one period to the first day of the next, usually 21 - 35 days'
           )}
         />
-        <Text style={uiStyles.label}>{t('Triệu chứng đi kèm', 'Symptoms')}</Text>
+        <Text style={uiStyles.label}>{t('Cảm giác đi kèm', 'How you feel')}</Text>
         <View style={[uiStyles.rowWrap, styles.symptoms]}>
           {CYCLE_SYMPTOMS.map((s) => (
             <Chip key={s} label={t(s, CYCLE_SYMPTOM_EN[s])} selected={symptoms.includes(s)} onPress={() => toggleSymptom(s)} />

@@ -47,21 +47,21 @@ export default function JourneyScreen() {
   const navigation = useNavigation<Nav>();
   const t = useT();
 
-  const stageTitles = [t('Chuẩn bị', 'Trying'), t('Thai kỳ', 'Pregnancy'), t('Sau sinh', 'After birth')];
+  const stageTitles = [t('Chu kỳ', 'Cycle'), t('Thai kỳ', 'Pregnancy'), t('Sau sinh', 'After birth')];
   const stageSubtitles = [
-    t('Thụ thai & dinh dưỡng', 'Conception & nutrition'),
+    t('Chu kỳ & dinh dưỡng', 'Cycle & nutrition'),
     t('40 tuần hạnh phúc', '40 happy weeks'),
-    t('Phục hồi & chăm bé', 'Recovery & baby care'),
+    t('Vận động nhẹ & chăm bé', 'Gentle activity & baby care'),
   ];
   const stageInsight = [
     t(
-      'Mẹ nên bổ sung acid folic 400 mcg mỗi ngày ít nhất 1 tháng trước khi mang thai, ngủ đủ giấc và ghi lại chu kỳ để biết ngày dễ thụ thai.',
-      'Take 400 mcg of folic acid daily for at least a month before getting pregnant, sleep well and log your cycle to know your fertile days.'
+      'Mẹ nên ăn uống đủ chất, ngủ đủ giấc và ghi lại chu kỳ để xem ngày rụng trứng dự kiến.',
+      'Eat well, sleep well and log your cycle to see your expected ovulation days.'
     ),
     '',
     t(
-      'Những tuần đầu sau sinh, mẹ ưu tiên nghỉ ngơi, ăn đủ chất và uống nhiều nước. Đừng ngại nhờ người thân hỗ trợ chăm bé để mẹ phục hồi.',
-      'In the first weeks after birth, put rest, good food and plenty of water first. Ask family for help with the baby so you can recover.'
+      'Những tuần đầu sau sinh, mẹ ưu tiên nghỉ ngơi, ăn đủ chất và uống nhiều nước. Đừng ngại nhờ người thân hỗ trợ chăm bé để mẹ được nghỉ ngơi.',
+      'In the first weeks after birth, put rest, good food and plenty of water first. Ask family for help with the baby so you can rest.'
     ),
   ];
   const [profile, setProfile] = useState<MomProfileDto | null>(null);
@@ -144,7 +144,7 @@ export default function JourneyScreen() {
             ),
             go: () => navigation.navigate('Pregnancy'),
           },
-          dailyLog(t('Giấc ngủ, bữa ăn, huyết áp và triệu chứng trong ngày.', 'Sleep, meals, blood pressure and how you feel today.')),
+          dailyLog(t('Giấc ngủ, bữa ăn, huyết áp và cảm giác trong ngày.', 'Sleep, meals, blood pressure and how you feel today.')),
           {
             icon: <Pill size={20} color="#8E6BB8" />,
             bg: '#F3EEF8',
@@ -158,7 +158,7 @@ export default function JourneyScreen() {
             {
               icon: <Heart size={20} color={a.primary} />,
               bg: a.light,
-              title: t('Phục hồi sau sinh', 'Postpartum recovery'),
+              title: t('Vận động nhẹ sau sinh', 'Gentle activity after birth'),
               body: MEDICAL_FEATURES_ENABLED
                 ? t('Kế hoạch vận động theo ngày và khảo sát tâm lý EPDS.', 'A day-by-day movement plan and the EPDS check-in.')
                 : t('Kế hoạch vận động nhẹ và nghỉ ngơi theo từng ngày.', 'A day-by-day plan for gentle movement and rest.'),
@@ -181,14 +181,14 @@ export default function JourneyScreen() {
               icon: <CalendarHeart size={20} color={a.primary} />,
               bg: a.light,
               title: t('Chu kỳ & rụng trứng', 'Cycle & ovulation'),
-              body: t('Ghi kỳ kinh để biết những ngày dễ thụ thai.', 'Log your periods to know your fertile days.'),
+              body: t('Ghi kỳ kinh để xem ngày rụng trứng dự kiến.', 'Log your periods to see your expected ovulation.'),
               go: () => navigation.navigate('Fertility'),
             },
             {
               icon: <Pill size={20} color={MOM_THEME.sageDark} />,
               bg: MOM_THEME.sageLight,
-              title: t('Nhắc uống acid folic', 'Folic acid reminders'),
-              body: t('Bổ sung acid folic đều đặn trước khi mang thai.', 'Take folic acid regularly before pregnancy.'),
+              title: t('Nhắc bổ sung vitamin', 'Vitamin reminders'),
+              body: t('Duy trì thói quen bổ sung vitamin mỗi ngày.', 'Keep a daily vitamin habit.'),
               go: () => navigation.navigate('Medications'),
             },
             dailyLog(t('Giấc ngủ, bữa ăn và tâm trạng mỗi ngày.', 'Sleep, meals and mood each day.')),
@@ -244,8 +244,8 @@ export default function JourneyScreen() {
                   ? t(`Tuần thai thứ ${week}`, `Pregnancy week ${week}`)
                   : t('Mẹ đang mang thai', 'You are pregnant')
                 : currentIndex === 2
-                  ? t('Phục hồi sau sinh & nuôi con', 'Recovery & raising your baby')
-                  : t('Chuẩn bị đón con yêu', 'Getting ready for your baby')}
+                  ? t('Vận động nhẹ & nuôi con', 'Gentle activity & raising your baby')
+                  : t('Theo dõi chu kỳ đều đặn', 'Keep track of your cycle')}
             </Text>
 
             <Text style={styles.heroBody}>
