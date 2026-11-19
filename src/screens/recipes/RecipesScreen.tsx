@@ -19,6 +19,7 @@ import { getApiErrorMessage } from '../../utils/apiError';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
 import { useAccent } from '../../theme/accent';
 import { useT } from '../../i18n';
+import { PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
 
 // Giá trị gửi lên server giữ tiếng Việt (AI tạo món theo đó); tiếng Anh chỉ để hiển thị.
 const DIET_EN: Record<string, string> = {
@@ -27,7 +28,9 @@ const DIET_EN: Record<string, string> = {
   'Ăn chay': 'Vegetarian',
   'Ít đường (tiểu đường thai kỳ)': 'Low sugar (gestational diabetes)',
 };
-const DIETS = Object.keys(DIET_EN);
+// Bản Play bỏ các chế độ ăn gắn với mang thai / sau sinh.
+const PREGNANCY_DIETS = ['Mẹ bầu', 'Mẹ sau sinh cho con bú', 'Ít đường (tiểu đường thai kỳ)'];
+const DIETS = Object.keys(DIET_EN).filter((d) => PREGNANCY_FEATURES_ENABLED || !PREGNANCY_DIETS.includes(d));
 const COOK_TIMES = [15, 30, 45];
 const DIFFICULTY: Record<string, [string, string]> = {
   Easy: ['Dễ', 'Easy'],
@@ -262,10 +265,15 @@ export default function RecipesScreen() {
                   ) : null}
                   {!approved ? (
                     <Text style={styles.pendingNote}>
-                      {t(
-                        'Món do AI gợi ý, chưa được chuyên gia kiểm tra. Mẹ lưu ý nấu chín kỹ và tránh thực phẩm sống khi mang thai.',
-                        'AI-suggested and not yet checked by a nutritionist. Cook food thoroughly and avoid raw food during pregnancy.'
-                      )}
+                      {PREGNANCY_FEATURES_ENABLED
+                        ? t(
+                            'Món do AI gợi ý, chưa được chuyên gia kiểm tra. Mẹ lưu ý nấu chín kỹ và tránh thực phẩm sống khi mang thai.',
+                            'AI-suggested and not yet checked by a nutritionist. Cook food thoroughly and avoid raw food during pregnancy.'
+                          )
+                        : t(
+                            'Món do AI gợi ý, chưa được chuyên gia kiểm tra. Mẹ lưu ý nấu chín kỹ trước khi ăn.',
+                            'AI-suggested and not yet checked by a nutritionist. Cook food thoroughly before eating.'
+                          )}
                     </Text>
                   ) : null}
                 </View>

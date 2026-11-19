@@ -28,6 +28,7 @@ import RecipesScreen from '../screens/recipes/RecipesScreen';
 import CareCalendarScreen from '../screens/wellness/CareCalendarScreen';
 import EmergencyScreen from '../screens/wellness/EmergencyScreen';
 import RelaxScreen from '../screens/wellness/RelaxScreen';
+import { PREGNANCY_FEATURES_ENABLED } from '../constants/features';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -56,14 +57,19 @@ export default function RootNavigator() {
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="SymptomHistory" component={SymptomHistoryScreen} />
         <Stack.Screen name="SymptomDetail" component={SymptomDetailScreen} />
-        <Stack.Screen name="Pregnancy" component={PregnancyScreen} />
-        <Stack.Screen name="Postpartum" component={PostpartumScreen} />
-        <Stack.Screen name="Epds" component={EpdsScreen} />
+        {/* Bản Play không đăng ký các màn mang thai / sau sinh (xem constants/features.ts). */}
+        {PREGNANCY_FEATURES_ENABLED ? (
+          <>
+            <Stack.Screen name="Pregnancy" component={PregnancyScreen} />
+            <Stack.Screen name="Postpartum" component={PostpartumScreen} />
+            <Stack.Screen name="Epds" component={EpdsScreen} />
+            <Stack.Screen name="PregnancyMealPlan" component={PregnancyMealPlanScreen} />
+            <Stack.Screen name="ExercisePlan" component={ExercisePlanScreen} />
+          </>
+        ) : null}
         <Stack.Screen name="Fertility" component={FertilityScreen} />
         <Stack.Screen name="GrowthChart" component={GrowthChartScreen} />
         <Stack.Screen name="BabyWeeklyMenu" component={BabyWeeklyMenuScreen} />
-        <Stack.Screen name="PregnancyMealPlan" component={PregnancyMealPlanScreen} />
-        <Stack.Screen name="ExercisePlan" component={ExercisePlanScreen} />
         <Stack.Screen name="IvfTimeline" component={IvfTimelineScreen} />
         <Stack.Screen name="Recipes" component={RecipesScreen} />
         <Stack.Screen name="CareCalendar" component={CareCalendarScreen} />

@@ -26,7 +26,7 @@ import { createThemedStyles, useAccent } from '../../theme/accent';
 
 // Câu hỏi chăm sóc hằng ngày (ăn uống, giấc ngủ, vận động), không phải kiểm tra triệu chứng.
 const quickSymptoms = [
-  { vi: 'Mẹ bầu nên ăn gì để đỡ mệt?', en: 'What to eat for more energy while pregnant?' },
+  { vi: 'Mẹ nên ăn gì để đỡ mệt?', en: 'What to eat for more energy?' },
   { vi: 'Bài tập nhẹ khi mỏi lưng', en: 'Gentle moves for a tired back' },
   { vi: 'Bé 6 tháng ăn dặm thế nào?', en: 'How to start solids at 6 months?' },
   { vi: 'Mẹo giúp bé ngủ ngon', en: 'Tips to help baby sleep' },
@@ -228,8 +228,8 @@ export default function SymptomCheckerScreen() {
           <TextInput
             style={styles.textArea}
             placeholder={t(
-              'Ví dụ: Bé 7 tháng nên ăn dặm những món gì? Mẹ bầu tháng thứ 5 hay mệt thì nên ăn uống, nghỉ ngơi thế nào?',
-              'Example: What foods suit a 7-month-old? I am 5 months pregnant and often tired, how should I eat and rest?'
+              'Ví dụ: Bé 7 tháng nên ăn dặm những món gì? Mẹ hay mệt vào buổi chiều thì nên ăn uống, nghỉ ngơi thế nào?',
+              'Example: What foods suit a 7-month-old? I often feel tired in the afternoon, how should I eat and rest?'
             )}
             placeholderTextColor={MOM_THEME.mutedLight}
             multiline

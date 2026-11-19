@@ -2,9 +2,9 @@
   "expo": {
     "name": "Mom Ơi",
     "slug": "mom-oi-healthcare-ai",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-v2.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
@@ -14,8 +14,8 @@
       "package": "com.momoi.healthcare",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/android-icon-foreground-v2.png",
+        "monochromeImage": "./assets/android-icon-monochrome-v2.png"
       },
       "permissions": [
         "android.permission.CAMERA",
@@ -32,8 +32,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Mom Ơi cần truy cập ảnh để mẹ gửi ảnh triệu chứng cho trợ lý sức khỏe AI phân tích.",
-          "cameraPermission": "Mom Ơi cần dùng camera để mẹ chụp ảnh triệu chứng cho trợ lý sức khỏe AI phân tích.",
+          "photosPermission": "Mom Ơi cần truy cập ảnh để mẹ gửi kèm ảnh khi hỏi trợ lý AI.",
+          "cameraPermission": "Mom Ơi cần dùng camera để mẹ chụp ảnh gửi kèm khi hỏi trợ lý AI.",
           "microphonePermission": false
         }
       ],
@@ -41,7 +41,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
+          "image": "./assets/splash-icon-v2.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#FDF2F8"

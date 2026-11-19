@@ -41,7 +41,7 @@ import { getApiErrorMessage } from '../../utils/apiError';
 import { LockIcon } from '../../components/ui';
 import { formatDate } from '../../utils/date';
 import { COLORS, MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
-import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
+import { MEDICAL_FEATURES_ENABLED, PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
 import { tr, useT } from '../../i18n';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 
@@ -136,7 +136,7 @@ export default function ToolsScreen() {
       tierLocked: true,
       go: () => navigation.navigate('MainTabs', { screen: 'Nutrition' }),
     },
-  ];
+  ].filter((item) => PREGNANCY_FEATURES_ENABLED || (item.key !== 'pregnancy' && item.key !== 'postpartum'));
 
   const panelItems: { key: PanelKey; label: string; icon: typeof User; color: string }[] = [
     { key: 'plan', label: t('Gói của mẹ', 'My plan'), icon: Sparkles, color: MOM_THEME.amberDark },
@@ -303,10 +303,15 @@ export default function ToolsScreen() {
           </View>
           <Text style={styles.title}>{t('Chức năng Mom Ơi', 'Mom Ơi features')}</Text>
           <Text style={styles.subtitle}>
-            {t(
-              'Trọn bộ công cụ theo dõi chu kỳ, sức khỏe thai kỳ và chăm sóc bé yêu 🌸',
-              'Tools for your cycle, pregnancy and baby care 🌸'
-            )}
+            {PREGNANCY_FEATURES_ENABLED
+              ? t(
+                  'Trọn bộ công cụ theo dõi chu kỳ, sức khỏe thai kỳ và chăm sóc bé yêu 🌸',
+                  'Tools for your cycle, pregnancy and baby care 🌸'
+                )
+              : t(
+                  'Trọn bộ công cụ theo dõi chu kỳ, thói quen lành mạnh và chăm sóc bé yêu 🌸',
+                  'Tools for your cycle, healthy habits and baby care 🌸'
+                )}
           </Text>
         </View>
 
@@ -317,7 +322,9 @@ export default function ToolsScreen() {
           ))}
         </View>
 
-        <Text style={styles.groupTitle}>{t('Theo giai đoạn', 'By stage')}</Text>
+        <Text style={styles.groupTitle}>
+          {PREGNANCY_FEATURES_ENABLED ? t('Theo giai đoạn', 'By stage') : t('Chu kỳ & bé yêu', 'Cycle & baby')}
+        </Text>
         <View style={styles.menuGrid}>
           {stageItems.map((item) => (
             <MenuTile

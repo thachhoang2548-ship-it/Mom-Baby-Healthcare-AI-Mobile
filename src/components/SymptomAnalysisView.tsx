@@ -103,8 +103,8 @@ export default function SymptomAnalysisView({ analysis }: { analysis?: SymptomAn
           {analysis?.aiAvailable && analysis.disclaimer
             ? analysis.disclaimer
             : t(
-                'Phân tích AI chỉ mang tính tham khảo. Nếu có dấu hiệu sốt cao liên tục, co giật, khó thở, ra máu bất thường hoặc thai máy giảm, mẹ hãy đến cơ sở y tế gần nhất.',
-                'AI suggestions are for reference only. With a persistent high fever, seizures, trouble breathing, unusual bleeding or reduced baby movements, go to the nearest medical facility.'
+                'Phân tích AI chỉ mang tính tham khảo. Nếu có dấu hiệu sốt cao liên tục, co giật, khó thở hoặc ra máu bất thường, mẹ hãy đến cơ sở y tế gần nhất.',
+                'AI suggestions are for reference only. With a persistent high fever, seizures, trouble breathing or unusual bleeding, go to the nearest medical facility.'
               )}
         </Text>
       </View>

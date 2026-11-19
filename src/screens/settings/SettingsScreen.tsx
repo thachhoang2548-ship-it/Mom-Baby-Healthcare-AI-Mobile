@@ -46,8 +46,8 @@ export default function SettingsScreen() {
         </View>
         <Text style={[uiStyles.muted, styles.note]}>
           {t(
-            'Nội dung do server và trợ lý AI tạo (thực đơn, gợi ý tuần thai, câu trả lời AI) hiện vẫn bằng tiếng Việt.',
-            'Content created by the server and the AI assistant (menus, weekly tips, AI answers) is still in Vietnamese.'
+            'Nội dung do server và trợ lý AI tạo (thực đơn, gợi ý, câu trả lời AI) hiện vẫn bằng tiếng Việt.',
+            'Content created by the server and the AI assistant (menus, tips, AI answers) is still in Vietnamese.'
           )}
         </Text>
       </Card>

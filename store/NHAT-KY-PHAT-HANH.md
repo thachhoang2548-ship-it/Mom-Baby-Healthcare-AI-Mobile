@@ -21,8 +21,10 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
 | 09/11/2026 | 7 (1.1.0) | Sửa thanh tab và bàn phím theo góp ý, màu theo giới tính bé, màn Cài đặt, tiếng Anh toàn bộ | Được duyệt, phát hành cho người thử 09/11 19:23 |
 | 11/11/2026 | (tài khoản) | Gửi đơn xin quyền phát hành công khai (production) | **Được duyệt** 12/11/2026 lúc 05:12, khoảng 16 giờ sau khi nộp. Email "Your app has been granted Google Play production access" |
 | 12/11/2026 | 7 (1.1.0) – Phát hành công khai | Bản chính thức đầu tiên, phát hành 100%, tất cả quốc gia (177 quốc gia/khu vực và các nơi khác trên thế giới) | **Bị từ chối** 16/11: "Inaccurate Health Apps Declaration" (mô tả cửa hàng có nội dung sức khỏe sinh sản, mục thuộc nhóm Y tế) |
-| 16/11/2026 | (trang cửa hàng) | Viết lại mô tả VI/EN cho khớp 5 mục Sức khỏe & thể chất đã khai, thêm câu miễn trừ "không phải thiết bị y tế" (xem store/mo-ta-cua-hang-v2.md) | Đã lưu trên Play Console, chưa gửi |
-| 16/11/2026 | 8 (1.1.1) | Đổi chữ trong app cho khớp tờ khai sức khỏe: bỏ "thụ thai / chuẩn bị mang thai", "phục hồi sau sinh", "triệu chứng / bệnh lý" | Code xong, chờ commit và build |
+| 16/11/2026 | (trang cửa hàng) | Viết lại mô tả VI/EN cho khớp 5 mục Sức khỏe & thể chất đã khai, thêm câu miễn trừ "không phải thiết bị y tế" (xem store/mo-ta-cua-hang-v2.md) | Gửi xem xét 16/11 cùng bản 8 |
+| 16/11/2026 | 8 (1.1.1) | Đổi chữ trong app cho khớp tờ khai sức khỏe: bỏ "thụ thai / chuẩn bị mang thai", "phục hồi sau sinh", "triệu chứng / bệnh lý" | Build EAS 16/11 (commit ac0ae8d). Gửi xem xét 16/11 cùng mô tả cửa hàng mới, kênh Phát hành công khai, tất cả quốc gia. **Bị từ chối** 18/11, cùng lỗi "Inaccurate Health Apps Declaration" |
+| 18/11/2026 | (tờ khai sức khỏe) | Khai thêm mục **Sức khỏe sinh sản và tình dục** (nhóm Y tế) vì app có theo dõi thai kỳ. Giữ 5 mục cũ, không thêm mục nào khác | Gửi xem xét 18/11. **Bị từ chối** 19/11: "Play Console Requirements", khai mục Y tế thì phải dùng tài khoản tổ chức |
+| 20/11/2026 | 9 (1.2.0) – bản Play không có phần mang thai | Cờ `PREGNANCY_FEATURES_ENABLED = false` ẩn giai đoạn Mang thai và Sau sinh. Tờ khai quay về 5 mục Sức khỏe & thể dục. Mô tả v3 (store/mo-ta-cua-hang-v3.md). Song song gửi câu hỏi cho chuyên viên chính sách Google | Đang chuẩn bị |
 
 ## Chi tiết
 
@@ -166,7 +168,61 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
   - **Tab AI:** gợi ý nhanh đổi từ triệu chứng ("thai máy ít hơn", "bé sốt") sang câu hỏi chăm sóc (ăn dặm, giấc ngủ, vận động). Câu hỏi và ví dụ mẫu đổi tương tự. Bỏ chữ "triệu chứng" ở nút chụp ảnh và lịch sử.
   - **Hồ sơ:** "Tiền sử bệnh / được chẩn đoán tiểu đường thai kỳ" thành "Lưu ý sức khỏe cho thực đơn / cần thực đơn ít đường". Nhật ký đổi "Triệu chứng" thành "Cảm giác khó chịu".
   - Typecheck, lint, đóng gói Android đều đạt. Version 1.1.1.
+- **Đã kiểm tra trước khi gửi:** tờ khai sức khỏe đúng 5 mục Sức khỏe & thể chất, không mục Y tế nào. Cảnh báo duy nhất là thiếu tệp gỡ rối R8.
+- **Việc cần làm sau (không gấp):** Play Console báo "Mức độ tối ưu hóa mã DEX thấp" (làm rối 1%), hạn sửa tháng 2/2027. Cách xử lý: bật R8/minify trong cấu hình build Android (expo-build-properties).
 - **Rủi ro còn lại:** kết quả AI vẫn có mức độ (Thấp, Trung bình, Cao, Khẩn cấp) và nút gọi 115 khi khẩn cấp. Nhóm giữ lại vì an toàn cho người dùng.
+
+### 18/11/2026 – Bị từ chối lần 2, khai thêm mục Sức khỏe sinh sản
+
+- **Email từ chối:** vẫn là "Inaccurate Health Apps Declaration", vẫn 6 mục cần kiểm tra như lần trước. Nơi phát hiện là **mô tả đầy đủ mới (v2)**. Mô tả này đã bỏ hết "thụ thai, sinh sản, phục hồi, triệu chứng" nhưng vẫn bị.
+- **Kết luận:** Google không bắt từ ngữ. Họ xếp nội dung **mang thai** (theo dõi thai kỳ, mẹ bầu, sau sinh) vào **Reproductive and Sexual Health**. Đây là tính năng chính của app nên không thể bỏ.
+- **Rà lại 6 mục so với tính năng thật trong app:**
+  - Hoạt động và thể dục: kế hoạch vận động, ghi bước chân.
+  - Cân nặng và dinh dưỡng: cân nặng thai kỳ, thực đơn, biểu đồ WHO.
+  - Theo dõi chu kỳ: lịch chu kỳ, ngày rụng trứng.
+  - Giấc ngủ: ghi giờ ngủ.
+  - Thư giãn: nhạc, bài thở, tâm trạng.
+  - Sức khỏe sinh sản: theo dõi thai kỳ theo tuần, giai đoạn sau sinh.
+  - Cả 6 đều có thật nên khai đủ 6. Bỏ mục nào cũng làm tờ khai sai.
+- **Đã làm:** tick thêm "Sức khoẻ sinh sản và tình dục" và giữ 5 mục cũ. Bước 2 "Yêu cầu theo khu vực" không cần khai gì. Lưu tờ khai.
+- **Rủi ro:** bản 3 bị từ chối vì đòi tài khoản tổ chức, lần đó tờ khai có 7 mục Y tế. Trang Play Console Requirements chỉ ghi *"Health apps, such as Medical apps"*. Trang định nghĩa ứng dụng y tế lấy ví dụ hồ sơ bệnh án, khám từ xa, quản lý bệnh, kiểm tra triệu chứng. App nhật ký mẹ bầu không thuộc nhóm đó, nhưng vẫn có thể bị đòi tài khoản tổ chức.
+
+### 19–20/11/2026 – Bị từ chối lần 3, làm bản Play không có phần mang thai (bản 9, 1.2.0)
+
+- **Email từ chối 19/11:** "Vi phạm yêu cầu của Play Console". *"Bạn đã chọn một danh mục ứng dụng hoặc khai báo rằng ứng dụng của bạn cung cấp một số tính năng nhất định, yêu cầu bạn phải gửi ứng dụng bằng tài khoản tổ chức."* Khu vực: Tài khoản nhà phát triển.
+- **Kết luận:**
+  - App bị kẹt giữa hai lỗi. Không khai Sức khỏe sinh sản thì tờ khai "không chính xác". Có khai thì bị đòi tài khoản tổ chức.
+  - Tài khoản cá nhân không phát hành được app có nội dung mang thai.
+  - Ngay cả 1 mục Y tế cũng kéo theo yêu cầu tài khoản tổ chức.
+- **Google gửi thêm email "Personalized guidance"** có nút Request support để hỏi chuyên viên chính sách. Nhóm gửi câu hỏi: app nhật ký thai kỳ không có chức năng y tế thì có bắt buộc khai Sức khỏe sinh sản không, và cần bỏ gì để tài khoản cá nhân phát hành được. **Đã gửi 20/11/2026**, kèm ảnh 2 email từ chối. Chờ chuyên viên trả lời.
+- **Hướng xử lý chính (do hạn present 27/11):** làm bản Play không có phần mang thai.
+  - Thêm cờ `PREGNANCY_FEATURES_ENABLED = false` trong `src/constants/features.ts`.
+  - `getStageIndex()` luôn trả về giai đoạn Theo dõi chu kỳ, nên mọi màn đều hiện nội dung chu kỳ.
+  - Ẩn ô Thai kỳ, Sau sinh ở Menu. Ẩn phần chọn giai đoạn ở Hồ sơ. Ẩn khung "Các chặng đường" ở Lộ trình.
+  - Đổi ảnh mẹ bầu sang ảnh khác ở Tổng quan, Lộ trình và trang chào.
+  - Trang chào, trợ lý AI, Món ăn AI (bỏ chế độ ăn mẹ bầu / sau sinh / tiểu đường thai kỳ), Cài đặt và Lịch chăm sóc bỏ chữ về thai kỳ.
+  - Code màn Mang thai, Sau sinh vẫn giữ nguyên. Có tài khoản tổ chức thì chỉ cần bật cờ.
+  - Typecheck, lint và đóng gói Android đều đạt. Version 1.2.0.
+- **Trên Play Console cần làm:**
+  - Tờ khai sức khỏe bỏ tick Sức khỏe sinh sản, giữ 5 mục.
+  - Mô tả v3.
+  - Thay ảnh chụp màn hình 1, 2, 4 vì có chữ "hậu sản", "Thai kỳ", "Ốm nghén", "triệu chứng". Ảnh 3 (Bé yêu) giữ lại.
+  - Phát hành bản 9.
+- **Lưu ý:**
+  - Tài khoản thử cho Google nên để giai đoạn Theo dõi chu kỳ. Lịch chăm sóc lấy nội dung từ server theo giai đoạn đã lưu.
+  - Bản đầy đủ (có phần mang thai) dùng để demo khi present bằng bản dev hoặc APK nội bộ, chỉ cần bật cờ.
+- **Trợ lý AI trong biểu mẫu hỗ trợ (20/11) xác nhận hướng này:**
+  - Tài khoản cá nhân phát hành được nếu bỏ hết tính năng mang thai, sau sinh và chỉ khai các mục Sức khỏe & thể dục.
+  - Phải bỏ chữ mang thai khỏi tên, mô tả ngắn và mô tả đầy đủ.
+  - Phải thay ảnh chụp màn hình và ảnh quảng bá có hình mang thai.
+  - Phải bỏ các màn mang thai khỏi app.
+  - Phải giữ câu miễn trừ y tế.
+  - Phát hành bản mới với versionCode tăng.
+- **Làm thêm theo góp ý đó:**
+  - Khi cờ tắt, các màn Mang thai, Sau sinh, EPDS, Thực đơn thai kỳ, Bài tập thai kỳ không được đăng ký trong điều hướng nên không mở được.
+  - **Đổi biểu tượng app** từ hình mẹ bầu sang chữ "M" trong trái tim hồng. File mới là `assets/*-v2.png`, logo cũ vẫn giữ trong `assets/`.
+  - Ảnh bìa cửa hàng mới chỉ có chữ: `store/play-feature-graphic-v2-1024x500.png`. Icon cửa hàng mới: `store/play-icon-v2-512.png`.
+  - Câu xin quyền ảnh và máy ảnh bỏ chữ "ảnh triệu chứng".
 
 ## Theo dõi người thử (cập nhật dần)
 
@@ -223,6 +279,8 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
 - **Vì sao đã sẵn sàng?** We shipped an update every 3-5 days based on tester notes, and the layout bugs several testers reported are fixed in 1.1.0 (live since Nov 9). 51 testers stayed opted in for 14 days; monthly active devices reached 42. Store listing and policy declarations are complete.
 
 ## Bài học rút ra
+
+- Khi email từ chối liệt kê một mục cần khai, sửa từ ngữ để né thường không đủ. Nếu app thật sự có tính năng đó (ở đây là theo dõi thai kỳ) thì khai đúng mục Google chỉ ra.
 
 - Lần duyệt bản công khai xét cả mô tả cửa hàng so với tờ khai sức khỏe, kỹ hơn lần duyệt thử nghiệm. Mô tả nhắc "chuẩn bị mang thai, theo dõi thai kỳ" bị coi là Reproductive and Sexual Health (nhóm Y tế), dù cùng mô tả đó vẫn qua duyệt ở kênh thử nghiệm. Theo Google, rụng trứng và cửa sổ thụ thai thuộc Period Tracking. Mô tả phải dùng đúng từ ngữ của các mục đã khai và có câu "không phải thiết bị y tế".
 

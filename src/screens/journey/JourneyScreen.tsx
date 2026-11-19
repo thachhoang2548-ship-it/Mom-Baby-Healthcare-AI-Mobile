@@ -27,7 +27,7 @@ import featureService, { PregnancyWeekInfo } from '../../services/featureService
 import { RootStackParamList } from '../../navigation/types';
 import { formatDate, fromUtcDateIso } from '../../utils/date';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
-import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
+import { MEDICAL_FEATURES_ENABLED, PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
 import { useT } from '../../i18n';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 
@@ -224,7 +224,11 @@ export default function JourneyScreen() {
         {/* ── Hero Milestone Card with Real Visual ── */}
         <View style={[styles.heroCard, SHADOWS.card]}>
           <Image
-            source={require('../../../assets/images/hero_mom.jpg')}
+            source={
+              PREGNANCY_FEATURES_ENABLED
+                ? require('../../../assets/images/hero_mom.jpg')
+                : require('../../../assets/images/health.jpg')
+            }
             style={styles.heroImage}
             resizeMode="cover"
           />
@@ -259,8 +263,8 @@ export default function JourneyScreen() {
                       'A precious time that needs rest, warm nourishing food and care for how you feel.'
                     )
                   : t(
-                      'Theo dõi ngày rụng trứng, giữ tinh thần thư thái và bổ sung acid folic đều đặn.',
-                      'Track ovulation, stay relaxed and take folic acid regularly.'
+                      'Theo dõi chu kỳ, ngủ đủ giấc và giữ tinh thần thư thái mỗi ngày.',
+                      'Track your cycle, sleep well and stay relaxed every day.'
                     )}
             </Text>
 
@@ -276,7 +280,8 @@ export default function JourneyScreen() {
           </View>
         </View>
 
-        {/* ── Journey Stepper / Timeline ── */}
+        {/* ── Journey Stepper / Timeline (bản Play không có các giai đoạn) ── */}
+        {PREGNANCY_FEATURES_ENABLED ? (
         <View style={[styles.timelineCard, SHADOWS.sm]}>
           <Text style={styles.timelineCardTitle}>{t('Các chặng đường thiêng liêng', 'The three stages')}</Text>
           <View style={styles.timeline}>
@@ -325,6 +330,7 @@ export default function JourneyScreen() {
             })}
           </View>
         </View>
+        ) : null}
 
         {/* ── Gợi ý chăm sóc (theo tuần thai nếu đang mang thai) ── */}
         <View style={styles.sectionHeader}>

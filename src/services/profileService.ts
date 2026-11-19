@@ -1,11 +1,14 @@
 import axiosClient from '../api/axiosClient';
 import { ENDPOINTS } from '../api/endpoints';
 import { ApiResponse } from './authService';
+import { PREGNANCY_FEATURES_ENABLED } from '../constants/features';
 
 export type StageIndex = 0 | 1 | 2;
 
 /** Backend trả enum dạng chuỗi (PrePregnancy/Pregnant/Postpartum), web gửi lên dạng số. */
 export function getStageIndex(stage?: number | string | null): StageIndex {
+  // Bản Play không có giai đoạn Mang thai / Sau sinh: luôn dùng Theo dõi chu kỳ.
+  if (!PREGNANCY_FEATURES_ENABLED) return 0;
   if (stage === 1 || stage === 'Pregnant') return 1;
   if (stage === 2 || stage === 'Postpartum') return 2;
   return 0;

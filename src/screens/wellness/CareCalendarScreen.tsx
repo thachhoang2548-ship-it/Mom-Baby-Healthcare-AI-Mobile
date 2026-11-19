@@ -9,6 +9,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { getApiErrorMessage } from '../../utils/apiError';
 import { MOM_THEME, RADII } from '../../theme/colors';
 import { useT } from '../../i18n';
+import { PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
 
 const STAGES: Record<StageIndex, { label: string; labelEn: string; accent: string; soft: string }> = {
   0: { label: 'Theo dõi chu kỳ', labelEn: 'Cycle tracking', accent: MOM_THEME.amberDark, soft: MOM_THEME.amberLight },
@@ -46,7 +47,7 @@ export default function CareCalendarScreen() {
 
   const stage = STAGES[getStageIndex(calendar?.stage)];
   const items = calendar ? [...calendar.items].sort((a, b) => a.priority - b.priority) : [];
-  const week = calendar?.stage === 'Pregnant' ? calendar.pregnancyWeek : null;
+  const week = PREGNANCY_FEATURES_ENABLED && calendar?.stage === 'Pregnant' ? calendar.pregnancyWeek : null;
 
   return (
     <Screen

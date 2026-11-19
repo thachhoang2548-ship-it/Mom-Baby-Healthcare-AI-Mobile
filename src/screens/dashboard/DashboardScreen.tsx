@@ -39,7 +39,7 @@ import {
   MOOD_OPTIONS,
 } from '../../utils/monitoring';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
-import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
+import { MEDICAL_FEATURES_ENABLED, PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
 import { useT } from '../../i18n';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 
@@ -210,8 +210,8 @@ export default function DashboardScreen() {
           'Take time to rest, have warm soups and enjoy cuddles with your baby.'
         )
       : t(
-          'Thời điểm vàng để bổ sung acid folic và giữ tinh thần luôn thư thái.',
-          'A great time to take folic acid and keep your mind at ease.'
+          'Mẹ nhớ ăn uống đủ chất, ngủ đủ giấc và giữ tinh thần luôn thư thái.',
+          'Eat well, sleep well and keep your mind at ease.'
         );
 
   return (
@@ -272,10 +272,15 @@ export default function DashboardScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.setupTitle}>{t('Hoàn thiện hồ sơ của mẹ', 'Complete your profile')}</Text>
               <Text style={styles.setupBody}>
-                {t(
-                  'Chọn giai đoạn (chuẩn bị / mang thai / sau sinh) để Mom Ơi cá nhân hóa lộ trình.',
-                  'Pick your stage (trying / pregnant / after birth) so Mom Ơi can personalize your journey.'
-                )}
+                {PREGNANCY_FEATURES_ENABLED
+                  ? t(
+                      'Chọn giai đoạn (chuẩn bị / mang thai / sau sinh) để Mom Ơi cá nhân hóa lộ trình.',
+                      'Pick your stage (trying / pregnant / after birth) so Mom Ơi can personalize your journey.'
+                    )
+                  : t(
+                      'Nhập ngày kinh gần nhất, chiều cao và cân nặng để Mom Ơi gợi ý phù hợp hơn.',
+                      'Add your last period date, height and weight so Mom Ơi can tailor its tips.'
+                    )}
               </Text>
             </View>
             <ChevronRight size={18} color={a.primary} />
@@ -289,7 +294,11 @@ export default function DashboardScreen() {
           onPress={() => goTab('Journey')}
         >
           <Image
-            source={require('../../../assets/images/pregnancy.jpg')}
+            source={
+              PREGNANCY_FEATURES_ENABLED
+                ? require('../../../assets/images/pregnancy.jpg')
+                : require('../../../assets/images/health.jpg')
+            }
             style={styles.heroImage}
             resizeMode="cover"
           />

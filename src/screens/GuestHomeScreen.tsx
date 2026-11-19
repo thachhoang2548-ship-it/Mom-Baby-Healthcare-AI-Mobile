@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { RADII, SHADOWS } from '../theme/colors';
-import { MEDICAL_FEATURES_ENABLED } from '../constants/features';
+import { MEDICAL_FEATURES_ENABLED, PREGNANCY_FEATURES_ENABLED } from '../constants/features';
 import LanguageToggle from '../components/LanguageToggle';
 import { useT } from '../i18n';
 
@@ -86,7 +86,11 @@ export default function GuestHomeScreen() {
           {/* Hero Image – large rounded card */}
           <View style={styles.heroImageWrapper}>
             <Image
-              source={require('../../assets/images/hero_mom.jpg')}
+              source={
+                PREGNANCY_FEATURES_ENABLED
+                  ? require('../../assets/images/hero_mom.jpg')
+                  : require('../../assets/images/health.jpg')
+              }
               style={styles.heroImage}
               resizeMode="cover"
             />
@@ -104,10 +108,15 @@ export default function GuestHomeScreen() {
               {t('Chăm mẹ khỏe,\nChăm bé vui.', 'Healthy mom,\nHappy baby.')}
             </Text>
             <Text style={styles.heroSubtitle}>
-              {t(
-                'Một nơi nhẹ nhàng để mẹ theo dõi thai kỳ, chăm sóc bé và tìm những thông tin hữu ích mỗi ngày.',
-                'A calm place to follow your pregnancy, care for your baby and find helpful tips every day.'
-              )}
+              {PREGNANCY_FEATURES_ENABLED
+                ? t(
+                    'Một nơi nhẹ nhàng để mẹ theo dõi thai kỳ, chăm sóc bé và tìm những thông tin hữu ích mỗi ngày.',
+                    'A calm place to follow your pregnancy, care for your baby and find helpful tips every day.'
+                  )
+                : t(
+                    'Một nơi nhẹ nhàng để mẹ theo dõi chu kỳ, chăm sóc bé và giữ thói quen lành mạnh mỗi ngày.',
+                    'A calm place to track your cycle, care for your baby and keep healthy habits every day.'
+                  )}
             </Text>
 
             {/* CTA Buttons */}
@@ -143,23 +152,36 @@ export default function GuestHomeScreen() {
         {/* Feature Card: Thai kỳ (large) */}
         <View style={[styles.featureCard, styles.featureCardLarge]}>
           <Image
-            source={require('../../assets/images/pregnancy.jpg')}
+            source={
+              PREGNANCY_FEATURES_ENABLED
+                ? require('../../assets/images/pregnancy.jpg')
+                : require('../../assets/images/mom_baby.jpg')
+            }
             style={styles.featureImageFill}
             resizeMode="cover"
           />
           <View style={styles.featureCardOverlay} />
           <View style={styles.featureCardContent}>
             <View style={styles.featureTag}>
-              <Text style={styles.featureTagText}>{t('Thai kỳ', 'Pregnancy')}</Text>
+              <Text style={styles.featureTagText}>
+                {PREGNANCY_FEATURES_ENABLED ? t('Thai kỳ', 'Pregnancy') : t('Chu kỳ', 'Cycle')}
+              </Text>
             </View>
             <Text style={styles.featureCardTitle}>
-              {t('Theo dõi hành trình thai kỳ', 'Follow your pregnancy')}
+              {PREGNANCY_FEATURES_ENABLED
+                ? t('Theo dõi hành trình thai kỳ', 'Follow your pregnancy')
+                : t('Theo dõi chu kỳ của mẹ', 'Track your cycle')}
             </Text>
             <Text style={styles.featureCardDesc}>
-              {t(
-                'Theo dõi từng tuần thai, cân nặng, thực đơn và bài tập phù hợp',
-                'Week by week: weight, meal plans and suitable exercises'
-              )}
+              {PREGNANCY_FEATURES_ENABLED
+                ? t(
+                    'Theo dõi từng tuần thai, cân nặng, thực đơn và bài tập phù hợp',
+                    'Week by week: weight, meal plans and suitable exercises'
+                  )
+                : t(
+                    'Lịch kỳ kinh, ngày rụng trứng dự kiến, giấc ngủ và tâm trạng',
+                    'Period calendar, expected ovulation, sleep and mood'
+                  )}
             </Text>
           </View>
         </View>
@@ -219,13 +241,20 @@ export default function GuestHomeScreen() {
             {t('Hỏi mọi điều\nbạn muốn biết', 'Ask anything\nyou want to know')}
           </Text>
           <Text style={styles.assistantDesc}>
-            {t(
-              'Từ chuyện thai kỳ, dinh dưỡng đến cách chăm sóc bé, Mom Ơi gợi ý cho mẹ tham khảo.',
-              'From pregnancy and nutrition to baby care, Mom Ơi gives you suggestions to consider.'
-            )}
+            {PREGNANCY_FEATURES_ENABLED
+              ? t(
+                  'Từ chuyện thai kỳ, dinh dưỡng đến cách chăm sóc bé, Mom Ơi gợi ý cho mẹ tham khảo.',
+                  'From pregnancy and nutrition to baby care, Mom Ơi gives you suggestions to consider.'
+                )
+              : t(
+                  'Từ dinh dưỡng, giấc ngủ đến cách chăm sóc bé, Mom Ơi gợi ý cho mẹ tham khảo.',
+                  'From nutrition and sleep to baby care, Mom Ơi gives you suggestions to consider.'
+                )}
           </Text>
           <View style={styles.assistantPills}>
-            <View style={styles.pill}><Text style={styles.pillText}>{t('Chuyện thai kỳ', 'Pregnancy')}</Text></View>
+            <View style={styles.pill}><Text style={styles.pillText}>
+              {PREGNANCY_FEATURES_ENABLED ? t('Chuyện thai kỳ', 'Pregnancy') : t('Giấc ngủ', 'Sleep')}
+            </Text></View>
             <View style={styles.pill}><Text style={styles.pillText}>{t('Dinh dưỡng cho mẹ', 'Nutrition for mom')}</Text></View>
             <View style={styles.pill}><Text style={styles.pillText}>{t('Chăm sóc sơ sinh', 'Newborn care')}</Text></View>
           </View>
@@ -267,11 +296,15 @@ export default function GuestHomeScreen() {
         ══════════════════════════════════════════ */}
         <View style={styles.trustSection}>
           {/* Chỉ nêu điều app thực sự có; không dùng số người dùng / đánh giá chưa kiểm chứng. */}
-          <View style={styles.trustCard}>
-            <Text style={styles.trustNumber}>3</Text>
-            <Text style={styles.trustLabel}>{t('Giai đoạn làm mẹ', 'Stages of motherhood')}</Text>
-          </View>
-          <View style={styles.trustDivider} />
+          {PREGNANCY_FEATURES_ENABLED ? (
+            <>
+              <View style={styles.trustCard}>
+                <Text style={styles.trustNumber}>3</Text>
+                <Text style={styles.trustLabel}>{t('Giai đoạn làm mẹ', 'Stages of motherhood')}</Text>
+              </View>
+              <View style={styles.trustDivider} />
+            </>
+          ) : null}
           <View style={styles.trustCard}>
             <Text style={styles.trustNumber}>WHO</Text>
             <Text style={styles.trustLabel}>{t('Chuẩn tăng trưởng của bé', 'Baby growth standards')}</Text>
@@ -307,10 +340,15 @@ export default function GuestHomeScreen() {
           </Text>
           {/* Không dùng số người dùng chưa kiểm chứng. */}
           <Text style={styles.finalCtaDesc}>
-            {t(
-              'Tạo tài khoản miễn phí để theo dõi thai kỳ và chăm sóc bé cùng Mom Ơi.',
-              'Create a free account to follow your pregnancy and care for your baby with Mom Ơi.'
-            )}
+            {PREGNANCY_FEATURES_ENABLED
+              ? t(
+                  'Tạo tài khoản miễn phí để theo dõi thai kỳ và chăm sóc bé cùng Mom Ơi.',
+                  'Create a free account to follow your pregnancy and care for your baby with Mom Ơi.'
+                )
+              : t(
+                  'Tạo tài khoản miễn phí để theo dõi chu kỳ và chăm sóc bé cùng Mom Ơi.',
+                  'Create a free account to track your cycle and care for your baby with Mom Ơi.'
+                )}
           </Text>
           <TouchableOpacity
             style={styles.finalCtaButton}

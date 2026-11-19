@@ -34,6 +34,7 @@ import {
 } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
 import { PRIVACY_POLICY_URL } from '../../constants/links';
+import { PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
 import { tr, useT } from '../../i18n';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 
@@ -358,11 +359,16 @@ export default function ProfileScreen() {
         <InfoRow label={t('Gói dịch vụ', 'Plan')} value={getTierDisplayName(tier)} />
       </Card>
 
-      <SectionTitle
-        title={t('Giai đoạn hiện tại', 'Current stage')}
-        subtitle={t('Chọn đúng giai đoạn để nhận nội dung phù hợp', 'Pick your stage to get the right content')}
-      />
-      {STAGE_OPTIONS.map((opt) => {
+      {/* Bản Play chỉ có Theo dõi chu kỳ nên không cần chọn giai đoạn. */}
+      {PREGNANCY_FEATURES_ENABLED ? (
+        <SectionTitle
+          title={t('Giai đoạn hiện tại', 'Current stage')}
+          subtitle={t('Chọn đúng giai đoạn để nhận nội dung phù hợp', 'Pick your stage to get the right content')}
+        />
+      ) : (
+        <SectionTitle title={t('Chu kỳ của mẹ', 'Your cycle')} />
+      )}
+      {(PREGNANCY_FEATURES_ENABLED ? STAGE_OPTIONS : []).map((opt) => {
         const Icon = opt.icon;
         const active = stage === opt.id;
         return (
@@ -484,7 +490,11 @@ export default function ProfileScreen() {
           placeholder={t('VD: 5.1', 'e.g. 5.1')}
         />
         <ToggleRow
-          label={t('Mẹ cần thực đơn ít đường (tiểu đường thai kỳ)', 'I need low-sugar meal ideas (gestational diabetes)')}
+          label={
+            PREGNANCY_FEATURES_ENABLED
+              ? t('Mẹ cần thực đơn ít đường (tiểu đường thai kỳ)', 'I need low-sugar meal ideas (gestational diabetes)')
+              : t('Mẹ cần thực đơn ít đường', 'I need low-sugar meal ideas')
+          }
           value={hasGestDiabetes}
           onValueChange={setHasGestDiabetes}
         />
