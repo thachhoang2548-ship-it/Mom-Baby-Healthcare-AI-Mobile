@@ -179,8 +179,8 @@ export default function GuestHomeScreen() {
                     'Week by week: weight, meal plans and suitable exercises'
                   )
                 : t(
-                    'Lịch kỳ kinh, ngày rụng trứng dự kiến và giấc ngủ mỗi đêm',
-                    'Period calendar, expected ovulation and nightly sleep'
+                    'Lịch kỳ kinh, kỳ kinh tiếp theo dự kiến và giấc ngủ mỗi đêm',
+                    'Period calendar, your next expected period and nightly sleep'
                   )}
             </Text>
           </View>

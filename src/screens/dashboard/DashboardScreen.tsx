@@ -169,12 +169,12 @@ export default function DashboardScreen() {
   const shortcut = {
     route: STAGE_ROUTE[stage],
     title: [
-      t('Chu kỳ & rụng trứng', 'Cycle & ovulation'),
+      t('Chu kỳ kinh nguyệt', 'Period tracker'),
       t('Theo dõi thai kỳ', 'Pregnancy tracker'),
       t('Mẹ sau sinh', 'After birth'),
     ][stage],
     sub: [
-      t('Dự đoán ngày rụng trứng', 'Predict your ovulation days'),
+      t('Lịch kỳ kinh dự kiến', 'Your expected period dates'),
       t('Tuần thai & cân nặng mẹ', 'Pregnancy week & your weight'),
       MEDICAL_FEATURES_ENABLED
         ? t('Vận động & khảo sát EPDS', 'Exercise & EPDS check-in')

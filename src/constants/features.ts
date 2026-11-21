@@ -12,3 +12,7 @@ export const PREGNANCY_FEATURES_ENABLED = false;
 // Chuyên viên chính sách Google Play (email 20/11/2026) yêu cầu bỏ cả "mood logging" khỏi bản phát hành
 // từ tài khoản cá nhân. Bản Play ẩn phần ghi tâm trạng ở Tổng quan và Nhật ký hằng ngày.
 export const MOOD_LOG_ENABLED = false;
+
+// Dự đoán ngày rụng trứng / cửa sổ dễ thụ thai có thể bị Google xếp vào "Sức khỏe sinh sản" (nhóm Y tế).
+// Bản Play chỉ theo dõi kỳ kinh: lịch đánh dấu kỳ kinh dự kiến và đếm ngày đến kỳ kinh tiếp theo.
+export const OVULATION_ENABLED = false;

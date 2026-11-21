@@ -55,8 +55,8 @@ export default function JourneyScreen() {
   ];
   const stageInsight = [
     t(
-      'Mẹ nên ăn uống đủ chất, ngủ đủ giấc và ghi lại chu kỳ để xem ngày rụng trứng dự kiến.',
-      'Eat well, sleep well and log your cycle to see your expected ovulation days.'
+      'Mẹ nên ăn uống đủ chất, ngủ đủ giấc và ghi lại kỳ kinh để biết kỳ kinh tiếp theo.',
+      'Eat well, sleep well and log your periods to know when the next one is due.'
     ),
     '',
     t(
@@ -180,8 +180,8 @@ export default function JourneyScreen() {
             {
               icon: <CalendarHeart size={20} color={a.primary} />,
               bg: a.light,
-              title: t('Chu kỳ & rụng trứng', 'Cycle & ovulation'),
-              body: t('Ghi kỳ kinh để xem ngày rụng trứng dự kiến.', 'Log your periods to see your expected ovulation.'),
+              title: t('Chu kỳ kinh nguyệt', 'Period tracker'),
+              body: t('Ghi kỳ kinh để xem kỳ kinh tiếp theo dự kiến.', 'Log your periods to see when the next one is due.'),
               go: () => navigation.navigate('Fertility'),
             },
             {

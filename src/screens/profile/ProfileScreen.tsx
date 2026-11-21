@@ -54,8 +54,8 @@ const STAGE_OPTIONS: { id: StageIndex; label: string; labelEn: string; desc: str
     id: 0,
     label: 'Theo dõi chu kỳ',
     labelEn: 'Cycle tracking',
-    desc: 'Theo dõi chu kỳ & ngày rụng trứng',
-    descEn: 'Track your cycle & ovulation',
+    desc: 'Theo dõi kỳ kinh & kỳ kinh tiếp theo',
+    descEn: 'Track your periods & the next one',
     icon: CalendarHeart,
   },
   {

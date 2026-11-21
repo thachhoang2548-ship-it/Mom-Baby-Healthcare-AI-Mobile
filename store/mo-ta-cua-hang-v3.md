@@ -34,8 +34,8 @@ Theo dõi chu kỳ, thói quen lành mạnh cho mẹ và thực đơn ăn dặm 
 Mom Ơi là nhật ký thói quen sống lành mạnh dành cho phụ nữ Việt Nam: theo dõi chu kỳ, ăn uống, vận động, giấc ngủ, thư giãn, cùng hồ sơ và thực đơn ăn dặm cho bé.
 
 THEO DÕI CHU KỲ KINH NGUYỆT
-• Ghi lại kỳ kinh và cảm giác đi kèm
-• Xem ngày rụng trứng dự kiến và kỳ kinh tiếp theo trên lịch tháng
+• Ghi lại kỳ kinh và các biểu hiện đi kèm như đau bụng, mệt mỏi
+• Xem kỳ kinh tiếp theo dự kiến trên lịch tháng
 
 DINH DƯỠNG VÀ CÂN NẶNG
 • Ghi chiều cao, cân nặng và xem chỉ số BMI
@@ -86,8 +86,8 @@ Cycle tracking, healthy habits for moms and weaning menus for your baby
 Mom Ơi is a healthy-habits journal for women in Vietnam: track your cycle, meals, activity, sleep and relaxation, plus a profile and weaning menus for your baby.
 
 PERIOD TRACKING
-• Log your periods and how you feel
-• See expected ovulation and next period dates on a monthly calendar
+• Log your periods and notes such as cramps or tiredness
+• See your next expected period on a monthly calendar
 
 NUTRITION AND WEIGHT
 • Log your height and weight and see your BMI

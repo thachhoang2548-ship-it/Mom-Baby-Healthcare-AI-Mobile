@@ -191,6 +191,8 @@ export interface FertilityCalendar {
 export interface OvulationToday {
   isInFertileWindow: boolean;
   daysUntilOvulation: number;
+  /** 0 = kỳ kinh dự kiến bắt đầu hôm nay. Server cũ không trả trường này. */
+  daysUntilNextPeriod?: number;
   recommendation?: string;
 }
 

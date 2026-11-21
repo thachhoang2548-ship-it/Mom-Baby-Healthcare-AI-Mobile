@@ -23,7 +23,12 @@ import featureService, { FertilityCalendar, OvulationToday } from '../../service
 import { getApiErrorMessage } from '../../utils/apiError';
 import { addDays, formatDate, fromUtcDateIso, startOfToday, toUtcDateIso } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
-import { MEDICAL_FEATURES_ENABLED, MOOD_LOG_ENABLED, PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
+import {
+  MEDICAL_FEATURES_ENABLED,
+  MOOD_LOG_ENABLED,
+  OVULATION_ENABLED,
+  PREGNANCY_FEATURES_ENABLED,
+} from '../../constants/features';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 import { useT } from '../../i18n';
 
@@ -57,13 +62,14 @@ function MonthGrid({ month, calendar }: { month: Date; calendar: FertilityCalend
   const a = useAccent();
   const styles = useStyles();
   const t = useT();
+  // Bản Play không đánh dấu rụng trứng / cửa sổ dễ thụ thai (xem constants/features.ts).
   const fertile = new Set(
-    (calendar?.fertileWindowDays || [])
+    (OVULATION_ENABLED ? calendar?.fertileWindowDays || [] : [])
       .map((d) => fromUtcDateIso(d))
       .filter((d): d is Date => !!d)
       .map(dayKey)
   );
-  const ovulation = fromUtcDateIso(calendar?.ovulationDay);
+  const ovulation = OVULATION_ENABLED ? fromUtcDateIso(calendar?.ovulationDay) : null;
   const period = fromUtcDateIso(calendar?.periodPrediction);
   const today = startOfToday();
 
@@ -120,8 +126,12 @@ function MonthGrid({ month, calendar }: { month: Date; calendar: FertilityCalend
         </View>
       ))}
       <View style={styles.legend}>
-        <Legend color={MOM_THEME.sageLight} label={t('Quanh ngày rụng trứng', 'Around ovulation')} />
-        <Legend color={a.primary} label={t('Ngày rụng trứng', 'Ovulation')} />
+        {OVULATION_ENABLED ? (
+          <>
+            <Legend color={MOM_THEME.sageLight} label={t('Quanh ngày rụng trứng', 'Around ovulation')} />
+            <Legend color={a.primary} label={t('Ngày rụng trứng', 'Ovulation')} />
+          </>
+        ) : null}
         <Legend color="#F04438" label={t('Dự kiến có kinh', 'Expected period')} />
       </View>
     </View>
@@ -185,6 +195,15 @@ export default function FertilityScreen() {
     setMonth((m) => new Date(m.getFullYear(), m.getMonth() + delta, 1));
   };
 
+  // Số ngày đến kỳ kinh tiếp theo. Server mới trả sẵn; server cũ thì suy từ lịch của tháng hiện tại.
+  const nextPeriodIn = (() => {
+    if (typeof today?.daysUntilNextPeriod === 'number') return today.daysUntilNextPeriod;
+    const predicted = fromUtcDateIso(calendar?.periodPrediction);
+    if (!predicted) return null;
+    const diff = Math.round((predicted.getTime() - startOfToday().getTime()) / 86400000);
+    return diff >= 0 ? diff : null;
+  })();
+
   const toggleSymptom = (s: string) =>
     setSymptoms((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
 
@@ -217,13 +236,30 @@ export default function FertilityScreen() {
   return (
     <Screen
       eyebrow={t('Theo dõi chu kỳ', 'Cycle tracking')}
-      title={t('Chu kỳ & rụng trứng', 'Cycle & ovulation')}
+      title={OVULATION_ENABLED ? t('Chu kỳ & rụng trứng', 'Cycle & ovulation') : t('Chu kỳ kinh nguyệt', 'Period tracker')}
       subtitle={t(
         'Dự đoán dựa trên các kỳ kinh mẹ đã ghi. Ghi càng đều, dự đoán càng chính xác.',
         'Predictions use the periods you log. The more you log, the better they get.'
       )}
     >
-      {today ? (
+      {!OVULATION_ENABLED && nextPeriodIn !== null ? (
+        <View style={[styles.todayCard, styles.todayNormal]}>
+          <Text style={styles.todayLabel}>{t('Kỳ kinh tiếp theo', 'Next period')}</Text>
+          <Text style={styles.todayValue}>
+            {nextPeriodIn === 0
+              ? t('Kỳ kinh dự kiến bắt đầu hôm nay', 'Your period is expected today')
+              : t(`Còn ${nextPeriodIn} ngày đến kỳ kinh`, `${nextPeriodIn} days until your period`)}
+          </Text>
+          <Text style={styles.todayText}>
+            {t(
+              'Mẹ ghi kỳ kinh đều đặn để lịch dự đoán chính xác hơn.',
+              'Log your periods regularly for more accurate predictions.'
+            )}
+          </Text>
+        </View>
+      ) : null}
+
+      {OVULATION_ENABLED && today ? (
         <View style={[styles.todayCard, today.isInFertileWindow ? styles.todayFertile : styles.todayNormal]}>
           <Text style={styles.todayLabel}>
             {today.isInFertileWindow
@@ -273,7 +309,12 @@ export default function FertilityScreen() {
         ) : (
           <MonthGrid month={month} calendar={calendar} />
         )}
-        {calendar?.ovulationDay ? (
+        {!OVULATION_ENABLED && calendar?.periodPrediction ? (
+          <Text style={[uiStyles.muted, styles.prediction]}>
+            {t('Kỳ kinh tiếp theo dự kiến', 'Next period expected')} {formatDate(fromUtcDateIso(calendar.periodPrediction))}
+          </Text>
+        ) : null}
+        {OVULATION_ENABLED && calendar?.ovulationDay ? (
           <Text style={[uiStyles.muted, styles.prediction]}>
             {t('Rụng trứng dự kiến', 'Expected ovulation')} {formatDate(fromUtcDateIso(calendar.ovulationDay))} ·{' '}
             {t('kỳ kinh tiếp theo', 'next period')}{' '}
