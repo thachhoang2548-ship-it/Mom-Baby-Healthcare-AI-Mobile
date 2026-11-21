@@ -251,6 +251,13 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
   - Web không gửi header nên giữ nguyên nội dung cũ.
   - App tự thay lời khuyên server ở màn Chu kỳ bằng câu trung tính (phòng khi server chưa deploy).
   - Backend build đạt, 48/48 test (thêm test BR01 không chạy ở bản Play).
+  - 21/11: backend rebase lên 6 commit mới của nhóm (ảnh bé, bác sĩ gọi lại), 67/67 test, push commit `43fae06`; Railway deploy xong.
+  - 21/11: app push commit `8b7db81`, chạy EAS build bản 11 (production .aab + preview APK).
+  - 21/11: build xong, `store/mom-oi-build11.aab` (1.2.0, versionCode 11) và `store/mom-oi-build11-preview.apk`. Cài APK lên máy ảo Pixel_7:
+    - Màn Chu kỳ hiện lời khuyên trung tính.
+    - Hỏi AI "Mẹ nên ăn gì để đỡ mệt?": không còn chữ mang thai / mẹ bầu / thụ thai / rụng trứng.
+  - 21/11: AI trả về dấu `**` (Markdown) hiện nguyên văn. Backend commit `afaf960`: dặn AI trả văn bản thuần và server tự xoá `**`. Đã kiểm tra lại trên máy ảo.
+  - Ảnh Play mới, đã cắt thanh trạng thái và thêm lề cho tỉ lệ 9:16 như bộ ảnh cũ: `play-v3-1-tong-quan.png`, `play-v3-2-chu-ky.png`, `play-v3-3-ai.png`, `play-v3-4-lo-trinh.png`. Ảnh thứ 5 dùng lại `play-phone-3.png` (Bé yêu).
 - **Tờ khai:** giữ 5 mục Health & Fitness, theo câu trả lời số 2 của chuyên viên. Mục Thư giãn vẫn đúng vì còn nhạc thư giãn và bài thở.
 
 ## Theo dõi người thử (cập nhật dần)
