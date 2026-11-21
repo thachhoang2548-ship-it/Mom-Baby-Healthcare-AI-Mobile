@@ -23,7 +23,7 @@ import featureService, { FertilityCalendar, OvulationToday } from '../../service
 import { getApiErrorMessage } from '../../utils/apiError';
 import { addDays, formatDate, fromUtcDateIso, startOfToday, toUtcDateIso } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
-import { MEDICAL_FEATURES_ENABLED, MOOD_LOG_ENABLED } from '../../constants/features';
+import { MEDICAL_FEATURES_ENABLED, MOOD_LOG_ENABLED, PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 import { useT } from '../../i18n';
 
@@ -240,7 +240,17 @@ export default function FertilityScreen() {
                 ? t('Hôm nay là ngày rụng trứng dự kiến', 'Today is your expected ovulation day')
                 : t('Đã qua ngày rụng trứng của chu kỳ này', 'Ovulation has passed for this cycle')}
           </Text>
-          {today.recommendation ? <Text style={styles.todayText}>{today.recommendation}</Text> : null}
+          {/* Lời khuyên server có thể nói về "thụ thai": bản Play dùng câu trung tính viết sẵn. */}
+          {PREGNANCY_FEATURES_ENABLED ? (
+            today.recommendation ? <Text style={styles.todayText}>{today.recommendation}</Text> : null
+          ) : (
+            <Text style={styles.todayText}>
+              {t(
+                'Mẹ ghi kỳ kinh đều đặn để lịch dự đoán chính xác hơn.',
+                'Log your periods regularly for more accurate predictions.'
+              )}
+            </Text>
+          )}
         </View>
       ) : null}
 

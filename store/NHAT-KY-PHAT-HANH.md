@@ -24,7 +24,9 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
 | 16/11/2026 | (trang cửa hàng) | Viết lại mô tả VI/EN cho khớp 5 mục Sức khỏe & thể chất đã khai, thêm câu miễn trừ "không phải thiết bị y tế" (xem store/mo-ta-cua-hang-v2.md) | Gửi xem xét 16/11 cùng bản 8 |
 | 16/11/2026 | 8 (1.1.1) | Đổi chữ trong app cho khớp tờ khai sức khỏe: bỏ "thụ thai / chuẩn bị mang thai", "phục hồi sau sinh", "triệu chứng / bệnh lý" | Build EAS 16/11 (commit ac0ae8d). Gửi xem xét 16/11 cùng mô tả cửa hàng mới, kênh Phát hành công khai, tất cả quốc gia. **Bị từ chối** 18/11, cùng lỗi "Inaccurate Health Apps Declaration" |
 | 18/11/2026 | (tờ khai sức khỏe) | Khai thêm mục **Sức khỏe sinh sản và tình dục** (nhóm Y tế) vì app có theo dõi thai kỳ. Giữ 5 mục cũ, không thêm mục nào khác | Gửi xem xét 18/11. **Bị từ chối** 19/11: "Play Console Requirements", khai mục Y tế thì phải dùng tài khoản tổ chức |
-| 20/11/2026 | 9 (1.2.0) – bản Play không có phần mang thai | Cờ `PREGNANCY_FEATURES_ENABLED = false` ẩn giai đoạn Mang thai và Sau sinh. Tờ khai quay về 5 mục Sức khỏe & thể dục. Mô tả v3 (store/mo-ta-cua-hang-v3.md). Song song gửi câu hỏi cho chuyên viên chính sách Google | Đang chuẩn bị |
+| 20/11/2026 | 9 (1.2.0) – bản Play không có phần mang thai | Cờ `PREGNANCY_FEATURES_ENABLED = false` ẩn giai đoạn Mang thai và Sau sinh. Tờ khai quay về 5 mục Sức khỏe & thể dục. Mô tả v3 (store/mo-ta-cua-hang-v3.md). Song song gửi câu hỏi cho chuyên viên chính sách Google | Không tải lên (còn ghi tâm trạng) |
+| 21/11/2026 | 10 (1.2.0) | Theo email chuyên viên Google: bỏ thêm ghi tâm trạng và Lịch chăm sóc | Không tải lên (server còn trả nội dung thụ thai) |
+| 21/11/2026 | 11 (1.2.0) + backend | App gửi header `X-App-Edition: play`; server bỏ nội dung thụ thai cho bản Play (AI, thông báo BR01, lời khuyên chu kỳ, món ăn AI) | Đang chuẩn bị |
 
 ## Chi tiết
 
@@ -235,7 +237,20 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
   - Cờ `MOOD_LOG_ENABLED = false` ẩn phần ghi tâm trạng ở Tổng quan (thẻ tâm trạng và hàng 5 biểu cảm) và ở Nhật ký hằng ngày.
   - Ẩn Lịch chăm sóc vì là checklist server trả theo giai đoạn.
   - Bỏ chữ "tâm trạng" ở trang chào, Lộ trình và mô tả v3.
+  - Bỏ ô triệu chứng "Thay đổi tâm trạng" ở màn ghi kỳ kinh.
   - Typecheck và lint đạt.
+- **Build 21/11:** commit 2cae903, versionCode 10. EAS build xong cả file .aab (store/mom-oi-build10.aab) và APK thử (store/mom-oi-build10-preview.apk).
+- **Kiểm tra bản 10 trên máy ảo (21/11) phát hiện server vẫn trả nội dung thụ thai** cho giai đoạn 0 (server gọi là `PrePregnancy`):
+  - Trợ lý AI khuyên "chuẩn bị trước khi mang thai", "acid folic trước khi mang thai", vì prompt gửi giai đoạn PrePregnancy.
+  - Màn Chu kỳ hiện câu "cửa sổ thụ thai vàng".
+  - Quy tắc BR01 đẩy thông báo "Cửa sổ thụ thai tối ưu" kèm gợi ý tăng cơ hội mang thai.
+  - Món ăn AI dùng prompt "dinh dưỡng cho mẹ bầu".
+- **Cách sửa (bản 11 + backend):**
+  - App gửi header `X-App-Edition: play` khi `PREGNANCY_FEATURES_ENABLED = false`.
+  - Backend thêm `IAppEditionContext`. Khi có header này: prompt AI không gửi giai đoạn và cấm nhắc mang thai/thụ thai, không tạo BR01, lời khuyên chu kỳ trung tính, món ăn AI cho "phụ nữ và gia đình".
+  - Web không gửi header nên giữ nguyên nội dung cũ.
+  - App tự thay lời khuyên server ở màn Chu kỳ bằng câu trung tính (phòng khi server chưa deploy).
+  - Backend build đạt, 48/48 test (thêm test BR01 không chạy ở bản Play).
 - **Tờ khai:** giữ 5 mục Health & Fitness, theo câu trả lời số 2 của chuyên viên. Mục Thư giãn vẫn đúng vì còn nhạc thư giãn và bài thở.
 
 ## Theo dõi người thử (cập nhật dần)

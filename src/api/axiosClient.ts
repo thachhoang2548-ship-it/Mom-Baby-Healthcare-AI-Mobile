@@ -1,6 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL, ENDPOINTS } from './endpoints';
+import { PREGNANCY_FEATURES_ENABLED } from '../constants/features';
 
 export const STORAGE_KEYS = {
   TOKEN: '@momoi_token',
@@ -14,6 +15,8 @@ const axiosClient = axios.create({
   timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
+    // Bản Play: server bỏ nội dung mang thai / thụ thai (AI, BR01, lời khuyên chu kỳ). Xem constants/features.ts.
+    ...(PREGNANCY_FEATURES_ENABLED ? {} : { 'X-App-Edition': 'play' }),
   },
 });
 
