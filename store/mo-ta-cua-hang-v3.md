@@ -14,7 +14,9 @@
 
 Bỏ tick mục Sức khỏe sinh sản và tình dục.
 
-**Quy tắc viết:** không dùng các chữ mang thai, mẹ bầu, thai kỳ, sau sinh, hậu sản, thụ thai, sinh sản, triệu chứng, chẩn đoán, pregnant, pregnancy, postpartum, new moms.
+**Bản 10 (21/11):** theo email chuyên viên Google, bỏ thêm phần ghi tâm trạng (mood logging) và Lịch chăm sóc.
+
+**Quy tắc viết:** không dùng các chữ tâm trạng, mood, mang thai, mẹ bầu, thai kỳ, sau sinh, hậu sản, thụ thai, sinh sản, triệu chứng, chẩn đoán, pregnant, pregnancy, postpartum, new moms.
 
 ---
 
@@ -53,11 +55,9 @@ GIẤC NGỦ
 THƯ GIÃN VÀ GIẢM CĂNG THẲNG
 • Nhạc thư giãn có hẹn giờ
 • Bài thở 4-2-6 giúp mẹ thả lỏng
-• Ghi lại tâm trạng mỗi ngày
 
 TIỆN ÍCH HẰNG NGÀY
-• Ghi nhanh lượng nước uống và tâm trạng ngay trên màn hình chính
-• Lịch chăm sóc với các việc nên làm
+• Ghi nhanh lượng nước uống ngay trên màn hình chính
 • Hỏi Mom Ơi AI để nhận gợi ý về ăn uống, giấc ngủ và chăm bé
 • Giao diện tiếng Việt và tiếng Anh
 
@@ -107,11 +107,9 @@ SLEEP
 RELAXATION AND STRESS
 • Relaxing music with a timer
 • 4-2-6 breathing exercise
-• Daily mood log
 
 EVERYDAY TOOLS
-• Quick water and mood check-in on the home screen
-• Care calendar with things to do
+• Quick water log on the home screen
 • Ask Mom Ơi AI for tips on eating, sleep and baby care
 • Available in Vietnamese and English
 

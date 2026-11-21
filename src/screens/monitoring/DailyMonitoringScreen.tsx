@@ -19,6 +19,7 @@ import { LITERS_PER_CUP, MOOD_OPTIONS, SLEEP_QUALITY_OPTIONS, cupsFromLiters } f
 import { MOM_THEME, RADII } from '../../theme/colors';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 import { useT } from '../../i18n';
+import { MOOD_LOG_ENABLED } from '../../constants/features';
 
 const toNumber = (value: string): number | undefined => {
   const n = parseFloat(value.replace(',', '.'));
@@ -251,17 +252,22 @@ export default function DailyMonitoringScreen() {
         <ToggleRow label={t('Bữa tối', 'Dinner')} value={meals.dinner} onValueChange={(v) => setMeals((m) => ({ ...m, dinner: v }))} />
       </Card>
 
-      <SectionTitle title={t('🌸 Tâm trạng', '🌸 Mood')} />
-      <Card>
-        <EmojiScale options={MOOD_OPTIONS} value={moodScore} onChange={setMoodScore} />
-        <View style={styles.gap} />
-        <Field
-          label={t('Ghi chú (không bắt buộc)', 'Note (optional)')}
-          value={moodNote}
-          onChangeText={setMoodNote}
-          placeholder={t('Hôm nay mẹ thấy thế nào?', 'How are you feeling today?')}
-        />
-      </Card>
+      {/* Bản Play không ghi tâm trạng (xem constants/features.ts). */}
+      {MOOD_LOG_ENABLED ? (
+        <>
+          <SectionTitle title={t('🌸 Tâm trạng', '🌸 Mood')} />
+          <Card>
+            <EmojiScale options={MOOD_OPTIONS} value={moodScore} onChange={setMoodScore} />
+            <View style={styles.gap} />
+            <Field
+              label={t('Ghi chú (không bắt buộc)', 'Note (optional)')}
+              value={moodNote}
+              onChangeText={setMoodNote}
+              placeholder={t('Hôm nay mẹ thấy thế nào?', 'How are you feeling today?')}
+            />
+          </Card>
+        </>
+      ) : null}
 
       <SectionTitle
         title={t('🩺 Chỉ số cơ thể', '🩺 Body measurements')}

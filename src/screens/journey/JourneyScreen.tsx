@@ -191,7 +191,7 @@ export default function JourneyScreen() {
               body: t('Duy trì thói quen bổ sung vitamin mỗi ngày.', 'Keep a daily vitamin habit.'),
               go: () => navigation.navigate('Medications'),
             },
-            dailyLog(t('Giấc ngủ, bữa ăn và tâm trạng mỗi ngày.', 'Sleep, meals and mood each day.')),
+            dailyLog(t('Giấc ngủ, bữa ăn và nước uống mỗi ngày.', 'Sleep, meals and water each day.')),
           ];
 
   return (

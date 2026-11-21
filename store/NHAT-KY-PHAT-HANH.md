@@ -224,6 +224,20 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
   - Ảnh bìa cửa hàng mới chỉ có chữ: `store/play-feature-graphic-v2-1024x500.png`. Icon cửa hàng mới: `store/play-icon-v2-512.png`.
   - Câu xin quyền ảnh và máy ảnh bỏ chữ "ảnh triệu chứng".
 
+### 20–21/11/2026 – Chuyên viên Google trả lời, bản 10 (1.2.0) bỏ thêm ghi tâm trạng
+
+- **Email "Google Play Policy Support" (case 3-8662000041345, 20/11 lúc 14:12)** trả lời 3 câu hỏi:
+  1. Nhật ký thai kỳ **có** phải khai Reproductive and Sexual Health. Lý do: theo dõi tiến trình thai kỳ, mốc theo tuần, sự phát triển của thai nhi hay phục hồi sau sinh đều thuộc mục này, kể cả khi app chỉ là nhật ký và đã ghi không phải thiết bị y tế.
+  2. Tài khoản cá nhân **được** phát hành nếu bỏ hết tính năng theo dõi mang thai và sau sinh, chỉ khai các mục Health & Fitness.
+  3. Họ chỉ ra cụ thể phần cần tài khoản tổ chức: *"pregnancy stage tracking, related exercises, and mood logging"*. Muốn giữ tài khoản cá nhân thì phải bỏ hẳn các phần này khỏi app và trang cửa hàng.
+- **Bản 9 đã làm** phần mang thai và bài tập thai kỳ. Bản 9 chưa tải lên Play.
+- **Bản 10 làm thêm:**
+  - Cờ `MOOD_LOG_ENABLED = false` ẩn phần ghi tâm trạng ở Tổng quan (thẻ tâm trạng và hàng 5 biểu cảm) và ở Nhật ký hằng ngày.
+  - Ẩn Lịch chăm sóc vì là checklist server trả theo giai đoạn.
+  - Bỏ chữ "tâm trạng" ở trang chào, Lộ trình và mô tả v3.
+  - Typecheck và lint đạt.
+- **Tờ khai:** giữ 5 mục Health & Fitness, theo câu trả lời số 2 của chuyên viên. Mục Thư giãn vẫn đúng vì còn nhạc thư giãn và bài thở.
+
 ## Theo dõi người thử (cập nhật dần)
 
 Điều kiện lên bản chính thức: **ít nhất 12 người thử tham gia liên tục 14 ngày**.

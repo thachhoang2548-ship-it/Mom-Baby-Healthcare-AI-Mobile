@@ -23,7 +23,7 @@ import featureService, { FertilityCalendar, OvulationToday } from '../../service
 import { getApiErrorMessage } from '../../utils/apiError';
 import { addDays, formatDate, fromUtcDateIso, startOfToday, toUtcDateIso } from '../../utils/date';
 import { MOM_THEME, RADII } from '../../theme/colors';
-import { MEDICAL_FEATURES_ENABLED } from '../../constants/features';
+import { MEDICAL_FEATURES_ENABLED, MOOD_LOG_ENABLED } from '../../constants/features';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 import { useT } from '../../i18n';
 
@@ -45,7 +45,10 @@ const CYCLE_SYMPTOM_EN: Record<string, string> = {
   'Căng tức ngực': 'Breast tenderness',
   'Thay đổi tâm trạng': 'Mood changes',
 };
-const CYCLE_SYMPTOMS = Object.keys(CYCLE_SYMPTOM_EN);
+// Bản Play không ghi tâm trạng (xem constants/features.ts): bỏ ô "Thay đổi tâm trạng" khỏi danh sách chọn.
+const CYCLE_SYMPTOMS = Object.keys(CYCLE_SYMPTOM_EN).filter(
+  (s) => MOOD_LOG_ENABLED || s !== 'Thay đổi tâm trạng'
+);
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 const monthParam = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;

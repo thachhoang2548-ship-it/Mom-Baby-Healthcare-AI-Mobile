@@ -39,7 +39,7 @@ import {
   MOOD_OPTIONS,
 } from '../../utils/monitoring';
 import { MOM_THEME, RADII, SHADOWS } from '../../theme/colors';
-import { MEDICAL_FEATURES_ENABLED, PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
+import { MEDICAL_FEATURES_ENABLED, MOOD_LOG_ENABLED, PREGNANCY_FEATURES_ENABLED } from '../../constants/features';
 import { useT } from '../../i18n';
 import { createThemedStyles, useAccent } from '../../theme/accent';
 
@@ -366,7 +366,8 @@ export default function DashboardScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* Mood card */}
+          {/* Mood card (bản Play không ghi tâm trạng) */}
+          {MOOD_LOG_ENABLED ? (
           <View style={[styles.priorityCard, { backgroundColor: '#FCF2F4' }]}>
             <View style={[styles.priorityIconCircle, { backgroundColor: '#F9DCE3' }]}>
               <HeartPulse size={18} color={a.primary} />
@@ -379,6 +380,7 @@ export default function DashboardScreen() {
               </Text>
             </View>
           </View>
+          ) : null}
         </View>
 
         {/* ── Quick Tools Grid ── */}
@@ -474,9 +476,10 @@ export default function DashboardScreen() {
             />
           </View>
 
+          {/* Tâm trạng: 5 ô bằng nhau trên một hàng (bản Play không ghi tâm trạng) */}
+          {MOOD_LOG_ENABLED ? (
+          <>
           <View style={styles.checkInDivider} />
-
-          {/* Tâm trạng: 5 ô bằng nhau trên một hàng */}
           <Text style={styles.sectionLabel}>{t('Mẹ đang cảm thấy thế nào?', 'How are you feeling?')}</Text>
           <View style={styles.moodRow}>
             {MOOD_OPTIONS.map((item) => {
@@ -499,6 +502,8 @@ export default function DashboardScreen() {
               );
             })}
           </View>
+          </>
+          ) : null}
 
           <View style={styles.checkInDivider} />
 

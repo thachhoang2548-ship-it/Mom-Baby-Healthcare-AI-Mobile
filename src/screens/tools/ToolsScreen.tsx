@@ -122,7 +122,7 @@ export default function ToolsScreen() {
     { key: 'alerts', label: t('Thông báo', 'Notifications'), icon: Bell, color: MOM_THEME.amberDark, go: () => navigation.navigate('Notifications') },
     { key: 'ai', label: t('Lịch sử Trợ lý AI', 'AI history'), icon: HeartPulse, color: a.primary, go: () => navigation.navigate('SymptomHistory') },
     { key: 'recipes', label: t('Món ăn AI', 'AI recipes'), icon: Utensils, color: MOM_THEME.amberDark, go: () => navigation.navigate('Recipes') },
-  ];
+  ].filter((item) => PREGNANCY_FEATURES_ENABLED || item.key !== 'care');
 
   const stageItems = [
     { key: 'fertility', label: t('Chu kỳ', 'Cycle'), icon: Calendar, color: a.primary, go: () => navigation.navigate('Fertility') },

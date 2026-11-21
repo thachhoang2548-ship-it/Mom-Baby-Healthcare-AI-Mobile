@@ -8,3 +8,7 @@ export const MEDICAL_FEATURES_ENABLED = false;
 // Bản Play tắt giai đoạn Mang thai và Sau sinh: mọi người dùng thấy nội dung Theo dõi chu kỳ,
 // cùng các phần bé, dinh dưỡng, vận động, giấc ngủ, thư giãn. Bật lại khi có tài khoản tổ chức.
 export const PREGNANCY_FEATURES_ENABLED = false;
+
+// Chuyên viên chính sách Google Play (email 20/11/2026) yêu cầu bỏ cả "mood logging" khỏi bản phát hành
+// từ tài khoản cá nhân. Bản Play ẩn phần ghi tâm trạng ở Tổng quan và Nhật ký hằng ngày.
+export const MOOD_LOG_ENABLED = false;
