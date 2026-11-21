@@ -26,7 +26,8 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
 | 18/11/2026 | (tờ khai sức khỏe) | Khai thêm mục **Sức khỏe sinh sản và tình dục** (nhóm Y tế) vì app có theo dõi thai kỳ. Giữ 5 mục cũ, không thêm mục nào khác | Gửi xem xét 18/11. **Bị từ chối** 19/11: "Play Console Requirements", khai mục Y tế thì phải dùng tài khoản tổ chức |
 | 20/11/2026 | 9 (1.2.0) – bản Play không có phần mang thai | Cờ `PREGNANCY_FEATURES_ENABLED = false` ẩn giai đoạn Mang thai và Sau sinh. Tờ khai quay về 5 mục Sức khỏe & thể dục. Mô tả v3 (store/mo-ta-cua-hang-v3.md). Song song gửi câu hỏi cho chuyên viên chính sách Google | Không tải lên (còn ghi tâm trạng) |
 | 21/11/2026 | 10 (1.2.0) | Theo email chuyên viên Google: bỏ thêm ghi tâm trạng và Lịch chăm sóc | Không tải lên (server còn trả nội dung thụ thai) |
-| 21/11/2026 | 11 (1.2.0) + backend | App gửi header `X-App-Edition: play`; server bỏ nội dung thụ thai cho bản Play (AI, thông báo BR01, lời khuyên chu kỳ, món ăn AI) | Đang chuẩn bị |
+| 21/11/2026 | 11 (1.2.0) + backend | App gửi header `X-App-Edition: play`; server bỏ nội dung thụ thai cho bản Play (AI, thông báo BR01, lời khuyên chu kỳ, món ăn AI) | Không tải lên (còn dự đoán rụng trứng) |
+| 21/11/2026 | 12 (1.2.1) | Bỏ dự đoán rụng trứng (cờ `OVULATION_ENABLED = false`): màn "Chu kỳ kinh nguyệt" chỉ đếm ngày đến kỳ kinh tiếp theo. Mô tả cửa hàng bỏ chữ rụng trứng | Sẵn sàng tải lên (store/mom-oi-build12.aab) |
 
 ## Chi tiết
 
@@ -258,6 +259,12 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
     - Hỏi AI "Mẹ nên ăn gì để đỡ mệt?": không còn chữ mang thai / mẹ bầu / thụ thai / rụng trứng.
   - 21/11: AI trả về dấu `**` (Markdown) hiện nguyên văn. Backend commit `afaf960`: dặn AI trả văn bản thuần và server tự xoá `**`. Đã kiểm tra lại trên máy ảo.
   - Ảnh Play mới, đã cắt thanh trạng thái và thêm lề cho tỉ lệ 9:16 như bộ ảnh cũ: `play-v3-1-tong-quan.png`, `play-v3-2-chu-ky.png`, `play-v3-3-ai.png`, `play-v3-4-lo-trinh.png`. Ảnh thứ 5 dùng lại `play-phone-3.png` (Bé yêu).
+- **Bản 12 (1.2.1), 21/11:**
+  - Người dùng đồng ý bỏ dự đoán rụng trứng vì có thể bị xếp vào Sức khỏe sinh sản.
+  - App commit `ec27a11`: thêm cờ `OVULATION_ENABLED = false`, đổi tên màn thành Chu kỳ kinh nguyệt, lịch chỉ đánh dấu kỳ kinh dự kiến, thẻ Còn N ngày đến kỳ kinh. Sửa chữ ở Tổng quan, Lộ trình, Hồ sơ, Trang khách.
+  - Backend commit `293b7ac`: `ovulation-today` trả thêm `DaysUntilNextPeriod`.
+  - Mô tả v3: bỏ dòng rụng trứng; đổi cảm giác đi kèm / how you feel thành biểu hiện như đau bụng, mệt mỏi.
+  - Kiểm tra trên máy ảo: Tổng quan, Chu kỳ (Còn 9 ngày, khớp 30/11), Lộ trình, Menu không còn chữ rụng trứng. Chụp lại ảnh 1, 2, 4.
 - **Tờ khai:** giữ 5 mục Health & Fitness, theo câu trả lời số 2 của chuyên viên. Mục Thư giãn vẫn đúng vì còn nhạc thư giãn và bài thở.
 
 ## Theo dõi người thử (cập nhật dần)
