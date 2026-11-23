@@ -273,6 +273,7 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
     - Bỏ qua cảnh báo android.hardware.screen.portrait (app chỉ dùng màn hình dọc), lý do: xuất bản thay đổi quan trọng hơn.
     - Lưu ý: nút Lưu dưới dạng bản nháp chỉ lưu nháp; phải bấm Tiếp theo rồi Lưu thì trang cửa hàng mới vào danh sách gửi.
   - **22/11 21:55:** email Google Play Developer Support (James) xác nhận bản 12 đang được xét duyệt sau lần từ chối trước; có thể mất 7 ngày hoặc lâu hơn. Yêu cầu không gửi thêm phiên bản nào cho đến khi xét duyệt xong.
+  - **23/11:** nhận email IARC Live Rating Notice: bảng câu hỏi phân loại nội dung đã gửi IARC, app được cấp xếp hạng độ tuổi (mã toàn cầu 6e8600b8-…). Không phải kết quả duyệt, không cần làm gì.
 - **Tờ khai:** giữ 5 mục Health & Fitness, theo câu trả lời số 2 của chuyên viên. Mục Thư giãn vẫn đúng vì còn nhạc thư giãn và bài thở.
 
 ## Theo dõi người thử (cập nhật dần)
