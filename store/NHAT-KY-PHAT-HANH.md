@@ -27,7 +27,7 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
 | 20/11/2026 | 9 (1.2.0) – bản Play không có phần mang thai | Cờ `PREGNANCY_FEATURES_ENABLED = false` ẩn giai đoạn Mang thai và Sau sinh. Tờ khai quay về 5 mục Sức khỏe & thể dục. Mô tả v3 (store/mo-ta-cua-hang-v3.md). Song song gửi câu hỏi cho chuyên viên chính sách Google | Không tải lên (còn ghi tâm trạng) |
 | 21/11/2026 | 10 (1.2.0) | Theo email chuyên viên Google: bỏ thêm ghi tâm trạng và Lịch chăm sóc | Không tải lên (server còn trả nội dung thụ thai) |
 | 21/11/2026 | 11 (1.2.0) + backend | App gửi header `X-App-Edition: play`; server bỏ nội dung thụ thai cho bản Play (AI, thông báo BR01, lời khuyên chu kỳ, món ăn AI) | Không tải lên (còn dự đoán rụng trứng) |
-| 21/11/2026 | 12 (1.2.1) | Bỏ dự đoán rụng trứng (cờ `OVULATION_ENABLED = false`): màn "Chu kỳ kinh nguyệt" chỉ đếm ngày đến kỳ kinh tiếp theo. Mô tả cửa hàng bỏ chữ rụng trứng | Gửi duyệt Production 21/11 (đang chờ Google) |
+| 21/11/2026 | 12 (1.2.1) | Bỏ dự đoán rụng trứng (cờ `OVULATION_ENABLED = false`): màn "Chu kỳ kinh nguyệt" chỉ đếm ngày đến kỳ kinh tiếp theo. Mô tả cửa hàng bỏ chữ rụng trứng | **Được duyệt** (email Google Play Developer Support, 24/11) |
 
 ## Chi tiết
 
@@ -274,6 +274,7 @@ và để trả lời bảng câu hỏi khi xin quyền phát hành bản chính
     - Lưu ý: nút Lưu dưới dạng bản nháp chỉ lưu nháp; phải bấm Tiếp theo rồi Lưu thì trang cửa hàng mới vào danh sách gửi.
   - **22/11 21:55:** email Google Play Developer Support (James) xác nhận bản 12 đang được xét duyệt sau lần từ chối trước; có thể mất 7 ngày hoặc lâu hơn. Yêu cầu không gửi thêm phiên bản nào cho đến khi xét duyệt xong.
   - **23/11:** nhận email IARC Live Rating Notice: bảng câu hỏi phân loại nội dung đã gửi IARC, app được cấp xếp hạng độ tuổi (mã toàn cầu 6e8600b8-…). Không phải kết quả duyệt, không cần làm gì.
+  - **24/11:** email Google Play Developer Support (Sheldon) xác nhận bản 12 đã được chấp thuận, vụ việc chính sách đã đóng. Xuất bản có quản lý đang tắt nên bản 12 tự phát hành lên Production.
 - **Tờ khai:** giữ 5 mục Health & Fitness, theo câu trả lời số 2 của chuyên viên. Mục Thư giãn vẫn đúng vì còn nhạc thư giãn và bài thở.
 
 ## Theo dõi người thử (cập nhật dần)
